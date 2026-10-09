@@ -45,7 +45,15 @@
   {
     "file": "camunda7-showcase.bpmn20.xml",
     "source": "BPMN Desk contributors",
-    "sha256": "a9cb64ba43efadc2d9301061da08d427556dab069a1335706515ae52c9988266",
+    "sha256": "53f0968daa065027039f96a30e731024f8dce7b7d52511640ed3738971b299c3",
+    "license": "MIT",
+    "modified": false,
+    "engine": "camunda7"
+  },
+  {
+    "file": "camunda7-integration.bpmn20.xml",
+    "source": "BPMN Desk contributors",
+    "sha256": "7cc507f374760df049d8baa2d323d28cd1ea113cc64e2966010e34b6ff215162",
     "license": "MIT",
     "modified": false,
     "engine": "camunda7"

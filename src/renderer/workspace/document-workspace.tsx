@@ -70,6 +70,6 @@ export function DocumentWorkspace({ record, active, editors, dark, sync, draft, 
       {panel === 'diagnostics' && <div className="bottom-panel"><DiagnosticsPanel diagnostics={snapshot?.diagnostics ?? []} onSelect={id => editor?.select(id)} onArrange={id => run(() => editor?.arrangeBoundaries(id))} /></div>}
     </div>
     {editor && snapshot && <PropertiesPanel editor={editor} snapshot={snapshot} dark={dark} run={run} />}
-    {definitions && editor && snapshot && <DefinitionsPanel editor={editor} close={() => setDefinitions(false)} run={run} />}
+    {definitions && editor && snapshot && <DefinitionsPanel engines={snapshot.engines} editor={editor} close={() => setDefinitions(false)} run={run} />}
   </div>;
 }

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 BPMN Desk contributors. SPDX-License-Identifier: MIT -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:c7="http://camunda.org/schema/1.0/bpmn" xmlns:demo="urn:bpmn-desk:example" id="IntegrationDefinitions" targetNamespace="urn:bpmn-desk:camunda7">
+  <bpmn:error id="BatchFailure" name="Batch failure" errorCode="BATCH_FAILED" c7:errorMessage="Batch processing failed" />
+  <bpmn:message id="CompletionMessage" name="Integration completed" />
+  <bpmn:process id="IntegrationProcess" name="Batch integration · Camunda 7" isExecutable="true" c7:historyTimeToLive="30">
+    <bpmn:startEvent id="IntegrationStart" name="Batch received"><bpmn:outgoing>StartConnector</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:serviceTask id="ConnectorTask" name="Load items" c7:asyncBefore="true">
+      <bpmn:extensionElements><c7:connector><c7:connectorId>http-connector</c7:connectorId><c7:inputOutput><c7:inputParameter name="url">${endpoint}</c7:inputParameter><c7:inputParameter name="method">GET</c7:inputParameter><c7:outputParameter name="items"><c7:script scriptFormat="javascript">JSON.parse(response)</c7:script></c7:outputParameter></c7:inputOutput></c7:connector><demo:settings demo:version="1"><demo:note>Generic metadata is preserved</demo:note></demo:settings></bpmn:extensionElements>
+      <bpmn:incoming>StartConnector</bpmn:incoming><bpmn:outgoing>ConnectorBatch</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="BatchTask" name="Process each item" c7:delegateExpression="${batchWorker}">
+      <bpmn:incoming>ConnectorBatch</bpmn:incoming><bpmn:outgoing>BatchNotify</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics id="BatchLoop" isSequential="false" c7:collection="items" c7:elementVariable="item" c7:asyncBefore="true"><bpmn:extensionElements><c7:failedJobRetryTimeCycle>R4/PT1M</c7:failedJobRetryTimeCycle></bpmn:extensionElements></bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="BatchError" name="Processing failed" attachedToRef="BatchTask"><bpmn:outgoing>ErrorEnd</bpmn:outgoing><bpmn:errorEventDefinition id="BatchErrorDefinition" errorRef="BatchFailure" c7:errorCodeVariable="failureCode" c7:errorMessageVariable="failureMessage" /></bpmn:boundaryEvent>
+    <bpmn:endEvent id="FailureEnd" name="Batch failed"><bpmn:incoming>ErrorEnd</bpmn:incoming></bpmn:endEvent>
+    <bpmn:endEvent id="NotifyEnd" name="Notify completion"><bpmn:incoming>BatchNotify</bpmn:incoming><bpmn:messageEventDefinition id="NotifyDefinition" messageRef="CompletionMessage" c7:delegateExpression="${notificationWorker}"><bpmn:extensionElements><c7:field name="channel" stringValue="integration" /></bpmn:extensionElements></bpmn:messageEventDefinition></bpmn:endEvent>
+    <bpmn:sequenceFlow id="StartConnector" sourceRef="IntegrationStart" targetRef="ConnectorTask" />
+    <bpmn:sequenceFlow id="ConnectorBatch" sourceRef="ConnectorTask" targetRef="BatchTask" />
+    <bpmn:sequenceFlow id="BatchNotify" sourceRef="BatchTask" targetRef="NotifyEnd" />
+    <bpmn:sequenceFlow id="ErrorEnd" sourceRef="BatchError" targetRef="FailureEnd" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="IntegrationDiagram"><bpmndi:BPMNPlane id="IntegrationPlane" bpmnElement="IntegrationProcess">
+    <bpmndi:BPMNShape id="IntegrationStart_di" bpmnElement="IntegrationStart"><dc:Bounds x="100" y="180" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="ConnectorTask_di" bpmnElement="ConnectorTask"><dc:Bounds x="230" y="158" width="120" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="BatchTask_di" bpmnElement="BatchTask"><dc:Bounds x="465" y="158" width="140" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="NotifyEnd_di" bpmnElement="NotifyEnd"><dc:Bounds x="720" y="180" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="BatchError_di" bpmnElement="BatchError"><dc:Bounds x="482" y="220" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="FailureEnd_di" bpmnElement="FailureEnd"><dc:Bounds x="482" y="365" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNEdge id="StartConnector_di" bpmnElement="StartConnector"><di:waypoint x="136" y="198" /><di:waypoint x="230" y="198" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="ConnectorBatch_di" bpmnElement="ConnectorBatch"><di:waypoint x="350" y="198" /><di:waypoint x="465" y="198" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="BatchNotify_di" bpmnElement="BatchNotify"><di:waypoint x="605" y="198" /><di:waypoint x="720" y="198" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="ErrorEnd_di" bpmnElement="ErrorEnd"><di:waypoint x="500" y="256" /><di:waypoint x="500" y="365" /></bpmndi:BPMNEdge>
+  </bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
+</bpmn:definitions>

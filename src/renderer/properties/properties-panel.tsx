@@ -23,7 +23,7 @@ export function PropertiesPanel({ editor, snapshot, dark, run }: { editor: BpmnE
       {snapshot.engines.map(id => <section className="engine-profile" data-profile={id} key={id} aria-label={engineProfiles[id].title}>
         {targets.map((target, index) => <EngineProperties key={index} element={element} target={target} profile={engineProfiles[id]} editor={editor} run={run} />)}
         {id === 'flowable' ? ['executionListener', ...(element.type === 'bpmn:UserTask' ? ['taskListener', 'formProperty'] : []), ...(element.type === 'bpmn:CallActivity' ? ['in', 'out'] : []), 'field'].map(kind =>
-          <ExtensionList key={kind} kind={kind} element={element} editor={editor} run={run} />) : <CamundaExtensions element={element} editor={editor} run={run} />}
+          <ExtensionList key={kind} kind={kind} element={element} editor={editor} run={run} />) : targets.map((target, index) => <CamundaExtensions key={index} element={element} target={target} editor={editor} run={run} />)}
       </section>)}
       <details><summary><Braces size={14} />{t("Дополнительные атрибуты")}</summary><div className="property-group"><CustomProperties element={element} editor={editor} run={run} /></div></details>
       <details><summary><Braces size={14} />{t("XML расширений")}</summary><div className="property-group"><ExtensionsEditor element={element} editor={editor} xml={snapshot.xml} dark={dark} run={run} /></div></details>

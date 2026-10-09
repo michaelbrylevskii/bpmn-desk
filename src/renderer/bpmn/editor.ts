@@ -146,6 +146,10 @@ export class BpmnEditor {
     this.update(this.modeler.get<Canvas>('canvas').getRootElement(), key, value || undefined, target);
   }
 
+  setDefinitionAttribute(target: ModdleElement, namespace: Namespace, name: string, value: string): void {
+    this.setEngineAttribute(this.modeler.get<Canvas>('canvas').getRootElement(), namespace, name, value, target);
+  }
+
   select(id: string): void {
     const element = this.modeler.get<Registry>('elementRegistry').get(id);
     if (!element) return;

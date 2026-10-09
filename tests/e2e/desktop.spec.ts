@@ -25,6 +25,29 @@ test('Electron запускает packaged renderer, preload и встроенн
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
+test('Electron открывает Camunda 7 через CLI и сохраняет вложенный target в локальный файл', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-camunda-'));
+  const path = resolve(directory, 'integration.bpmn20.xml');
+  await copyFile('examples/camunda7-integration.bpmn20.xml', path);
+  const app = await electron.launch({ args: ['.', path], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
+  try {
+    const page = await app.firstWindow();
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await page.getByLabel('Найти элемент').fill('BatchTask');
+    await page.locator('.outline-item').first().click();
+    const loop = page.locator('.engine-properties').filter({ hasText: 'MultiInstanceLoopCharacteristics' });
+    await loop.getByLabel('Коллекция', { exact: true }).fill('nativeItems');
+    await loop.getByLabel('Коллекция', { exact: true }).blur();
+    await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+    await expect(page.getByRole('status')).toContainText('Сохранено');
+    const xml = await readFile(path, 'utf8');
+    expect(xml).toContain('c7:collection="nativeItems"');
+    expect(xml).toContain('c7:delegateExpression="${notificationWorker}"');
+    expect(xml).toContain('demo:version="1"');
+    await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
 test('CLI открывает файл и передаёт второй файл в существующее окно', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-cli-'));
   const first = resolve(directory, 'first.bpmn');

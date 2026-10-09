@@ -28,5 +28,16 @@ test('извлечённая AppImage открывает демонстраци�
     await page.keyboard.press('Control+f');
     await expect(page.locator('.xml-panel').getByRole('textbox', { name: 'Find', exact: true })).toBeVisible();
     await page.screenshot({ path: 'test-results/appimage-editor.png' });
+    await page.getByTitle('Close flowable-showcase.bpmn20.xml', { exact: true }).click();
+    await page.getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await expect(page.locator('.djs-element[data-element-id="ArchiveOrder"]')).toBeVisible();
+    await page.getByLabel('Find element').fill('ArchiveOrder');
+    await page.locator('.outline-item').first().click();
+    await expect(page.getByLabel('External task topic', { exact: true })).toHaveValue('archive-order');
+    await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('ru');
+    await expect(page.getByLabel('Тема внешней задачи', { exact: true })).toHaveValue('archive-order');
+    await page.getByRole('button', { name: 'Диагностика', exact: false }).click();
+    await expect(page.locator('.diagnostics-panel')).toContainText('Проблем не обнаружено');
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
