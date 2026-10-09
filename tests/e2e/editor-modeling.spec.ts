@@ -48,6 +48,13 @@ for (const scenario of [
     expect(tasks).toHaveLength(2);
     expect(tasks[0]!.getAttribute('id')).not.toBe(tasks[1]!.getAttribute('id'));
     expect(tasks[1]!.getElementsByTagNameNS(scenario.uri, 'failedJobRetryTimeCycle')).toHaveLength(1);
+    const originalError = tasks[0]!.getElementsByTagNameNS(scenario.uri, 'errorEventDefinition')[0];
+    const copiedError = tasks[1]!.getElementsByTagNameNS(scenario.uri, 'errorEventDefinition')[0];
+    if (copiedError) {
+      expect(copiedError.getAttribute('id')).not.toBe(originalError!.getAttribute('id'));
+      // Меняем только копию DOM для сравнения остальных атрибутов и детей.
+      copiedError.setAttribute('id', originalError!.getAttribute('id')!);
+    }
     expect(canonicalElement(tasks[1]!.getElementsByTagNameNS('http://www.omg.org/spec/BPMN/20100524/MODEL', 'extensionElements')[0]!)).toEqual(canonicalElement(tasks[0]!.getElementsByTagNameNS('http://www.omg.org/spec/BPMN/20100524/MODEL', 'extensionElements')[0]!));
     if (scenario.sample === 'camunda7-showcase') await (await pending).saveAs('.cache/camunda-edits/copied.bpmn20.xml');
     await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();

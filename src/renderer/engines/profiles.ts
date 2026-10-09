@@ -12,6 +12,7 @@ export const engineProfiles: Record<EngineId, EngineProfile> = {
   } },
   camunda7: { id: 'camunda7', title: 'Camunda 7', ...camundaNamespace, fieldsFor: camundaFieldsFor },
 };
+export const engineExtensionIds = [{ uri: camundaNamespace.uri, name: 'errorEventDefinition' }];
 
 /** Использованные URI важнее неиспользуемых объявлений, оставшихся от другого редактора. */
 export function detectEngines(xml: string): EngineId[] {

@@ -9,7 +9,7 @@ import { AttributeCommand, type AttributeChange } from './attribute-command';
 import { boundaryLayoutIssues, BoundaryLayoutCommand, planBoundaryLayout } from './boundary-layout';
 import { checkImport, parseExtensions } from './codec';
 import { modelElements, validateModel } from './diagnostics';
-import { detectEngines } from '../engines/profiles';
+import { detectEngines, engineExtensionIds } from '../engines/profiles';
 import type { EngineId } from '../engines/contracts';
 import { normalizeDiagram } from './diagram-normalization';
 import { configureDiagramTheme, rendererColors, standaloneSvg } from './diagram-theme';
@@ -48,7 +48,7 @@ export class BpmnEditor {
     this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values, target) => this.replaceExtensionValues(element, values, target));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
     configurePropertyPresence(this.modeler.get('eventBus'));
-    configureModelCopy(this.modeler.get('eventBus'), this.modeler.get<Moddle>('moddle'));
+    configureModelCopy(this.modeler.get('eventBus'), this.modeler.get<Moddle>('moddle'), engineExtensionIds);
     configureModdle(this.modeler.get<Moddle>('moddle'));
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.attributes', AttributeCommand);
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.boundaryLayout', BoundaryLayoutCommand);
