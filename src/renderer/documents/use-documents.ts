@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { OpenedFile } from '../../shared/contracts';
 import { errorMessage } from '../../shared/errors';
+import type { DocumentProfile } from '../engines/contracts';
 import type { EditorSnapshot } from '../bpmn/editor';
 import { diagramTemplate } from '../bpmn/template';
 import { useI18n } from '../i18n/provider';
@@ -8,7 +9,7 @@ import { bridge } from '../platform/bridge';
 import { clearRecovery, readRecovery, writeRecovery } from './recovery';
 import type { DocumentRecord, EditorRegistry } from './types';
 import { isDirty } from './types';
-export function useDocuments(report: (message: string) => void) {
+export function useDocuments(report: (message: string) => void, newProfile: DocumentProfile = 'flowable') {
   const { t } = useI18n();
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [activeId, setActiveId] = useState('');
@@ -34,7 +35,7 @@ export function useDocuments(report: (message: string) => void) {
     setDocuments(previous => [...previous, record]); setActiveId(id);
   }, []);
 
-  const create = useCallback(() => add({ token: '', path: '', name: t('Новая схема.bpmn'), xml: diagramTemplate(t) }), [add, t]);
+  const create = useCallback(() => add({ token: '', path: '', name: t('Новая схема.bpmn'), xml: diagramTemplate(t, newProfile) }), [add, t, newProfile]);
   useEffect(() => {
     const unsubscribe = bridge.onFiles(files => files.forEach(file => add(file)));
     bridge.initialFiles().then(files => files.forEach(file => add(file))).catch(error => report(errorMessage(error)));

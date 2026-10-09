@@ -1,4 +1,5 @@
 import { test, expect } from './russian-fixture';
+import provenance from '../../examples/provenance.json' with { type: 'json' };
 import { readFileSync } from 'node:fs';
 import { preservationIssues } from '../../src/renderer/bpmn/xml';
 import { emptyDiagram } from '../../src/renderer/bpmn/template';
@@ -33,7 +34,7 @@ test('редактирование Flowable, undo/redo и сохранение �
 });
 
 test('все встроенные схемы отображаются и сохраняют расширения', async ({ page }) => {
-  const names = ['vacation-request', 'vacation-approval', 'table-reservation', 'flowable-showcase', 'boundary-events'];
+  const names = provenance.filter(record => record.engine === 'flowable').map(record => record.file.replace('.bpmn20.xml', ''));
   for (const name of names) {
     await page.goto('/');
     await page.getByRole('button', { name, exact: true }).click();

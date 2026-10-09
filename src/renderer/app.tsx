@@ -3,6 +3,8 @@ import { EditorView } from '@codemirror/view';
 import { X, Workflow, CircleCheck, Info } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { errorMessage } from '../shared/errors';
+import type { DocumentProfile } from './engines/contracts';
+import { engineProfiles } from './engines/profiles';
 import { isDirty } from './documents/types';
 import { useDocuments } from './documents/use-documents';
 import { useI18n } from './i18n/provider';
@@ -14,7 +16,8 @@ export function App() {
   const { t, text, setLanguage } = useI18n();
   const [message, setMessage] = useState('');
   const report = useCallback((value: string) => setMessage(value), []);
-  const docs = useDocuments(report);
+  const [newProfile, setNewProfile] = useState<DocumentProfile>('flowable');
+  const docs = useDocuments(report, newProfile);
   const [dark, setDark] = useState(() => localStorage.getItem('bpmn-desk:theme') !== 'light');
   const [examples, setExamples] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
@@ -61,7 +64,7 @@ export function App() {
   return <div className="app" onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragging(true); } }}
     onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
     onDrop={event => { event.preventDefault(); setDragging(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
-    <Toolbar hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} dark={dark} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} />
+    <Toolbar newProfile={newProfile} onNewProfile={setNewProfile} hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} dark={dark} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} />
     {docs.documents.length > 0 && <nav className="document-tabs" aria-label={t("Открытые схемы")}>{docs.documents.map(record => <div key={record.id} className={`document-tab ${docs.activeId === record.id ? 'active' : ''}`}>
       <button title={record.path || record.name} onClick={() => docs.setActiveId(record.id)}><Workflow size={14} /><span>{record.name}</span>{isDirty(record) && <i className="dirty-dot" aria-label={t("Несохранённые изменения")} />}</button>
       <button title={t('Закрыть {name}', { name: record.name })} onClick={() => docs.close(record.id)}><X size={13} /></button>
@@ -71,7 +74,7 @@ export function App() {
       editors={docs.editors.current} dark={dark} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />) :
       <Welcome create={docs.create} open={() => docs.run(docs.open)} examples={examples} recent={recent} openExample={name => docs.run(() => docs.openExample(name))}
         openRecent={path => docs.run(() => docs.openRecent(path))} recovery={docs.recovery.length} restore={docs.restore} discardRecovery={docs.discardRecovery} />}</div>
-    <footer className="statusbar"><span><CircleCheck size={13} />{docs.active ? t('{count} элементов', { count: docs.active.snapshot?.items.length ?? 0 }) : t("Готово")}</span><span>{docs.active?.snapshot?.selected?.id ?? 'BPMN 2.0 + Flowable'}</span><span className="status-spacer" /><span>{docs.active && isDirty(docs.active) ? t("Есть несохранённые изменения") : docs.active && !docs.active.path ? t("Без файла · сохрани копию") : t("Все изменения сохранены")}</span></footer>
+    <footer className="statusbar"><span><CircleCheck size={13} />{docs.active ? t('{count} элементов', { count: docs.active.snapshot?.items.length ?? 0 }) : t("Готово")}</span><span>{docs.active?.snapshot && <span className="engine-badge">{docs.active.snapshot.engines.map(id => engineProfiles[id].title).join(" + ") || "BPMN 2.0"}</span>}{docs.active?.snapshot?.selected?.id ?? 'BPMN 2.0 · Flowable · Camunda 7'}</span><span className="status-spacer" /><span>{docs.active && isDirty(docs.active) ? t("Есть несохранённые изменения") : docs.active && !docs.active.path ? t("Без файла · сохрани копию") : t("Все изменения сохранены")}</span></footer>
     {message && <div className="toast" role="status"><Info size={18} /><span>{text(message)}</span><button title={t("Закрыть уведомление")} onClick={() => setMessage('')}><X size={16} /></button></div>}
     {dragging && <div className="drop-overlay"><Workflow size={44} /><h2>{t("Отпусти BPMN-файлы здесь")}</h2><p>{t("Схемы откроются в отдельных вкладках")}</p></div>}
   </div>;

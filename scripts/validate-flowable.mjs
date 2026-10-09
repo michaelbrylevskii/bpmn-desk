@@ -1,21 +1,17 @@
-import spawn from 'cross-spawn';
 import { readFileSync } from 'node:fs';
-import { delimiter, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import process from 'node:process';
 import { extraSchemaPack } from './lib/schema-pack.mjs';
 import { verifyExtraResults } from './lib/extra-results.mjs';
+import { javaValidator } from './lib/java-validation.mjs';
 const extra = process.argv.includes('--extra') ? extraSchemaPack() : undefined;
 if (extra) verifyExtraResults(extra);
-const root = resolve('tools/flowable-validation');
-const maven = process.platform === 'win32' ? 'mvn.cmd' : 'mvn';
-const build = spawn.sync(maven, ['-q', '-f', `${root}/pom.xml`, 'compile', 'dependency:build-classpath', '-Dmdep.outputFile=target/classpath.txt'], { stdio: 'inherit' });
-if (build.error) throw new Error('Не удалось запустить Maven. Установи Maven и JDK 17+ и проверь PATH.', { cause: build.error });
-if (build.status !== 0) process.exit(build.status ?? 1);
-const classpath = `${root}/target/classes${delimiter}${readFileSync(`${root}/target/classpath.txt`, 'utf8').trim()}`;
-const result = spawn.sync('java', ['-cp', classpath, 'FlowableCheck', extra?.schemasDirectory ?? resolve('examples'), resolve(extra ? '.cache/extra-schema-exports' : '.cache/flowable-exports')], { stdio: 'inherit' });
-if (result.error) throw new Error('Не удалось запустить Java. Установи JDK 17+ и проверь PATH.', { cause: result.error });
-if (result.status !== 0) process.exit(result.status ?? 1);
-if (extra) process.exit(0);
-const layout = spawn.sync('java', ['-cp', classpath, 'FlowableCheck', resolve('examples'), resolve('.cache/flowable-layout'), 'boundary-events.bpmn20.xml'], { stdio: 'inherit' });
-if (layout.error) throw layout.error;
-process.exit(layout.status ?? 1);
+const validate = javaValidator('flowable', 'FlowableCheck');
+if (extra) {
+  validate(extra.schemasDirectory, resolve('.cache/extra-schema-exports'));
+} else {
+  const records = JSON.parse(readFileSync('examples/provenance.json', 'utf8')).filter(record => record.engine === 'flowable');
+  if (!records.length) throw new Error('Встроенные схемы Flowable отсутствуют.');
+  for (const record of records) validate(resolve('examples'), resolve('.cache/flowable-exports'), record.file);
+  validate(resolve('examples'), resolve('.cache/flowable-layout'), 'boundary-events.bpmn20.xml');
+}

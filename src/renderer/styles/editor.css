@@ -19,6 +19,9 @@
 details { border-bottom: 1px solid var(--border); }summary { display: flex; align-items: center; gap: 8px; padding: 14px 15px; font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; }summary::before { content: '›'; color: var(--muted); }details[open] > summary::before { transform: rotate(90deg); }.property-group { padding: 0 16px 18px; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 13px; }.field > span { font-size: 11px; color: var(--muted); }.field small { font-size: 9px; color: var(--muted); overflow-wrap: anywhere; opacity: .8; }.field.compact { flex-direction: row; align-items: center; justify-content: space-between; }.field.compact select { max-width: 134px; font-size: 11px; padding: 6px; }.property-group h4 { font-size: 11px; margin: 14px 0 12px; color: var(--accent); font-weight: 550; }
 .flowable-dot { width: 6px; height: 6px; border-radius: 50%; background: #72b8a7; }
+.engine-properties[data-engine="camunda7"] .flowable-dot { background: #df9675; }
+.extension-additions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.extension-card .extension-card { border-left: 2px solid var(--accent-soft); margin: 8px 0; padding: 0 8px 5px; }
 .attribute-row { display: flex; align-items: flex-start; gap: 5px; }.attribute-row .field { flex: 1; min-width: 0; }.attribute-row .icon-button { margin-top: 21px; }
 .new-attribute { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }.new-attribute h4 { margin: 0; }.new-attribute .button { align-self: flex-start; }
 .extension-card { border: 1px solid var(--border); border-radius: 7px; padding: 0 10px 5px; margin-bottom: 12px; }.extension-card-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }.extension-card-heading code { font-size: 10px; color: var(--muted); }

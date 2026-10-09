@@ -9,6 +9,8 @@ import { AttributeCommand, type AttributeChange } from './attribute-command';
 import { boundaryLayoutIssues, BoundaryLayoutCommand, planBoundaryLayout } from './boundary-layout';
 import { checkImport, parseExtensions } from './codec';
 import { modelElements, validateModel } from './diagnostics';
+import { detectEngines } from '../engines/profiles';
+import type { EngineId } from '../engines/contracts';
 import { normalizeDiagram } from './diagram-normalization';
 import { configureDiagramTheme, rendererColors, standaloneSvg } from './diagram-theme';
 import { configureModdle } from './generic-xml';
@@ -19,6 +21,7 @@ import type { Canvas, CommandStack, EventBus, Modeling, Registry, Selection } fr
 import { translationModule } from './translate';
 import type { DiagramElement, Diagnostic, Moddle, ModdleElement } from './types';
 export interface EditorSnapshot {
+  engines: EngineId[];
   xml: string;
   selected?: DiagramElement;
   items: DiagramElement[];
@@ -41,7 +44,7 @@ export class BpmnEditor {
 
   constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage) {
     this.modeler = new Modeler({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
-    this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values) => this.replaceExtensionValues(element, values));
+    this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values, target) => this.replaceExtensionValues(element, values, target));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
     configurePropertyPresence(this.modeler.get('eventBus'));
     configureModdle(this.modeler.get<Moddle>('moddle'));
@@ -159,10 +162,10 @@ export class BpmnEditor {
     else modeling.updateModdleProperties(element, target, { [key]: value });
   }
 
-  setAttribute(element: DiagramElement, key: string, value: string, uri?: string): void {
+  setAttribute(element: DiagramElement, key: string, value: string, uri?: string, target = element.businessObject): void {
     if (!/^[A-Za-z_][\w.-]*:[A-Za-z_][\w.-]*$/.test(key) || key.startsWith('xmlns:')) throw new Error('Атрибут: prefix:name. Объявления xmlns задаются полем URI.');
     const prefix = key.split(':')[0] ?? '';
-    const bo = element.businessObject;
+    const bo = target;
     const binding = namespaceUri(bo, prefix);
     if (uri && binding && uri !== binding) throw new Error('Этот prefix уже связан с другим URI.');
     if (!binding && !uri) throw new Error('Для нового namespace укажи URI.');
@@ -202,21 +205,21 @@ export class BpmnEditor {
     this.update(element, 'documentation', [documentation]);
   }
 
-  setEngineAttribute(element: DiagramElement, namespace: Namespace, name: string, value: string): void {
-    this.setAttribute(element, namespacedKey(element.businessObject, name, namespace), value, namespace.uri);
+  setEngineAttribute(element: DiagramElement, namespace: Namespace, name: string, value: string, target = element.businessObject): void {
+    this.setAttribute(element, namespacedKey(target, name, namespace), value, namespace.uri, target);
   }
 
-  setRetry(element: DiagramElement, body: string, namespace: Namespace = flowableNamespace): void { this.extensions.retry(element, namespace, body); }
+  setRetry(element: DiagramElement, body: string, namespace: Namespace = flowableNamespace, target = element.businessObject): void { this.extensions.retry(element, namespace, body, target); }
   addExtension(element: DiagramElement, name: string, attributes: Record<string, string>): void { this.extensions.add(element, flowableNamespace, name, attributes); }
   editExtension(element: DiagramElement, index: number, attributes: Record<string, string>): void { this.extensions.edit(element, [index], attributes); }
   removeExtension(element: DiagramElement, index: number): void { this.extensions.remove(element, [index]); }
   editFieldBody(element: DiagramElement, index: number, kind: string, body: string): void { this.extensions.fieldBody(element, [index], flowableNamespace, kind, body); }
 
-  private replaceExtensionValues(element: DiagramElement, values: ModdleElement[]): void {
+  private replaceExtensionValues(element: DiagramElement, values: ModdleElement[], target = element.businessObject): void {
     const extension = values.length ? this.modeler.get<Moddle>('moddle').create('bpmn:ExtensionElements', { values }) : undefined;
-    if (extension) { extension.$parent = element.businessObject; for (const value of values) value.$parent = extension; }
-    this.guard.allow(element.businessObject, 'extensions');
-    this.update(element, 'extensionElements', extension);
+    if (extension) { extension.$parent = target; for (const value of values) value.$parent = extension; }
+    this.guard.allow(target, 'extensions');
+    this.update(element, 'extensionElements', extension, target);
   }
 
   private async publish(): Promise<void> {
@@ -227,9 +230,10 @@ export class BpmnEditor {
     const stack = this.modeler.get<CommandStack>('commandStack');
     const selected = this.modeler.get<Selection>('selection').get()[0];
     const issues = this.guard.issues(xml, this.allModelElements());
-    this.notify({ xml, selected: selected?.labelTarget ?? selected ?? this.modeler.get<Canvas>('canvas').getRootElement(),
+    const engines = detectEngines(xml);
+    this.notify({ xml, engines, selected: selected?.labelTarget ?? selected ?? this.modeler.get<Canvas>('canvas').getRootElement(),
       items: registry.getAll().filter(element => !element.labelTarget),
-      diagnostics: [...this.warnings, ...validateModel(this.root()), ...boundaryLayoutIssues(registry.getAll().filter(element => !element.labelTarget)), ...issues.map(message => ({ severity: 'error' as const, message }))],
+      diagnostics: [...this.warnings, ...validateModel(this.root(), engines), ...boundaryLayoutIssues(registry.getAll().filter(element => !element.labelTarget)), ...issues.map(message => ({ severity: 'error' as const, message }))],
       canUndo: stack.canUndo(), canRedo: stack.canRedo(),
     });
   }

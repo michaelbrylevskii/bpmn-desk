@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { errorMessage } from '../../shared/errors';
 import { BpmnEditor, type EditorSnapshot } from '../bpmn/editor';
 import type { DocumentRecord, EditorRegistry } from '../documents/types';
+import { engineProfiles } from '../engines/profiles';
 import { useI18n } from '../i18n/provider';
 import { DefinitionsPanel } from '../properties/definitions-panel';
 import { PropertiesPanel } from '../properties/properties-panel';
@@ -53,7 +54,7 @@ export function DocumentWorkspace({ record, active, editors, dark, sync, draft, 
   return <div className="document-workspace" style={{ display: active ? 'flex' : 'none' }}>
     {editor && snapshot && <Outline snapshot={snapshot} editor={editor} />}
     <div className="center-workspace">
-      <div className="canvas-heading"><span><i />{error ? t("Ошибка импорта") : 'BPMN 2.0 · Flowable'}</span><span className="canvas-hint">{t("Пробел + перетаскивание · Ctrl + колесо")}</span>{snapshot && <button className="button small ghost" onClick={() => setDefinitions(true)}>{t("Определения")}</button>}</div>
+      <div className="canvas-heading"><span><i />{error ? t("Ошибка импорта") : `BPMN 2.0${snapshot?.engines.map(id => ` · ${engineProfiles[id].title}`).join('') ?? ''}`}</span><span className="canvas-hint">{t("Пробел + перетаскивание · Ctrl + колесо")}</span>{snapshot && <button className="button small ghost" onClick={() => setDefinitions(true)}>{t("Определения")}</button>}</div>
       <div className="canvas-area"><div className="bpmn-container" ref={container} />
         {error && <div className="import-error"><AlertTriangle size={24} /><h3>{t("Не удалось открыть диаграмму")}</h3><pre>{text(error)}</pre><button className="button" onClick={() => setPanel('xml')}>{t("Открыть XML")}</button></div>}
         <div className="zoom-controls"><button title={t("Уменьшить")} onClick={() => editor?.zoom(0.8)}><Minus size={16} /></button><button title={t("Вписать схему")} onClick={() => editor?.fit()}><Maximize size={16} /></button><button title={t("Увеличить")} onClick={() => editor?.zoom(1.25)}><Plus size={16} /></button></div>

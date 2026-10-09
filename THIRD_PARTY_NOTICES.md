@@ -10,7 +10,7 @@
 
 `vacation-request.bpmn20.xml`, `vacation-approval.bpmn20.xml` и `table-reservation.bpmn20.xml` взяты из публичного репозитория [flowable/flowable-examples](https://github.com/flowable/flowable-examples) по Apache License 2.0. XML не изменён; локальные имена файлов отличаются от upstream. Полный текст лицензии находится в [licenses/flowable-examples-APACHE-2.0.txt](licenses/flowable-examples-APACHE-2.0.txt).
 
-Исходные пути, закреплённая revision, SHA-256 и лицензия каждого файла указаны в [examples/provenance.json](examples/provenance.json). `flowable-showcase.bpmn20.xml` и `boundary-events.bpmn20.xml` созданы авторами BPMN Desk независимо и распространяются по MIT.
+Исходные пути, закреплённая revision, SHA-256 и лицензия каждого файла указаны в [examples/provenance.json](examples/provenance.json). `flowable-showcase.bpmn20.xml`, `boundary-events.bpmn20.xml` и `camunda7-showcase.bpmn20.xml` созданы авторами BPMN Desk независимо и распространяются по MIT.
 
 ## Зависимости
 

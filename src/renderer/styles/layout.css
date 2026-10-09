@@ -39,5 +39,7 @@
 @media (max-width: 900px) { .brand { margin-right: 3px; }.brand strong, .version { display: none; }.toolbar-divider { margin: 0 3px; }.toolbar .button { font-size: 11px; gap: 4px; padding: 8px; }.canvas-heading { gap: 5px; }.canvas-heading > span:first-child { min-width: 0; overflow: hidden; white-space: nowrap; }.statusbar { gap: 8px; }.statusbar > span:nth-child(2) { max-width: 120px; overflow: hidden; white-space: nowrap; } }
 
 .language-picker { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; color: var(--muted); }.language-picker select { width: 55px; padding: 5px 3px; border: 0; background: transparent; font-size: 11px; }
+.profile-picker select { width: 108px; padding: 6px 8px; font-size: 11px; }
+.engine-badge { border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; color: var(--accent); white-space: nowrap; }
 
 @media (max-width: 750px) { .toolbar .button { font-size: 0; gap: 0; }.toolbar .button svg { width: 18px; height: 18px; } }

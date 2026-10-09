@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { checkImport, createModdle, parseExtensions } from '../../src/renderer/bpmn/codec';
+import provenance from '../../examples/provenance.json';
 import { preservationIssues, parseXml } from '../../src/renderer/bpmn/xml';
 
-const names = ['vacation-request', 'vacation-approval', 'table-reservation', 'flowable-showcase', 'boundary-events'];
-describe('BPMN / Flowable roundtrip', () => {
+const names = provenance.map(record => record.file.replace('.bpmn20.xml', ''));
+describe('BPMN / профили движков roundtrip', () => {
   it.each(names)('сохраняет атрибуты и extensionElements схемы %s', async name => {
     const xml = readFileSync(join('examples', `${name}.bpmn20.xml`), 'utf8');
     const first = await checkImport(xml);

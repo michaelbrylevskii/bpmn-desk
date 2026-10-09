@@ -5,7 +5,8 @@
     "revision": "8a2ad495b4348f5314c65cbeca3e2d27fad94f55",
     "sha256": "39c9a746d1f6b5bf4ea2549b1ce54b0a49c0ca8aaa13d8fefe73438bd68b1dd8",
     "license": "Apache-2.0",
-    "modified": false
+    "modified": false,
+    "engine": "flowable"
   },
   {
     "file": "vacation-approval.bpmn20.xml",
@@ -13,7 +14,8 @@
     "revision": "8a2ad495b4348f5314c65cbeca3e2d27fad94f55",
     "sha256": "934a58d754c7a1e7d52661d711346889238732fa50c26e0756ad33b1aa5f5956",
     "license": "Apache-2.0",
-    "modified": false
+    "modified": false,
+    "engine": "flowable"
   },
   {
     "file": "table-reservation.bpmn20.xml",
@@ -21,20 +23,31 @@
     "revision": "8a2ad495b4348f5314c65cbeca3e2d27fad94f55",
     "sha256": "1576b6314734f60d7e5b504ca94856964495568a763c4fd6cb643e7bceab551f",
     "license": "Apache-2.0",
-    "modified": false
+    "modified": false,
+    "engine": "flowable"
   },
   {
     "file": "flowable-showcase.bpmn20.xml",
     "source": "BPMN Desk contributors",
     "sha256": "7849039fb7daa1211f5cc4ef61e1de03b5de88d2ec9ca262538c1cd14e09fd7f",
     "license": "MIT",
-    "modified": false
+    "modified": false,
+    "engine": "flowable"
   },
   {
     "file": "boundary-events.bpmn20.xml",
     "source": "BPMN Desk contributors",
     "sha256": "fcd89d2521c78913ab6ccaa3d9df12fde4836aea93ae20657026042a0eb9a7ef",
     "license": "MIT",
-    "modified": false
+    "modified": false,
+    "engine": "flowable"
+  },
+  {
+    "file": "camunda7-showcase.bpmn20.xml",
+    "source": "BPMN Desk contributors",
+    "sha256": "a9cb64ba43efadc2d9301061da08d427556dab069a1335706515ae52c9988266",
+    "license": "MIT",
+    "modified": false,
+    "engine": "camunda7"
   }
 ]

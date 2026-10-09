@@ -1,4 +1,9 @@
 import type { Diagnostic, ModdleElement } from './types';
+import { namespacedValue, namespaceUri } from './namespaces';
+import { flowableNamespace } from '../flowable/attributes';
+import { camundaNamespace } from '../camunda/forms';
+import { validateCamunda } from '../camunda/diagnostics';
+import type { EngineId } from '../engines/contracts';
 
 /** Обходит containment properties без ссылок и циклического $parent. */
 export function modelElements(root: ModdleElement): ModdleElement[] {
@@ -19,13 +24,16 @@ export function modelElements(root: ModdleElement): ModdleElement[] {
   return result;
 }
 
-export function validateModel(root: ModdleElement): Diagnostic[] {
+export function validateModel(root: ModdleElement, engines: EngineId[] = []): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
+  if (engines.length > 1) diagnostics.push({ severity: 'warning', message: 'Смешанные расширения Flowable и Camunda 7. Проверь совместимость с выбранным движком.' });
   const items = modelElements(root);
   for (const element of items) {
     const elementId = element.id;
-    if (element.$type === 'bpmn:ServiceTask' && !['flowable:class', 'flowable:expression', 'flowable:delegateExpression', 'flowable:type']
-      .some(key => element.$attrs?.[key])) {
+    const has = (uri: string) => Object.keys(element.$attrs ?? {}).some(key => namespaceUri(element, key.split(':')[0]!) === uri);
+    if (engines.includes('camunda7') && (engines.length === 1 || has(camundaNamespace.uri))) diagnostics.push(...validateCamunda(element));
+    if (engines.includes('flowable') && (engines.length === 1 || has(flowableNamespace.uri)) && element.$type === 'bpmn:ServiceTask' && !['class', 'expression', 'delegateExpression', 'type']
+      .some(name => namespacedValue(element, name, flowableNamespace))) {
       diagnostics.push({ severity: 'warning', elementId, message: 'Сервисная задача: не задана реализация Flowable.' });
     }
     if (element.$type === 'bpmn:CallActivity' && !element.get('calledElement')) {

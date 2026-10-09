@@ -6,7 +6,7 @@ export type ExtensionPath = readonly number[];
 
 /** Путь адресует containment XML. Каждая операция заменяет дерево одной командой. */
 export class ExtensionCommands {
-  constructor(private readonly moddle: Moddle, private readonly replace: (element: DiagramElement, values: ModdleElement[]) => void) {}
+  constructor(private readonly moddle: Moddle, private readonly replace: (element: DiagramElement, values: ModdleElement[], target?: ModdleElement) => void) {}
 
   add(element: DiagramElement, namespace: Namespace, name: string, attributes: Record<string, string>, parent: ExtensionPath = []): void {
     const value = this.moddle.createAny(`${namespacePrefix(element.businessObject, namespace)}:${name}`, namespace.uri, attributes);
@@ -19,10 +19,19 @@ export class ExtensionCommands {
 
   remove(element: DiagramElement, path: ExtensionPath): void { this.change(element, path, () => undefined); }
 
-  retry(element: DiagramElement, namespace: Namespace, body: string): void {
-    const values = extensionValues(element.businessObject).filter(value => !isExtension(value, namespace.uri, 'failedJobRetryTimeCycle'));
+  valueType(element: DiagramElement, path: ExtensionPath, namespace: Namespace, kind: string): void {
+    if (!['text', 'script', 'list', 'map'].includes(kind)) throw new Error('Неизвестный тип значения поля.');
+    this.change(element, path, node => {
+      const children = extensionChildren(node).filter(child => !['script', 'list', 'map'].some(name => isExtension(child, namespace.uri, name)));
+      if (kind !== 'text') children.push(this.moddle.createAny(`${namespacePrefix(element.businessObject, namespace)}:${kind}`, namespace.uri, kind === 'script' ? { scriptFormat: 'javascript' } : {}));
+      return cloneExtension(this.moddle, node, { $children: children, $body: undefined });
+    });
+  }
+
+  retry(element: DiagramElement, namespace: Namespace, body: string, target = element.businessObject): void {
+    const values = extensionValues(target).filter(value => !isExtension(value, namespace.uri, 'failedJobRetryTimeCycle'));
     if (body.trim()) values.push(this.moddle.createAny(`${namespacePrefix(element.businessObject, namespace)}:failedJobRetryTimeCycle`, namespace.uri, { $body: body }));
-    this.replace(element, values);
+    this.replace(element, values, target);
   }
 
   fieldBody(element: DiagramElement, path: ExtensionPath, namespace: Namespace, kind: string, body: string): void {
