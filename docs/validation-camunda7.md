@@ -4,14 +4,16 @@
 
 ## Основной набор
 
-- `npm run check`: strict TypeScript, ESLint, **53 unit-теста** в 15 файлах. Семь встроенных схем проходят двойной XML roundtrip. Дополнительно проверяются неизвестные теги самого Camunda URI, альтернативные префиксы/их локальное переопределение, независимый retry, вложенные команды и сохранность исходного дерева, профили пустых схем, применимость форм, Camunda diagnostics и глубокое копирование с областями ID.
-- `npm run test:e2e`: **37 passed, 1 skipped**. Chromium — 29 сценариев, Electron — 7, AppImage — 1. Сохраняется основной набор Flowable, языков, темы, XML, recovery, локальных файлов и защиты данных.
+- `npm run check`: strict TypeScript, ESLint, **56 unit-тестов** в 16 файлах. Семь встроенных схем проходят двойной XML roundtrip. Дополнительно проверяются неизвестные теги самого Camunda URI, альтернативные префиксы/их локальное переопределение, независимый retry, вложенные команды и сохранность исходного дерева, профили пустых схем, применимость форм, Camunda diagnostics и глубокое копирование с областями ID.
+- `npm run test:e2e`: **46 passed, 1 skipped**. Chromium — 37 сценариев, Electron — 8, AppImage — 1. Сохраняется основной набор Flowable, языков, темы, XML, recovery, локальных файлов и защиты данных.
 - Новые UI-сценарии: создание профилей и recovery Camunda; external tasks, явное false, listeners/fields, formData/enum/validation, map/list/script, альтернативный `c7`, смешанная схема, connector, multi-instance, error/message definitions. Проверены смена типа задачи и copy/paste обоих движков с undo и сохранением неизвестных данных.
 - Native Electron открывает Camunda через CLI и сохраняет изменение вложенного loop target в локальный файл. Готовая AppImage открывает встроенные Flowable и Camunda, переключает EN/RU и показывает их свойства; sandbox включён.
 - `npm run package:linux`: AppImage собрана штатной командой. Новых runtime-зависимостей JavaScript не добавлено.
+- Состав пакета: семь примеров и provenance побайтово совпадают с исходниками; старых имён нет. ASAR не содержит локальные кеши, пользовательские пакеты, тесты или Java-инструменты.
 - `npm run validate:flowable`: официальный converter 7.2 подтвердил пять встроенных экспортов и отдельный boundary layout export.
 - `npm run validate:camunda`: официальная BPMN Model API 7.24.0 прочитала и валидировала два встроенных экспорта, изменённую integration и copy/paste. Исходные и изменённые модели сравниваются без DI; текстовые значения сохраняются. Ожидаемый XML integration строится из оригинала отдельно от bpmn-js. Проверка отвергает контрольный XML с повторным глобальным Camunda ID.
 - `/tmp/actionlint .github/workflows/build.yml`: конфигурация CI прошла проверку. Для Linux/Windows добавлен запуск Camunda validator и Maven cache обоих инструментов; удалённый workflow этой ветки не запускался.
+- Доработки после ручного просмотра: явный выбор профиля при создании и отмена Escape, engine prefixes всех примеров, удалённый Offline badge, toggle поиска с сохранением запроса, точное восстановление DI после undo/redo, PNG 2× с белым/прозрачным фоном. PNG проверен по signature, размерам и пикселям; native IPC отклоняет некорректный payload и не добавляет экспорт в recent files. Сохранённые XML и dirty state при экспорте не меняются.
 - `git diff --check`: ошибок форматирования нет.
 
 ## Дополнительный локальный набор
