@@ -36,7 +36,9 @@ test('CLI открывает файл и передаёт второй файл 
   try {
     const page = await app.firstWindow();
     await expect(page.locator('.document-tab')).toContainText('first.bpmn');
-    const child = spawn(app.process().spawnfile, ['.', second], { cwd: process.cwd(), env, stdio: 'ignore' });
+    // На Windows Playwright запускает Electron через cmd.exe; нужен executable самого приложения.
+    const executable = await app.evaluate(() => process.execPath);
+    const child = spawn(executable, ['.', second], { cwd: process.cwd(), env, stdio: 'ignore' });
     await expect(page.locator('.document-tab')).toHaveCount(2);
     await expect(page.locator('.document-tab').last()).toContainText('second.bpmn');
     const exit = await new Promise<number | null>(resolveExit => {
@@ -113,7 +115,9 @@ test('масштаб интерфейса меняется клавиатуро�
       item.click();
     });
     await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.webContents.getZoomFactor())).toBeCloseTo(0.9);
-    await expect.poll(async () => JSON.parse(await readFile(resolve(directory, 'interface-zoom.json'), 'utf8')) as number).toBe(0.9);
+    await expect(async () => {
+      expect(JSON.parse(await readFile(resolve(directory, 'interface-zoom.json'), 'utf8')) as number).toBe(0.9);
+    }).toPass({ timeout: 5000 });
     await app.close();
     app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
     await expect((await app.firstWindow()).getByRole('heading', { level: 1 })).toBeVisible();
