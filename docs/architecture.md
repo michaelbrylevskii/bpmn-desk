@@ -9,12 +9,14 @@
 | `src/renderer/platform` | Адаптер preload и браузерный preview | Моделирование |
 | `src/renderer/documents` | Вкладки, dirty state, сохранение, восстановление | Внутреннее устройство bpmn-js |
 | `src/renderer/bpmn` | bpmn-js, команды, XML, диагностика, защита данных | Компоненты React и файловая система |
-| `src/renderer/flowable` | Namespace, реестр форм, generic extensions | Electron и жизненный цикл вкладок |
+| `src/renderer/flowable` | Namespace, реестр форм, generic extensions Flowable | Electron и жизненный цикл вкладок |
+| `src/renderer/camunda` | Формы, структуры расширений и диагностика Camunda 7 | Сериализация, Electron и жизненный цикл вкладок |
+| `src/renderer/engines` | Контракты профилей, их состав и определение по URI | Переключение языка и файловая система |
 | `src/renderer/properties` | Формы выбранного элемента и определения | Прямое изменение модели |
 | `src/renderer/workspace` | Холст, поиск, панели XML/диагностики | Файловая система |
 | `src/renderer/ui`, `styles` | Переиспользуемые элементы и оформление | BPMN-модель |
 
-`bpmn` и `flowable` используют общие типы BPMN, но не импортируют UI. Только BPMN-адаптер создаёт Modeler. Каждый документ получает собственный экземпляр и независимый command stack. Скрытые вкладки сохраняют историю и положение холста.
+`bpmn`, `engines`, `flowable` и `camunda` используют общие типы BPMN, но не импортируют UI. Только BPMN-адаптер создаёт Modeler. Каждый документ получает собственный экземпляр и независимый command stack. Скрытые вкладки сохраняют историю и положение холста.
 
 ESLint запрещает renderer доступ к `node:*`, Electron и desktop. Shared не зависит от renderer. TypeScript strict и noUncheckedIndexedAccess включены. ESLint ограничивает исходные модули 280 содержательными строками.
 
@@ -29,11 +31,13 @@ ESLint запрещает renderer доступ к `node:*`, Electron и desktop
 
 ## XML и сохранность данных
 
-Flowable namespace не зарегистрирован как частичный moddle descriptor: unknown tags внутри известного namespace могут отбрасываться. Атрибуты хранятся в `$attrs`, вложенные элементы — в generic objects. Формы являются отдельным реестром и не определяют полноту сериализации.
+Flowable и Camunda namespaces не зарегистрированы как частичные moddle descriptors: unknown tags внутри известного namespace могут отбрасываться. Атрибуты хранятся в `$attrs`, вложенные элементы — в generic objects. Формы являются отдельным реестром и не определяют полноту сериализации.
 
 Каноническое сравнение использует namespace URI, localName, атрибуты и текст. Префиксы и CDATA не считаются семантикой. Для generic-атрибутов того же namespace, что и тег, адаптер исправляет снятие prefix в moddle-xml. Mixed content, который модель не может сохранить, блокируется проверкой roundtrip.
 
 PreservationGuard защищает исходные namespaced атрибуты и extensionElements при изменениях холста. Привязка к moddle-объектам сохраняется при смене ID и undo. Явное редактирование атрибута разрешает изменение этого ключа; редактирование extensionElements/их форм — блока расширений выбранного элемента. Удаление элемента считается явным удалением его метаданных.
+
+Профиль определяется по использованным URI; для пустых схем — по объявлениям namespace. `bpmn/model-copy` дополняет штатные операции глубоким копированием generic extensions и `$attrs`. Глобальные ID известных расширений при вставке генерируются заново; остальные пользовательские данные сохраняются. Подробнее: [ADR 0014](adr/0014-engine-profiles.md).
 
 Видимый XML-черновик хранится отдельно от модели. Применение XML начинает новую историю команд. Ошибочный XML не заменяет текущую диаграмму. До применения или отмены XML-черновика сохранение BPMN блокируется.
 
@@ -59,6 +63,6 @@ PreservationGuard защищает исходные namespaced атрибуты 
 
 Приложение использует только фиксированный каталог `examples/`: browser preview импортирует верхнеуровневые `.bpmn20.xml`, desktop читает этот же каталог из resources. Provenance и тексты лицензий сопровождают встроенные материалы. Исходные пользовательские пакеты не входят в renderer или поставку.
 
-`scripts/lib/schema-pack` отвечает за структуру/пути/checksum/UTF-8 внешнего пакета; `tests/extra` — за roundtrip и UI; `scripts/test-extra` запускает их отдельно от основного набора. `scripts/validate-flowable` передаёт уже проверенные пути независимому Java-конвертеру. Все выходы дополнительных проверок лежат в `.cache/`; входы не изменяются. Dev-сервер не наблюдает и не отдаёт `.cache/` и `.local-schemas/`.
+`scripts/lib/schema-pack` отвечает за структуру/пути/checksum/UTF-8 внешнего пакета; `tests/extra` — за roundtrip и UI; `scripts/test-extra` запускает их отдельно от основного набора. `scripts/validate-flowable` передаёт уже проверенные пути независимому Java-конвертеру. `scripts/validate-camunda` проверяет свои встроенные и изменённые экспорты через Model API 7.24. Общий `scripts/lib/java-validation` отвечает только за запуск Maven/Java; семантические проверки остаются в отдельных Java-инструментах. Все выходы дополнительных проверок лежат в `.cache/`; входы не изменяются. Dev-сервер не наблюдает и не отдаёт `.cache/` и `.local-schemas/`.
 
 `scripts/capture-screenshots` создаёт browser preview встроенной демонстрационной схемы в двух темах и двух локалях, используя временный Chromium profile.
