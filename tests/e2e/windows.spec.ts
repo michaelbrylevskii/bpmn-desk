@@ -2,6 +2,7 @@ import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
 import { copyFile, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { packagedWindow, type PackagedView } from './packaged-window';
 
 test('готовое Windows-приложение открывает, изменяет и сохраняет BPMN', async () => {
   test.skip(process.platform !== 'win32', 'Запуск готового приложения проверяется на Windows.');
@@ -14,10 +15,12 @@ test('готовое Windows-приложение открывает, измен
     await copyFile('examples/flowable-showcase.bpmn20.xml', path);
     const app = await electron.launch({ executablePath, args: [path], chromiumSandbox: true,
       env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' } });
+    let view: PackagedView | undefined;
     try {
       expect(await app.evaluate(({ app }) => app.isPackaged)).toBe(true);
       expect(await app.evaluate(({ app }) => app.commandLine.hasSwitch('no-sandbox'))).toBe(false);
-      const page = await app.firstWindow();
+      view = await packagedWindow(app);
+      const { page } = view;
       expect(await page.evaluate(() => !!window.desktop && !('require' in window))).toBe(true);
       await expect(page.locator('.document-tab')).toContainText('Документ.bpmn20.xml');
       await expect(page.locator('.djs-element[data-element-id="prepareDocument"]')).toBeVisible();
@@ -43,6 +46,7 @@ test('готовое Windows-приложение открывает, измен
       await expect(page.locator('.document-tab').last()).toContainText('flowable-showcase');
       await page.screenshot({ path: 'test-results/windows-editor.png' });
     } finally {
+      await view?.browser.close();
       await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; });
       await app.close();
     }

@@ -72,3 +72,5 @@ PreservationGuard защищает исходные namespaced атрибуты 
 `bpmn/image-export` растрирует самодостаточный SVG в PNG через Chromium. `ui/export-menu` выбирает формат; bridge передаёт текст или Uint8Array, main атомарно сохраняет экспорт отдельно от capabilities документов и recent files. Новая схема создаётся через общий `ui/new-diagram-dialog`, а данные документа получают явно выбранный профиль.
 
 `scripts/capture-screenshots` создаёт browser preview встроенной демонстрационной схемы в двух темах и двух локалях, используя временный Chromium profile.
+
+`tests/e2e/packaged-window` подключает UI к существующему главному окну через публичный CDP после завершения навигации; main остаётся доступен через ElectronApplication. Этот тестовый адаптер не входит в дистрибутив и не добавляет hooks в приложение.

@@ -5,6 +5,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import packageInfo from '../../package.json' with { type: 'json' };
+import { packagedWindow, type PackagedView } from './packaged-window';
 
 const image = resolve(`release/BPMN-Desk-${packageInfo.version}-x86_64.AppImage`);
 test('извлечённая AppImage открывает демонстрационную схему с включённым sandbox', async () => {
@@ -16,8 +17,10 @@ test('извлечённая AppImage открывает демонстраци�
   const app = await electron.launch({ executablePath: resolve(directory, 'squashfs-root/bpmn-desk'), chromiumSandbox: true,
     args: [resolve('examples/flowable-showcase.bpmn20.xml')],
     env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' }, timeout: 30_000 });
+  let view: PackagedView | undefined;
   try {
-    const page = await app.firstWindow();
+    view = await packagedWindow(app);
+    const { page } = view;
     await expect(page.locator('.document-tab')).toContainText('flowable-showcase.bpmn20.xml');
     await expect(page.locator('.djs-element[data-element-id="reviewDocument"]')).toBeVisible();
     expect(await app.evaluate(({ app }) => app.commandLine.hasSwitch('no-sandbox'))).toBe(false);
@@ -39,5 +42,5 @@ test('извлечённая AppImage открывает демонстраци�
     await expect(page.getByLabel('Тема внешней задачи', { exact: true })).toHaveValue('archive-order');
     await page.getByRole('button', { name: 'Диагностика', exact: false }).click();
     await expect(page.locator('.diagnostics-panel')).toContainText('Проблем не обнаружено');
-  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+  } finally { await view?.browser.close(); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });

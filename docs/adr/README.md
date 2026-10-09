@@ -20,3 +20,4 @@
 - [0016 — Отступы XML-блока расширений](0016-extension-fragment-indentation.md)
 - [0017 — Системная тема и ручной выбор палитры](0017-system-theme.md)
 - [0018 — Ошибки и время жизни уведомлений](0018-notification-errors-and-lifetime.md)
+- [0019 — Подключение тестов готового приложения](0019-packaged-test-connection.md)
