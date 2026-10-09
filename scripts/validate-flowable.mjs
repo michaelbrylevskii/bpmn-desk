@@ -13,5 +13,5 @@ if (extra) {
   const records = JSON.parse(readFileSync('examples/provenance.json', 'utf8')).filter(record => record.engine === 'flowable');
   if (!records.length) throw new Error('Встроенные схемы Flowable отсутствуют.');
   for (const record of records) validate(resolve('examples'), resolve('.cache/flowable-exports'), record.file);
-  validate(resolve('examples'), resolve('.cache/flowable-layout'), 'boundary-events.bpmn20.xml');
+  validate(resolve('examples'), resolve('.cache/flowable-layout'), 'flowable-boundary-events.bpmn20.xml');
 }

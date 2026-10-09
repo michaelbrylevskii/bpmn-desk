@@ -9,6 +9,7 @@ it('встроенные схемы соответствуют provenance и и�
   for (const record of provenance) {
     expect(createHash('sha256').update(readFileSync(`examples/${record.file}`)).digest('hex')).toBe(record.sha256);
     expect(['flowable', 'camunda7']).toContain(record.engine);
+    expect(record.file.startsWith(record.engine + '-')).toBe(true);
     expect(['MIT', 'Apache-2.0']).toContain(record.license);
     if (record.license === 'Apache-2.0') {
       expect(record.source).toMatch(/^https:\/\/github\.com\/flowable\/flowable-examples\/blob\/[0-9a-f]{40}\//);

@@ -1,6 +1,6 @@
 [
   {
-    "file": "vacation-request.bpmn20.xml",
+    "file": "flowable-vacation-request.bpmn20.xml",
     "source": "https://github.com/flowable/flowable-examples/blob/8a2ad495b4348f5314c65cbeca3e2d27fad94f55/spring-boot-example/src/main/resources/processes/VacationRequest.bpmn20.xml",
     "revision": "8a2ad495b4348f5314c65cbeca3e2d27fad94f55",
     "sha256": "39c9a746d1f6b5bf4ea2549b1ce54b0a49c0ca8aaa13d8fefe73438bd68b1dd8",
@@ -9,7 +9,7 @@
     "engine": "flowable"
   },
   {
-    "file": "vacation-approval.bpmn20.xml",
+    "file": "flowable-vacation-approval.bpmn20.xml",
     "source": "https://github.com/flowable/flowable-examples/blob/8a2ad495b4348f5314c65cbeca3e2d27fad94f55/flowfest-2018/demo-own-application/src/main/resources/processes/Vacation_request.bpmn20.xml",
     "revision": "8a2ad495b4348f5314c65cbeca3e2d27fad94f55",
     "sha256": "934a58d754c7a1e7d52661d711346889238732fa50c26e0756ad33b1aa5f5956",
@@ -18,7 +18,7 @@
     "engine": "flowable"
   },
   {
-    "file": "table-reservation.bpmn20.xml",
+    "file": "flowable-table-reservation.bpmn20.xml",
     "source": "https://github.com/flowable/flowable-examples/blob/8a2ad495b4348f5314c65cbeca3e2d27fad94f55/blog/migration-bpmn/src/main/resources/processes/Table_Reservation_v1.bpmn20.xml",
     "revision": "8a2ad495b4348f5314c65cbeca3e2d27fad94f55",
     "sha256": "1576b6314734f60d7e5b504ca94856964495568a763c4fd6cb643e7bceab551f",
@@ -35,7 +35,7 @@
     "engine": "flowable"
   },
   {
-    "file": "boundary-events.bpmn20.xml",
+    "file": "flowable-boundary-events.bpmn20.xml",
     "source": "BPMN Desk contributors",
     "sha256": "fcd89d2521c78913ab6ccaa3d9df12fde4836aea93ae20657026042a0eb9a7ef",
     "license": "MIT",

@@ -2,7 +2,7 @@ import { test, expect } from './russian-fixture';
 
 test('XML поиск и переход к выбранному элементу сохраняют текст и историю', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'boundary-events', exact: true }).click();
+  await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByRole('textbox', { name: 'Найти элемент' }).fill('Review document');
   await page.locator('.outline-item').filter({ hasText: 'reviewCall' }).click();
