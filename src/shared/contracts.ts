@@ -7,13 +7,13 @@ export interface OpenedFile {
   xml: string;
 }
 
-export interface SaveRequest {
+interface SaveOptions {
   token?: string;
   name: string;
-  content: string;
   saveAs?: boolean;
-  format?: 'bpmn' | 'svg';
 }
+export type SaveRequest = SaveOptions & ({ content: string; format?: 'bpmn' | 'svg' } | { content: Uint8Array; format: 'png' });
+export type DiagramExport = 'svg' | 'png-white' | 'png-transparent';
 
 export interface SavedFile {
   token: string;

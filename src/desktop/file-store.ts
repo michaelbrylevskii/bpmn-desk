@@ -45,10 +45,16 @@ export class FileStore {
     this.files.set(nextToken, { path, revision: hash(content) });
     return { token: nextToken, path, name: basename(path) };
   }
+
+  async saveExport(content: string | Uint8Array, path: string): Promise<SavedFile> {
+    if (Buffer.byteLength(content) > MAX_FILE_SIZE) throw new Error('Файл превышает 20 МБ.');
+    await atomicWrite(path, content);
+    return { token: '', path, name: basename(path) };
+  }
 }
 
 /** Временный файл находится на той же файловой системе; ошибка не повреждает оригинал. */
-export async function atomicWrite(path: string, content: string): Promise<void> {
+export async function atomicWrite(path: string, content: string | Uint8Array): Promise<void> {
   const temporary = join(dirname(path), `.${basename(path)}.${randomUUID()}.tmp`);
   let mode = 0o600;
   try { mode = (await stat(path)).mode & 0o777; } catch (error) {

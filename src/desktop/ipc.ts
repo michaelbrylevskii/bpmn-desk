@@ -55,23 +55,26 @@ export async function registerIpc(window: BrowserWindow, setDirty: (value: boole
   });
   ipcMain.handle(channels.save, async (event, request: SaveRequest) => {
     validate(event);
-    if (!request || typeof request.content !== 'string' || typeof request.name !== 'string' ||
+    const png = request?.format === 'png';
+    const binary = png && request.content instanceof Uint8Array && [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => request.content[index] === byte);
+    if (!request || (png ? !binary : typeof request.content !== 'string') || typeof request.name !== 'string' ||
         (request.token !== undefined && typeof request.token !== 'string') ||
-        (request.format !== undefined && !['bpmn', 'svg'].includes(request.format))) throw new Error('Недопустимый запрос сохранения.');
-    const exportSvg = request.format === 'svg';
+        (request.saveAs !== undefined && typeof request.saveAs !== 'boolean') ||
+        (request.format !== undefined && !['bpmn', 'svg', 'png'].includes(request.format))) throw new Error('Недопустимый запрос сохранения.');
+    const exporting = request.format === 'svg' || png;
     let path: string;
     let token = request.token;
-    if (request.saveAs || !token || exportSvg) {
+    if (request.saveAs || !token || exporting) {
       const result = await dialog.showSaveDialog(window, {
         defaultPath: basename(request.name),
-        filters: [{ name: exportSvg ? 'SVG' : 'BPMN', extensions: exportSvg ? ['svg'] : ['bpmn', 'xml'] }],
+        filters: [{ name: exporting ? png ? 'PNG' : 'SVG' : 'BPMN', extensions: exporting ? png ? ['png'] : ['svg'] : ['bpmn', 'xml'] }],
       });
       if (result.canceled || !result.filePath) return null;
       path = result.filePath;
       token = undefined;
     } else path = store.pathFor(token);
-    const saved = await store.save(request.content, path, token);
-    if (!exportSvg) await recent.add(path);
+    const saved = request.format === 'png' || request.format === 'svg' ? await store.saveExport(request.content, path) : await store.save(request.content, path, token);
+    if (!exporting) await recent.add(path);
     return saved;
   });
   ipcMain.on(channels.dirty, (event, dirty: unknown) => {

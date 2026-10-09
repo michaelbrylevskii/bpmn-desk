@@ -2,7 +2,7 @@ import { test, expect } from './russian-fixture';
 
 test('свойства отличают заданное false от значения по умолчанию', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'boundary-events', exact: true }).click();
+  await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
   await page.getByRole('textbox', { name: 'Найти элемент' }).fill('Review document');
   await page.locator('.outline-item').filter({ hasText: 'reviewCall' }).click();
   await expect(page.locator('.property-legend, .field-status')).toHaveCount(0);

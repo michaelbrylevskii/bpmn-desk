@@ -1,4 +1,5 @@
 import { test, expect } from './russian-fixture';
+import provenance from '../../examples/provenance.json' with { type: 'json' };
 import { readFileSync } from 'node:fs';
 import { preservationIssues } from '../../src/renderer/bpmn/xml';
 import { emptyDiagram } from '../../src/renderer/bpmn/template';
@@ -33,7 +34,7 @@ test('редактирование Flowable, undo/redo и сохранение �
 });
 
 test('все встроенные схемы отображаются и сохраняют расширения', async ({ page }) => {
-  const names = ['vacation-request', 'vacation-approval', 'table-reservation', 'flowable-showcase', 'boundary-events'];
+  const names = provenance.filter(record => record.engine === 'flowable').map(record => record.file.replace('.bpmn20.xml', ''));
   for (const name of names) {
     await page.goto('/');
     await page.getByRole('button', { name, exact: true }).click();
@@ -54,6 +55,7 @@ test('все встроенные схемы отображаются и сох�
 test('кастомные атрибуты и XML расширений редактируются и отменяются', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByText('Дополнительные атрибуты', { exact: true }).click();
   await page.getByLabel('Имя атрибута').fill('custom:mode');
@@ -80,11 +82,13 @@ test('кастомные атрибуты и XML расширений редак
 test('вкладки независимы, локальное восстановление сохраняет изменения', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByLabel('Название', { exact: true }).fill('Восстановленный старт');
   await page.getByLabel('Название', { exact: true }).blur();
   await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
   await page.getByTitle('Новая схема (Ctrl+N)').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await expect(page.locator('.document-tab')).toHaveCount(2);
   await page.reload();
   await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
@@ -95,17 +99,19 @@ test('вкладки независимы, локальное восстанов
 test('ошибочный XML не заменяет диаграмму', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await expect(page.locator('.outline-item').first()).toBeVisible();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('XML схемы').fill('<broken>');
   await page.getByRole('button', { name: 'Применить XML', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Некорректный XML');
+  await expect(page.getByRole('alert')).toContainText('Не удалось применить XML.');
   await expect(page.locator('.outline-item').filter({ hasText: 'StartEvent_1' })).toBeVisible();
 });
 
 test('listeners, поля и определения редактируются через формы с undo/redo', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByText('Обработчики процесса · executionListener', { exact: true }).click();
   await page.getByRole('button', { name: 'Добавить executionListener', exact: true }).click();

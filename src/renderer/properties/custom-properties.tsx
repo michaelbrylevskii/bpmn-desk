@@ -2,7 +2,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { BpmnEditor } from '../bpmn/editor';
 import type { DiagramElement } from '../bpmn/types';
-import { namespaceUri } from '../flowable/attributes';
+import { namespaceUri } from '../bpmn/namespaces';
 import { useI18n } from '../i18n/provider';
 import { Field } from '../ui/field';
 export function CustomProperties({ element, editor, run }: { element: DiagramElement; editor: BpmnEditor; run: (operation: () => void | Promise<void>) => void }) {

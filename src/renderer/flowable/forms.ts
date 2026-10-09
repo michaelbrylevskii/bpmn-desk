@@ -1,7 +1,10 @@
+import type { MessageKey } from '../../shared/i18n';
+import { namespaceUri } from '../bpmn/namespaces';
+import { FLOWABLE_URI } from './descriptor';
 import type { ModdleElement } from '../bpmn/types';
 import { flowableBooleans, flowableStrings } from './descriptor';
 
-export const labels: Record<string, string> = {
+export const labels: Record<string, MessageKey> = {
   class: 'Java-класс', expression: 'Выражение', delegateExpression: 'Выражение делегата',
   resultVariableName: 'Переменная результата', assignee: 'Исполнитель', owner: 'Владелец',
   candidateUsers: 'Пользователи-кандидаты', candidateGroups: 'Группы-кандидаты', dueDate: 'Срок выполнения',
@@ -28,7 +31,7 @@ export function fieldsFor(element: ModdleElement): { strings: string[]; booleans
     'bpmn:StartEvent': ['initiator', 'formKey'],
     'bpmn:ScriptTask': ['resultVariableName', 'autoStoreVariables'],
   };
-  const existing = Object.keys(element.$attrs ?? {}).filter(k => k.startsWith('flowable:')).map(k => k.slice(9));
+  const existing = Object.keys(element.$attrs ?? {}).filter(k => namespaceUri(element, k.split(':')[0]!) === FLOWABLE_URI).map(k => k.split(':')[1]!);
   const names = new Set([...common, ...(specialized[type] ?? []), ...existing]);
   return { strings: flowableStrings.filter(name => names.has(name) && !name.includes('Docker')), booleans: flowableBooleans.filter(name => names.has(name)) };
 }

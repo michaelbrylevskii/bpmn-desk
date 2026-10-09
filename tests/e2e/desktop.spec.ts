@@ -25,12 +25,90 @@ test('Electron запускает packaged renderer, preload и встроенн
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
+test('nativeTheme переключает системную палитру; ручной режим переживает перезапуск', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-theme-'));
+  const env = { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(directory), ELECTRON_RENDERER_URL: '' };
+  const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
+  try {
+    const page = await app.firstWindow();
+    await expect(page.getByRole('button', { name: 'Системная тема', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    // Playwright по умолчанию эмулирует light; здесь проверяется тема самого Electron.
+    await page.emulateMedia({ colorScheme: null });
+    await app.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'dark'; });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await app.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'light'; });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await page.getByRole('button', { name: 'Тёмная тема', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(await page.evaluate(() => localStorage.getItem('bpmn-desk:theme'))).toBe('dark');
+  } finally { await app.close(); }
+  try {
+    const reopened = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
+    try {
+      const page = await reopened.firstWindow();
+      await expect(page.getByRole('button', { name: 'Тёмная тема', exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await page.emulateMedia({ colorScheme: null });
+      await reopened.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'light'; });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+      await page.getByRole('button', { name: 'Системная тема', exact: true }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    } finally { await reopened.close(); }
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test('Electron открывает Camunda 7 через CLI и сохраняет вложенный target в локальный файл', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-camunda-'));
+  const path = resolve(directory, 'integration.bpmn20.xml');
+  await copyFile('examples/camunda7-integration.bpmn20.xml', path);
+  const app = await electron.launch({ args: ['.', path], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
+  try {
+    const page = await app.firstWindow();
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await page.getByLabel('Найти элемент').fill('BatchTask');
+    await page.locator('.outline-item').first().click();
+    const loop = page.locator('.engine-properties').filter({ hasText: 'MultiInstanceLoopCharacteristics' });
+    await loop.getByLabel('Коллекция', { exact: true }).fill('nativeItems');
+    await loop.getByLabel('Коллекция', { exact: true }).blur();
+    await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+    await expect(page.getByRole('status')).toContainText('Сохранено');
+    const xml = await readFile(path, 'utf8');
+    expect(xml).toContain('c7:collection="nativeItems"');
+    expect(xml).toContain('c7:delegateExpression="${notificationWorker}"');
+    expect(xml).toContain('demo:version="1"');
+    await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
+test('native создание выбирает профиль, PNG проходит через IPC и не меняет BPMN или recent files', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-export-'));
+  const png = resolve(directory, 'diagram.png');
+  const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
+  try {
+    const page = await app.firstWindow();
+    await expect(page.getByRole('button', { name: 'Новая схема', exact: true })).toBeVisible();
+    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-diagram')!.click());
+    await page.getByRole('dialog').getByRole('button', { name: 'Camunda 7', exact: true }).click();
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, png);
+    await expect(page.evaluate(() => window.desktop!.saveFile({ format: 'png', name: 'bad.png', content: new Uint8Array([1, 2, 3]) }))).rejects.toThrow('Недопустимый запрос');
+    await page.getByTitle('Формат экспорта', { exact: true }).click();
+    await page.getByRole('menuitem', { name: 'PNG · белый фон', exact: true }).click();
+    await expect(async () => { expect(Array.from((await readFile(png)).subarray(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]); }).toPass({ timeout: 5000 });
+    expect(await page.evaluate(() => window.desktop!.recentFiles())).toEqual([]);
+    await expect(page.locator('.dirty-dot')).toHaveCount(0);
+    // Отмена native диалога не создаёт файл и не изменяет документ.
+    await app.evaluate(({ dialog }) => { dialog.showSaveDialog = async () => ({ canceled: true, filePath: '' }); });
+    await page.getByTitle('PNG · белый фон', { exact: true }).click();
+    await expect(page.locator('.dirty-dot')).toHaveCount(0);
+  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
 test('CLI открывает файл и передаёт второй файл в существующее окно', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-cli-'));
   const first = resolve(directory, 'first.bpmn');
   const second = resolve(directory, 'second.bpmn');
   await copyFile('examples/flowable-showcase.bpmn20.xml', first);
-  await copyFile('examples/vacation-request.bpmn20.xml', second);
+  await copyFile('examples/flowable-vacation-request.bpmn20.xml', second);
   const env = { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' };
   const app = await electron.launch({ args: ['.', first], chromiumSandbox: true, env });
   try {
@@ -70,7 +148,7 @@ test('Electron сохраняет копию и отклоняет внешне�
     await writeFile(path, '<external-edit/>');
     await field.fill('${secondEdit}'); await field.blur();
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-    await expect(page.getByRole('status')).toContainText('изменён другим приложением');
+    await expect(page.getByRole('alert')).toContainText('изменён другим приложением');
     expect(await readFile(path, 'utf8')).toBe('<external-edit/>');
     // Отключаем диалог закрытия только в тестовом main process.
     await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; });

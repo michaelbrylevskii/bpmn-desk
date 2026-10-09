@@ -1,12 +1,14 @@
 import { interfaceMessages } from './interface';
 import { propertyMessages } from './properties';
 import { noticeMessages } from './notices';
+import { engineMessages } from './engines';
+import { exportMessages } from './exports';
 
 export type Language = 'en' | 'ru';
 export const defaultLanguage: Language = 'en';
 export const languageKey = 'bpmn-desk:language';
 export const isLanguage = (value: unknown): value is Language => value === 'en' || value === 'ru';
-const english = { ...interfaceMessages, ...propertyMessages, ...noticeMessages };
+const english = { ...interfaceMessages, ...propertyMessages, ...noticeMessages, ...engineMessages, ...exportMessages };
 export type MessageKey = keyof typeof english;
 export type Parameters = Readonly<Record<string, string | number>>;
 export type Translator = (key: MessageKey, parameters?: Parameters) => string;

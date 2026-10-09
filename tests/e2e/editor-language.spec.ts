@@ -5,6 +5,7 @@ test('английский по умолчанию, смена языка сох
   await expect(page.getByRole('button', { name: 'New diagram', exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Language', exact: true })).toHaveValue('en');
   await page.getByRole('button', { name: 'New diagram', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
   await page.getByLabel('Name', { exact: true }).fill('Название пользователя');
   await page.getByLabel('Name', { exact: true }).blur();
@@ -30,7 +31,7 @@ test('английский по умолчанию, смена языка сох
   await page.keyboard.press('Control+Home');
   await page.keyboard.insertText('<!-- second draft -->\n');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-  const toast = page.getByRole('status');
+  const toast = page.getByRole('alert');
   // XML остаётся черновиком до явного применения/отмены.
   await expect(toast).toContainText('Примени или отмени изменения XML');
   await page.getByRole('combobox', { name: 'Язык', exact: true }).selectOption('en');
@@ -55,6 +56,7 @@ test('выбранный русский язык восстанавливает�
 test('смена языка сохраняет действия выбранного элемента и контролы поиска', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'New diagram', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   const entries = page.locator('.djs-context-pad .entry');
   const initial = await entries.count(); expect(initial).toBeGreaterThan(1);

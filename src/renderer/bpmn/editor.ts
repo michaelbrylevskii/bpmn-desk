@@ -1,23 +1,29 @@
 import Modeler from 'bpmn-js/lib/Modeler';
 import { errorMessage } from '../../shared/errors';
 import { defaultLanguage, type Language } from '../../shared/i18n';
-import { attributeKey, namespaceUri } from '../flowable/attributes';
+import { attributeKey, flowableNamespace } from '../flowable/attributes';
 import { FLOWABLE_URI } from '../flowable/descriptor';
-import { cloneExtension, extensionValues, isFlowableExtension } from '../flowable/extensions';
+import { ExtensionCommands } from './extension-commands';
+import { namespaceUri, namespacedKey, type Namespace } from './namespaces';
 import { AttributeCommand, type AttributeChange } from './attribute-command';
 import { boundaryLayoutIssues, BoundaryLayoutCommand, planBoundaryLayout } from './boundary-layout';
 import { checkImport, parseExtensions } from './codec';
 import { modelElements, validateModel } from './diagnostics';
+import { detectEngines, engineExtensionIds } from '../engines/profiles';
+import type { EngineId } from '../engines/contracts';
 import { normalizeDiagram } from './diagram-normalization';
 import { configureDiagramTheme, rendererColors, standaloneSvg } from './diagram-theme';
 import { configureModdle } from './generic-xml';
+import { configureModelCopy } from './model-copy';
 import { PreservationGuard } from './preservation-guard';
 import { configurePropertyPresence } from './property-presence';
+import { configureLabelPresence } from './label-presence';
 import { createDefinition, requireUnused } from './root-definitions';
 import type { Canvas, CommandStack, EventBus, Modeling, Registry, Selection } from './services';
 import { translationModule } from './translate';
 import type { DiagramElement, Diagnostic, Moddle, ModdleElement } from './types';
 export interface EditorSnapshot {
+  engines: EngineId[];
   xml: string;
   selected?: DiagramElement;
   items: DiagramElement[];
@@ -29,6 +35,7 @@ export interface EditorSnapshot {
 /** Единственная граница взаимодействия UI с bpmn-js. Каждый tab имеет свою модель. */
 export class BpmnEditor {
   private readonly modeler: Modeler;
+  readonly extensions: ExtensionCommands;
   private baseline = '';
   private warnings: Diagnostic[] = [];
   private readonly guard = new PreservationGuard();
@@ -39,8 +46,11 @@ export class BpmnEditor {
 
   constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage) {
     this.modeler = new Modeler({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
+    this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values, target) => this.replaceExtensionValues(element, values, target));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
     configurePropertyPresence(this.modeler.get('eventBus'));
+    configureLabelPresence(this.modeler.get('eventBus'));
+    configureModelCopy(this.modeler.get('eventBus'), this.modeler.get<Moddle>('moddle'), engineExtensionIds);
     configureModdle(this.modeler.get<Moddle>('moddle'));
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.attributes', AttributeCommand);
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.boundaryLayout', BoundaryLayoutCommand);
@@ -59,7 +69,7 @@ export class BpmnEditor {
   async import(xml: string): Promise<void> {
     const checked = await checkImport(xml);
     // Проверка отдельной модели позволяет оставить текущую диаграмму при ошибке XML.
-    if (checked.warnings.length) throw new Error(`Импорт может изменить данные:\n${checked.warnings.join('\n')}`);
+    if (checked.warnings.length) throw new Error(`Импорт XML отклонён: некорректные или неподдерживаемые BPMN-данные.\n${checked.warnings.join('\n')}`);
     const previous = this.baseline ? await this.xml() : undefined;
     this.importing = true;
     try {
@@ -138,6 +148,10 @@ export class BpmnEditor {
     this.update(this.modeler.get<Canvas>('canvas').getRootElement(), key, value || undefined, target);
   }
 
+  setDefinitionAttribute(target: ModdleElement, namespace: Namespace, name: string, value: string): void {
+    this.setEngineAttribute(this.modeler.get<Canvas>('canvas').getRootElement(), namespace, name, value, target);
+  }
+
   select(id: string): void {
     const element = this.modeler.get<Registry>('elementRegistry').get(id);
     if (!element) return;
@@ -156,15 +170,15 @@ export class BpmnEditor {
     else modeling.updateModdleProperties(element, target, { [key]: value });
   }
 
-  setAttribute(element: DiagramElement, key: string, value: string, uri?: string): void {
+  setAttribute(element: DiagramElement, key: string, value: string, uri?: string, target = element.businessObject): void {
     if (!/^[A-Za-z_][\w.-]*:[A-Za-z_][\w.-]*$/.test(key) || key.startsWith('xmlns:')) throw new Error('Атрибут: prefix:name. Объявления xmlns задаются полем URI.');
     const prefix = key.split(':')[0] ?? '';
-    const bo = element.businessObject;
+    const bo = target;
     const binding = namespaceUri(bo, prefix);
     if (uri && binding && uri !== binding) throw new Error('Этот prefix уже связан с другим URI.');
     if (!binding && !uri) throw new Error('Для нового namespace укажи URI.');
     const changes: AttributeChange[] = [];
-    if (!binding || (prefix === 'flowable' && !this.root().$attrs?.['xmlns:flowable'])) {
+    if (!binding) {
       changes.push({ target: this.root(), attributes: { ...this.root().$attrs, [`xmlns:${prefix}`]: uri ?? binding ?? '' } });
     }
     const attrs = { ...bo.$attrs };
@@ -199,48 +213,21 @@ export class BpmnEditor {
     this.update(element, 'documentation', [documentation]);
   }
 
-  async setRetry(element: DiagramElement, body: string): Promise<void> {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    const bo = element.businessObject;
-    const old = bo.get<ModdleElement | undefined>('extensionElements');
-    const values = [...(old?.get<ModdleElement[]>('values') ?? [])].filter(value => !isFlowableExtension(value, 'failedJobRetryTimeCycle'));
-    if (body.trim()) values.push(moddle.createAny('flowable:failedJobRetryTimeCycle', FLOWABLE_URI, { $body: body }));
-    const extension = values.length ? moddle.create('bpmn:ExtensionElements', { values }) : undefined;
-    if (extension) extension.$parent = bo;
-    this.guard.allow(bo, 'extensions');
-    this.update(element, 'extensionElements', extension);
+  setEngineAttribute(element: DiagramElement, namespace: Namespace, name: string, value: string, target = element.businessObject): void {
+    this.setAttribute(element, namespacedKey(target, name, namespace), value, namespace.uri, target);
   }
 
-  addExtension(element: DiagramElement, name: string, attributes: Record<string, string>): void {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    this.replaceExtensionValues(element, [...extensionValues(element.businessObject), moddle.createAny(`flowable:${name}`, FLOWABLE_URI, attributes)]);
-  }
+  setRetry(element: DiagramElement, body: string, namespace: Namespace = flowableNamespace, target = element.businessObject): void { this.extensions.retry(element, namespace, body, target); }
+  addExtension(element: DiagramElement, name: string, attributes: Record<string, string>): void { this.extensions.add(element, flowableNamespace, name, attributes); }
+  editExtension(element: DiagramElement, index: number, attributes: Record<string, string>): void { this.extensions.edit(element, [index], attributes); }
+  removeExtension(element: DiagramElement, index: number): void { this.extensions.remove(element, [index]); }
+  editFieldBody(element: DiagramElement, index: number, kind: string, body: string): void { this.extensions.fieldBody(element, [index], flowableNamespace, kind, body); }
 
-  editExtension(element: DiagramElement, index: number, attributes: Record<string, string>): void {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    this.replaceExtensionValues(element, extensionValues(element.businessObject).map((value, i) => i === index ? cloneExtension(moddle, value, attributes) : value));
-  }
-
-  removeExtension(element: DiagramElement, index: number): void {
-    this.replaceExtensionValues(element, extensionValues(element.businessObject).filter((_value, i) => i !== index));
-  }
-
-  editFieldBody(element: DiagramElement, index: number, kind: string, body: string): void {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    this.replaceExtensionValues(element, extensionValues(element.businessObject).map((value, i) => {
-      if (i !== index) return value;
-      const clone = cloneExtension(moddle, value, {});
-      const children = (clone.$children as ModdleElement[] ?? []).filter(child => !isFlowableExtension(child, 'string') && !isFlowableExtension(child, 'expression'));
-      clone.$children = [...children, moddle.createAny(`flowable:${kind}`, FLOWABLE_URI, { $body: body })];
-      return clone;
-    }));
-  }
-
-  private replaceExtensionValues(element: DiagramElement, values: ModdleElement[]): void {
+  private replaceExtensionValues(element: DiagramElement, values: ModdleElement[], target = element.businessObject): void {
     const extension = values.length ? this.modeler.get<Moddle>('moddle').create('bpmn:ExtensionElements', { values }) : undefined;
-    if (extension) { extension.$parent = element.businessObject; for (const value of values) value.$parent = extension; }
-    this.guard.allow(element.businessObject, 'extensions');
-    this.update(element, 'extensionElements', extension);
+    if (extension) { extension.$parent = target; for (const value of values) value.$parent = extension; }
+    this.guard.allow(target, 'extensions');
+    this.update(element, 'extensionElements', extension, target);
   }
 
   private async publish(): Promise<void> {
@@ -251,9 +238,10 @@ export class BpmnEditor {
     const stack = this.modeler.get<CommandStack>('commandStack');
     const selected = this.modeler.get<Selection>('selection').get()[0];
     const issues = this.guard.issues(xml, this.allModelElements());
-    this.notify({ xml, selected: selected?.labelTarget ?? selected ?? this.modeler.get<Canvas>('canvas').getRootElement(),
+    const engines = detectEngines(xml);
+    this.notify({ xml, engines, selected: selected?.labelTarget ?? selected ?? this.modeler.get<Canvas>('canvas').getRootElement(),
       items: registry.getAll().filter(element => !element.labelTarget),
-      diagnostics: [...this.warnings, ...validateModel(this.root()), ...boundaryLayoutIssues(registry.getAll().filter(element => !element.labelTarget)), ...issues.map(message => ({ severity: 'error' as const, message }))],
+      diagnostics: [...this.warnings, ...validateModel(this.root(), engines), ...boundaryLayoutIssues(registry.getAll().filter(element => !element.labelTarget)), ...issues.map(message => ({ severity: 'error' as const, message }))],
       canUndo: stack.canUndo(), canRedo: stack.canRedo(),
     });
   }

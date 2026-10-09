@@ -5,6 +5,7 @@ test('после перезапуска восстанавливаются вс�
   await page.goto('/');
   for (let index = 0; index < 21; index++) {
     await page.getByTitle('New diagram (Ctrl+N)', { exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
     const workspace = page.locator('.document-workspace:visible');
     await workspace.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await workspace.getByLabel('Name', { exact: true }).fill(`Recovered process ${index}`);

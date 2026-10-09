@@ -1,7 +1,8 @@
 import { BpmnModdle } from 'bpmn-moddle';
 import type { Moddle, ModdleElement } from './types';
-import { requireBpmn, preservationIssues, namespaceDeclarations, serializeXml, BPMN_URI } from './xml';
+import { requireBpmn, preservationIssues, namespaceDeclarations, BPMN_URI } from './xml';
 import { configureModdle } from './generic-xml';
+import { formatXmlFragment } from './xml-fragment-format';
 
 export const createModdle = (): Moddle => configureModdle(new BpmnModdle());
 
@@ -31,5 +32,5 @@ export function extensionsXml(xml: string, id: string): string {
   const document = requireBpmn(xml);
   const element = Array.from(document.getElementsByTagName('*')).find(e => e.getAttribute('id') === id);
   const extension = element && Array.from(element.childNodes).find(n => n.nodeType === 1 && (n as Element).localName === 'extensionElements');
-  return extension ? serializeXml(extension) : '<bpmn:extensionElements />';
+  return extension ? formatXmlFragment(extension as Element) : '<bpmn:extensionElements />';
 }

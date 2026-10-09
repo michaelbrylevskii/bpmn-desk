@@ -32,6 +32,8 @@ export const interfaceMessages = {
   'Увеличить': 'Zoom in',
   'Светлая тема': 'Light theme',
   'Тёмная тема': 'Dark theme',
+  'Системная тема': 'System theme',
+  'Тема интерфейса': 'Interface theme',
   'Экспорт SVG': 'Export SVG',
   'Локально': 'Offline',
   'ЛОКАЛЬНЫЙ РЕДАКТОР BPMN': 'OFFLINE BPMN EDITOR',

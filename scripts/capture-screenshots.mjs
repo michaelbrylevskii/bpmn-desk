@@ -10,6 +10,7 @@ try {
   try {
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     await page.goto('http://127.0.0.1:5174');
+    await page.getByTitle('Dark theme', { exact: true }).click();
     await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
     await page.getByRole('textbox', { name: 'Find element', exact: true }).fill('prepareDocument');
     await page.locator('.outline-item').first().click();
