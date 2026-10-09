@@ -1,7 +1,7 @@
 {
   "name": "bpmn-desk",
   "version": "0.2.0",
-  "description": "Локальный BPMN-редактор с поддержкой Flowable",
+  "description": "Локальный BPMN-редактор с поддержкой Flowable и Camunda 7",
   "private": true,
   "type": "module",
   "main": "out/main/index.js",
@@ -24,7 +24,8 @@
     "build:icon": "node scripts/build-icon.mjs",
     "capture:screenshots": "node scripts/capture-screenshots.mjs",
     "validate:flowable": "node scripts/validate-flowable.mjs",
-    "validate:flowable:extra": "node scripts/validate-flowable.mjs --extra"
+    "validate:flowable:extra": "node scripts/validate-flowable.mjs --extra",
+    "validate:camunda": "node scripts/validate-camunda.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "6.11.1",

@@ -23,6 +23,14 @@ describe('BPMN / профили движков roundtrip', () => {
     expect(extension?.get<unknown[]>('values')).toHaveLength(1);
   });
 
+  it('сохраняет неизвестные теги самого Camunda namespace без descriptor', async () => {
+    const xml = `<b:definitions xmlns:b="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:c7="http://camunda.org/schema/1.0/bpmn" targetNamespace="test"><b:process id="p"><b:serviceTask id="task"><b:extensionElements><c7:future c7:mode="strict"><c7:nested c7:flag="yes"><![CDATA[ value < 2 ]]></c7:nested></c7:future></b:extensionElements></b:serviceTask></b:process></b:definitions>`;
+    const first = await checkImport(xml);
+    expect(first.warnings).toEqual([]);
+    expect((await checkImport(first.xml)).warnings).toEqual([]);
+    expect(preservationIssues(xml, first.xml)).toEqual([]);
+  });
+
   it('обнаруживает потерянные project extensions', () => {
     const xml = readFileSync(join('examples', 'flowable-showcase.bpmn20.xml'), 'utf8');
     const altered = xml.replace(/demo:outcome="[^"]*"/g, '');

@@ -14,6 +14,7 @@
 | @xmldom/xmldom | XML DOM | MIT |
 | @resvg/resvg-js | Сборка PNG из собственного SVG приложения | MPL-2.0, только build tool |
 | Flowable BPMN converter | Дополнительная независимая проверка | Apache-2.0, только test tool |
+| Camunda BPMN Model API 7.24.0 | Проверка XML и семантики Camunda 7 | Apache-2.0, только test tool |
 
 Watermark bpmn.io остаётся полностью видимым на холсте. Оригинальные LICENSE зависимости находятся в установленных npm-пакетах; electron-builder включает production dependencies в app.asar. Дистрибутив также содержит LICENSE.electron.txt и LICENSES.chromium.html.
 

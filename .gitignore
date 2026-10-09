@@ -9,6 +9,7 @@ playwright-report/
 .local-schemas/
 *.log
 tools/flowable-validation/target/
+tools/camunda-validation/target/
 SingletonCookie
 SingletonLock
 SingletonSocket
