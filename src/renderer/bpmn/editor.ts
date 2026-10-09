@@ -1,9 +1,10 @@
 import Modeler from 'bpmn-js/lib/Modeler';
 import { errorMessage } from '../../shared/errors';
 import { defaultLanguage, type Language } from '../../shared/i18n';
-import { attributeKey, namespaceUri } from '../flowable/attributes';
+import { attributeKey, flowableNamespace } from '../flowable/attributes';
 import { FLOWABLE_URI } from '../flowable/descriptor';
-import { cloneExtension, extensionValues, isFlowableExtension } from '../flowable/extensions';
+import { ExtensionCommands } from './extension-commands';
+import { namespaceUri, namespacedKey, type Namespace } from './namespaces';
 import { AttributeCommand, type AttributeChange } from './attribute-command';
 import { boundaryLayoutIssues, BoundaryLayoutCommand, planBoundaryLayout } from './boundary-layout';
 import { checkImport, parseExtensions } from './codec';
@@ -29,6 +30,7 @@ export interface EditorSnapshot {
 /** Единственная граница взаимодействия UI с bpmn-js. Каждый tab имеет свою модель. */
 export class BpmnEditor {
   private readonly modeler: Modeler;
+  readonly extensions: ExtensionCommands;
   private baseline = '';
   private warnings: Diagnostic[] = [];
   private readonly guard = new PreservationGuard();
@@ -39,6 +41,7 @@ export class BpmnEditor {
 
   constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage) {
     this.modeler = new Modeler({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
+    this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values) => this.replaceExtensionValues(element, values));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
     configurePropertyPresence(this.modeler.get('eventBus'));
     configureModdle(this.modeler.get<Moddle>('moddle'));
@@ -164,7 +167,7 @@ export class BpmnEditor {
     if (uri && binding && uri !== binding) throw new Error('Этот prefix уже связан с другим URI.');
     if (!binding && !uri) throw new Error('Для нового namespace укажи URI.');
     const changes: AttributeChange[] = [];
-    if (!binding || (prefix === 'flowable' && !this.root().$attrs?.['xmlns:flowable'])) {
+    if (!binding) {
       changes.push({ target: this.root(), attributes: { ...this.root().$attrs, [`xmlns:${prefix}`]: uri ?? binding ?? '' } });
     }
     const attrs = { ...bo.$attrs };
@@ -199,42 +202,15 @@ export class BpmnEditor {
     this.update(element, 'documentation', [documentation]);
   }
 
-  async setRetry(element: DiagramElement, body: string): Promise<void> {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    const bo = element.businessObject;
-    const old = bo.get<ModdleElement | undefined>('extensionElements');
-    const values = [...(old?.get<ModdleElement[]>('values') ?? [])].filter(value => !isFlowableExtension(value, 'failedJobRetryTimeCycle'));
-    if (body.trim()) values.push(moddle.createAny('flowable:failedJobRetryTimeCycle', FLOWABLE_URI, { $body: body }));
-    const extension = values.length ? moddle.create('bpmn:ExtensionElements', { values }) : undefined;
-    if (extension) extension.$parent = bo;
-    this.guard.allow(bo, 'extensions');
-    this.update(element, 'extensionElements', extension);
+  setEngineAttribute(element: DiagramElement, namespace: Namespace, name: string, value: string): void {
+    this.setAttribute(element, namespacedKey(element.businessObject, name, namespace), value, namespace.uri);
   }
 
-  addExtension(element: DiagramElement, name: string, attributes: Record<string, string>): void {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    this.replaceExtensionValues(element, [...extensionValues(element.businessObject), moddle.createAny(`flowable:${name}`, FLOWABLE_URI, attributes)]);
-  }
-
-  editExtension(element: DiagramElement, index: number, attributes: Record<string, string>): void {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    this.replaceExtensionValues(element, extensionValues(element.businessObject).map((value, i) => i === index ? cloneExtension(moddle, value, attributes) : value));
-  }
-
-  removeExtension(element: DiagramElement, index: number): void {
-    this.replaceExtensionValues(element, extensionValues(element.businessObject).filter((_value, i) => i !== index));
-  }
-
-  editFieldBody(element: DiagramElement, index: number, kind: string, body: string): void {
-    const moddle = this.modeler.get<Moddle>('moddle');
-    this.replaceExtensionValues(element, extensionValues(element.businessObject).map((value, i) => {
-      if (i !== index) return value;
-      const clone = cloneExtension(moddle, value, {});
-      const children = (clone.$children as ModdleElement[] ?? []).filter(child => !isFlowableExtension(child, 'string') && !isFlowableExtension(child, 'expression'));
-      clone.$children = [...children, moddle.createAny(`flowable:${kind}`, FLOWABLE_URI, { $body: body })];
-      return clone;
-    }));
-  }
+  setRetry(element: DiagramElement, body: string, namespace: Namespace = flowableNamespace): void { this.extensions.retry(element, namespace, body); }
+  addExtension(element: DiagramElement, name: string, attributes: Record<string, string>): void { this.extensions.add(element, flowableNamespace, name, attributes); }
+  editExtension(element: DiagramElement, index: number, attributes: Record<string, string>): void { this.extensions.edit(element, [index], attributes); }
+  removeExtension(element: DiagramElement, index: number): void { this.extensions.remove(element, [index]); }
+  editFieldBody(element: DiagramElement, index: number, kind: string, body: string): void { this.extensions.fieldBody(element, [index], flowableNamespace, kind, body); }
 
   private replaceExtensionValues(element: DiagramElement, values: ModdleElement[]): void {
     const extension = values.length ? this.modeler.get<Moddle>('moddle').create('bpmn:ExtensionElements', { values }) : undefined;
