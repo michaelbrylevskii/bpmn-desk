@@ -17,8 +17,8 @@ describe('FileStore', () => {
   it('сохраняет открытый файл и обновляет ревизию без временных файлов', async () => {
     const store = new FileStore();
     const file = await store.open(path);
-    await store.save('<edited/>', path, file.token);
-    await store.save('<edited-again/>', path, file.token);
+    await store.save('<edited/>', file.path, file.token);
+    await store.save('<edited-again/>', file.path, file.token);
     expect(await readFile(path, 'utf8')).toBe('<edited-again/>');
     expect(await readdir(directory)).toEqual(['process.bpmn']);
   });
@@ -27,7 +27,7 @@ describe('FileStore', () => {
     const store = new FileStore();
     const file = await store.open(path);
     await writeFile(path, '<external/>');
-    await expect(store.save('<edited/>', path, file.token)).rejects.toThrow('изменён другим приложением');
+    await expect(store.save('<edited/>', file.path, file.token)).rejects.toThrow('изменён другим приложением');
     expect(await readFile(path, 'utf8')).toBe('<external/>');
   });
 
@@ -36,13 +36,23 @@ describe('FileStore', () => {
     expect(await readFile(path, 'utf8')).toBe('<original/>');
   });
 
+  it('использует канонический путь capability и не разрешает запись в другой файл', async () => {
+    const store = new FileStore();
+    const file = await store.open(path);
+    expect(store.pathFor(file.token)).toBe(file.path);
+    const other = join(directory, 'other.bpmn');
+    await writeFile(other, '<other/>');
+    await expect(store.save('<edited/>', other, file.token)).rejects.toThrow('Нет разрешения');
+    expect(await readFile(other, 'utf8')).toBe('<other/>');
+  });
+
   it('отклоняет неверный UTF-8 и сохраняет файл с BOM без ложного конфликта', async () => {
     const store = new FileStore();
     await writeFile(path, Buffer.from([0xff, 0xfe, 0x00]));
     await expect(store.open(path)).rejects.toThrow('UTF-8');
     await writeFile(path, '\ufeff<original/>');
     const opened = await store.open(path);
-    await store.save('<edited/>', path, opened.token);
+    await store.save('<edited/>', opened.path, opened.token);
     expect(await readFile(path, 'utf8')).toBe('<edited/>');
   });
 });
