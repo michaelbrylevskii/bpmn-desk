@@ -35,6 +35,10 @@
 
 Повторный [прогон 37989030193](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37989030193) выявил нестабильность firstWindow для packaged executable: на каждой ОС 57 UI/Electron-сценариев прошли, проверка готового приложения не обнаружила окно. Диагностика подтвердила загруженный DOM и существующий CDP target. Тестовый адаптер переведён на публичное подключение CDP после навигации; 20 последовательных локальных запусков AppImage прошли. Подробности: [ADR 0019](adr/0019-packaged-test-connection.md).
 
+После исправления [прогон основной ветки 37991882513](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37991882513) и [релизный прогон 37992511168](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37992511168) успешно выполнили полную матрицу обеих ОС, включая AppImage и готовый Windows EXE. Проверенный коммит: `41d144a`; тег: `v0.3.0`.
+
+[Релиз 0.3.0](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.3.0) опубликован с AppImage, NSIS installer, portable и SHA256SUMS. Состав проверен по GitHub API: ровно три дистрибутива и manifest; суммы всех дистрибутивов и самого manifest совпали с asset.digest, тег указывает на проверенный коммит, версия отмечена latest. Локальная сборка в релиз не загружалась.
+
 ## Границы
 
 Локальный прогон выполнен на Linux; Windows-сценарий пропущен по платформе. Новая версия отдельно проверена нативно на Windows Server 2022 в CI. Эти тесты не запускают installer/portable launcher и не подтверждают ручную установку или ассоциации. Пользовательское подтверждение Windows-инсталлятора относится к 0.2.0. macOS не проверялась. В локальной среде нет FUSE: тест запускает извлечённое содержимое AppImage.
