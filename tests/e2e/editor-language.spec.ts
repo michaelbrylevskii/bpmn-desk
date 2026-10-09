@@ -31,7 +31,7 @@ test('английский по умолчанию, смена языка сох
   await page.keyboard.press('Control+Home');
   await page.keyboard.insertText('<!-- second draft -->\n');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-  const toast = page.getByRole('status');
+  const toast = page.getByRole('alert');
   // XML остаётся черновиком до явного применения/отмены.
   await expect(toast).toContainText('Примени или отмени изменения XML');
   await page.getByRole('combobox', { name: 'Язык', exact: true }).selectOption('en');

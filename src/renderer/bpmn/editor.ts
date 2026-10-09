@@ -69,7 +69,7 @@ export class BpmnEditor {
   async import(xml: string): Promise<void> {
     const checked = await checkImport(xml);
     // Проверка отдельной модели позволяет оставить текущую диаграмму при ошибке XML.
-    if (checked.warnings.length) throw new Error(`Импорт может изменить данные:\n${checked.warnings.join('\n')}`);
+    if (checked.warnings.length) throw new Error(`Импорт XML отклонён: некорректные или неподдерживаемые BPMN-данные.\n${checked.warnings.join('\n')}`);
     const previous = this.baseline ? await this.xml() : undefined;
     this.importing = true;
     try {

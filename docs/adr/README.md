@@ -19,3 +19,4 @@
 - [0015 — Создание схем, экспорт изображений и точный undo](0015-creation-export-and-undo.md)
 - [0016 — Отступы XML-блока расширений](0016-extension-fragment-indentation.md)
 - [0017 — Системная тема и ручной выбор палитры](0017-system-theme.md)
+- [0018 — Ошибки и время жизни уведомлений](0018-notification-errors-and-lifetime.md)

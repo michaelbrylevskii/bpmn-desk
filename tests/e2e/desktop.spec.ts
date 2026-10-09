@@ -148,7 +148,7 @@ test('Electron сохраняет копию и отклоняет внешне�
     await writeFile(path, '<external-edit/>');
     await field.fill('${secondEdit}'); await field.blur();
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-    await expect(page.getByRole('status')).toContainText('изменён другим приложением');
+    await expect(page.getByRole('alert')).toContainText('изменён другим приложением');
     expect(await readFile(path, 'utf8')).toBe('<external-edit/>');
     // Отключаем диалог закрытия только в тестовом main process.
     await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; });

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DiagramExport, OpenedFile } from '../../shared/contracts';
-import { errorMessage } from '../../shared/errors';
+import { errorNotice } from '../notifications/errors';
+import type { ReportNotice, FailureContext } from '../notifications/types';
 import type { DocumentProfile } from '../engines/contracts';
 import type { EditorSnapshot } from '../bpmn/editor';
 import { diagramTemplate } from '../bpmn/template';
@@ -10,7 +11,7 @@ import { bridge } from '../platform/bridge';
 import { clearRecovery, readRecovery, writeRecovery } from './recovery';
 import type { DocumentRecord, EditorRegistry } from './types';
 import { isDirty } from './types';
-export function useDocuments(report: (message: string) => void) {
+export function useDocuments(report: ReportNotice) {
   const { t } = useI18n();
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [activeId, setActiveId] = useState('');
@@ -24,7 +25,7 @@ export function useDocuments(report: (message: string) => void) {
     const dirty = documents.some(isDirty);
     bridge.setDirty(dirty);
     // Предыдущая сессия и новая работа сохраняются одновременно до решения пользователя.
-    try { writeRecovery(documents, recovery); } catch { report('Не удалось сохранить состояние для восстановления. Сохрани BPMN-файлы.'); }
+    try { writeRecovery(documents, recovery); } catch { report({ severity: 'error', message: 'Не удалось сохранить состояние для восстановления. Сохрани BPMN-файлы.' }); }
   }, [documents, recovery, report]);
 
   const add = useCallback((file: OpenedFile, restored?: import('./recovery').RecoveryRecord) => {
@@ -39,7 +40,7 @@ export function useDocuments(report: (message: string) => void) {
   const create = useCallback((profile: DocumentProfile) => add({ token: '', path: '', name: t('Новая схема.bpmn'), xml: diagramTemplate(t, profile) }), [add, t]);
   useEffect(() => {
     const unsubscribe = bridge.onFiles(files => files.forEach(file => add(file)));
-    bridge.initialFiles().then(files => files.forEach(file => add(file))).catch(error => report(errorMessage(error)));
+    bridge.initialFiles().then(files => files.forEach(file => add(file))).catch(error => report(errorNotice(error)));
     return unsubscribe;
   }, [add, report]);
   const open = useCallback(async () => { for (const file of await bridge.openFiles()) add(file); }, [add]);
@@ -82,7 +83,7 @@ export function useDocuments(report: (message: string) => void) {
       const saved = await bridge.saveFile({ token: active.token, name: active.name, content: xml, saveAs });
       if (!saved) return;
       setDocuments(previous => previous.map(document => document.id === active.id ? { ...document, ...saved, token: saved.token || undefined, savedXml: xml } : document));
-      report(`Сохранено: ${saved.name}`);
+      report({ severity: 'success', message: `Сохранено: ${saved.name}` });
     } finally { saving.current = false; }
   }, [active, report]);
 
@@ -111,11 +112,11 @@ export function useDocuments(report: (message: string) => void) {
       // Пишем свежую модель до ack main, не ожидая следующего React effect.
       writeRecovery(records, recovery);
       bridge.closeReady(records.some(isDirty));
-    } catch (error) { report(errorMessage(error)); bridge.closeReady(true); }
+    } catch (error) { report(errorNotice(error)); bridge.closeReady(true); }
   }, [recovery, report]);
 
-  const run = useCallback((operation: () => void | Promise<void>) => {
-    try { Promise.resolve(operation()).catch(error => report(errorMessage(error))); } catch (error) { report(errorMessage(error)); }
+  const run = useCallback((operation: () => void | Promise<void>, failure?: FailureContext) => {
+    try { Promise.resolve(operation()).catch(error => report(errorNotice(error, failure))); } catch (error) { report(errorNotice(error, failure)); }
   }, [report]);
 
   return { documents, active, activeId, setActiveId, editors, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportDiagram, recovery, restore, discardRecovery, prepareClose, run };

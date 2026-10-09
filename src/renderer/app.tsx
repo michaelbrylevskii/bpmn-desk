@@ -1,8 +1,10 @@
 import { undo, redo } from '@codemirror/commands';
 import { EditorView } from '@codemirror/view';
-import { X, Workflow, CircleCheck, Info } from 'lucide-react';
+import { X, Workflow, CircleCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { errorMessage } from '../shared/errors';
+import { errorNotice } from './notifications/errors';
+import type { Notice } from './notifications/types';
+import { NotificationToast } from './ui/notification-toast';
 import type { DocumentProfile } from './engines/contracts';
 import { engineProfiles } from './engines/profiles';
 import { isDirty } from './documents/types';
@@ -15,9 +17,9 @@ import { NewDiagramDialog } from './ui/new-diagram-dialog';
 import { Welcome } from './ui/welcome';
 import { DocumentWorkspace } from './workspace/document-workspace';
 export function App() {
-  const { t, text, setLanguage } = useI18n();
-  const [message, setMessage] = useState('');
-  const report = useCallback((value: string) => setMessage(value), []);
+  const { t, setLanguage } = useI18n();
+  const [notice, setNotice] = useState<Notice & { id: string }>();
+  const report = useCallback((value: Notice) => setNotice({ ...value, id: crypto.randomUUID() }), []);
   const [creating, setCreating] = useState(false);
   const requestNew = useCallback(() => setCreating(true), []);
   const docs = useDocuments(report);
@@ -26,7 +28,7 @@ export function App() {
   const [recent, setRecent] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
 
-  useEffect(() => { void bridge.examples().then(setExamples).catch(error => report(errorMessage(error))); void bridge.recentFiles().then(setRecent).catch(error => report(errorMessage(error))); }, [report, docs.documents.length]);
+  useEffect(() => { void bridge.examples().then(setExamples).catch(error => report(errorNotice(error))); void bridge.recentFiles().then(setRecent).catch(error => report(errorNotice(error))); }, [report, docs.documents.length]);
 
   const onAction = useCallback((action: string) => {
     const editor = docs.editors.current.get(docs.activeId);
@@ -76,7 +78,7 @@ export function App() {
       <Welcome create={requestNew} open={() => docs.run(docs.open)} examples={examples} recent={recent} openExample={name => docs.run(() => docs.openExample(name))}
         openRecent={path => docs.run(() => docs.openRecent(path))} recovery={docs.recovery.length} restore={docs.restore} discardRecovery={docs.discardRecovery} />}</div>
     <footer className="statusbar"><span><CircleCheck size={13} />{docs.active ? t('{count} элементов', { count: docs.active.snapshot?.items.length ?? 0 }) : t("Готово")}</span><span>{docs.active?.snapshot && <span className="engine-badge">{docs.active.snapshot.engines.map(id => engineProfiles[id].title).join(" + ") || "BPMN 2.0"}</span>}{docs.active?.snapshot?.selected?.id ?? 'BPMN 2.0 · Flowable · Camunda 7'}</span><span className="status-spacer" /><span>{docs.active && isDirty(docs.active) ? t("Есть несохранённые изменения") : docs.active && !docs.active.path ? t("Без файла · сохрани копию") : t("Все изменения сохранены")}</span></footer>
-    {message && <div className="toast" role="status"><Info size={18} /><span>{text(message)}</span><button title={t("Закрыть уведомление")} onClick={() => setMessage('')}><X size={16} /></button></div>}
+    {notice && <NotificationToast key={notice.id} notice={notice} close={() => setNotice(undefined)} />}
     {dragging && <div className="drop-overlay"><Workflow size={44} /><h2>{t("Отпусти BPMN-файлы здесь")}</h2><p>{t("Схемы откроются в отдельных вкладках")}</p></div>}
     {creating && <NewDiagramDialog close={() => setCreating(false)} create={(profile: DocumentProfile) => { docs.create(profile); setCreating(false); }} />}
   </div>;

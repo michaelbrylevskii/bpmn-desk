@@ -1,6 +1,7 @@
 import { SlidersHorizontal, Braces } from 'lucide-react';
 import type { BpmnEditor, EditorSnapshot } from '../bpmn/editor';
 import type { ModdleElement } from '../bpmn/types';
+import type { RunOperation } from '../notifications/types';
 import { engineProfiles } from '../engines/profiles';
 import { useI18n } from '../i18n/provider';
 import { EngineProperties } from './engine-properties';
@@ -9,7 +10,7 @@ import { CustomProperties } from './custom-properties';
 import { ExtensionList } from './extension-list';
 import { ExtensionsEditor } from './extensions-editor';
 import { StandardProperties } from './standard-properties';
-export function PropertiesPanel({ editor, snapshot, dark, run }: { editor: BpmnEditor; snapshot: EditorSnapshot; dark: boolean; run: (operation: () => void | Promise<void>) => void }) {
+export function PropertiesPanel({ editor, snapshot, dark, run }: { editor: BpmnEditor; snapshot: EditorSnapshot; dark: boolean; run: RunOperation }) {
   const { t } = useI18n();
   const element = snapshot.selected;
   if (!element) return <aside className="properties"><div className="panel-heading"><SlidersHorizontal size={16} />{t("Свойства")}</div><div className="properties-empty"><SlidersHorizontal size={30} /><h3>{t("Выбери элемент")}</h3><p>{t("Его BPMN и свойства движка появятся здесь.")}</p></div></aside>;

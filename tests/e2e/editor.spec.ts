@@ -104,7 +104,7 @@ test('ошибочный XML не заменяет диаграмму', async ({
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('XML схемы').fill('<broken>');
   await page.getByRole('button', { name: 'Применить XML', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Некорректный XML');
+  await expect(page.getByRole('alert')).toContainText('Не удалось применить XML.');
   await expect(page.locator('.outline-item').filter({ hasText: 'StartEvent_1' })).toBeVisible();
 });
 
