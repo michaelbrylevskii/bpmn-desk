@@ -22,6 +22,20 @@ describe('отступы отдельного XML-фрагмента', () => {
     }
   });
 
+  it('сохраняет неразрывные пробелы между тегами как значимый текст', () => {
+    const source = parseXml('<root><value>\u00a0<child/>\u00a0</value></root>');
+    const result = parseXml(formatXmlFragment(source.documentElement));
+    expect(result.getElementsByTagName('value')[0]!.textContent).toBe('\u00a0\u00a0');
+    expect(canonicalElement(result.documentElement)).toBe(canonicalElement(source.documentElement));
+  });
+
+  it('учитывает унаследованный xml:space и явный сброс default на корне', () => {
+    const source = parseXml('<host xml:space="preserve"><root>\n      <child/>\n    </root><reset xml:space="default">\n      <child/>\n    </reset></host>');
+    const root = source.getElementsByTagName('root')[0]!;
+    expect(formatXmlFragment(root)).toBe(serializeXml(root));
+    expect(formatXmlFragment(source.getElementsByTagName('reset')[0]!)).toBe('<reset xml:space="default">\n  <child/>\n</reset>');
+  });
+
   it('применяет оформленный блок с исходными namespace и значениями расширений', async () => {
     const source = '<b:definitions xmlns:b="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:c="urn:custom" targetNamespace="test"><b:process id="p"><b:serviceTask id="t"><b:extensionElements>\n        <c:outer>\n          <c:value>  user value  </c:value>\n        </c:outer>\n      </b:extensionElements></b:serviceTask></b:process></b:definitions>';
     const fragment = extensionsXml(source, 't');
