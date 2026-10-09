@@ -17,3 +17,4 @@
 - [0013 — Проверки и релизы в GitHub Actions](0013-github-actions-release.md)
 - [0014 — Профили Flowable и Camunda 7](0014-engine-profiles.md)
 - [0015 — Создание схем, экспорт изображений и точный undo](0015-creation-export-and-undo.md)
+- [0016 — Отступы XML-блока расширений](0016-extension-fragment-indentation.md)
