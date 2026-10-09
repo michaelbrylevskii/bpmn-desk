@@ -1,4 +1,4 @@
-import { Workflow, FilePlus2, FolderOpen, Save, Undo2, Redo2, Moon, Sun, CopyPlus, Globe } from 'lucide-react';
+import { Workflow, FilePlus2, FolderOpen, Save, Undo2, Redo2, Moon, Sun, CopyPlus, Globe, ChevronDown } from 'lucide-react';
 import { version } from '../../../package.json';
 import type { Language } from '../../shared/i18n';
 import type { DiagramExport } from '../../shared/contracts';
@@ -17,7 +17,7 @@ export function Toolbar({ hasDocument, canUndo, canRedo, dark, onAction, onLangu
     <button className="icon-button" disabled={!hasDocument} title={t("Сохранить как (Ctrl+Shift+S)")} onClick={() => onAction('save-as')}><CopyPlus size={18} /></button>
     <div className="toolbar-divider" /><button className="icon-button" disabled={!canUndo} title={t("Отменить (Ctrl+Z)")} onClick={() => onAction('undo')}><Undo2 size={18} /></button>
     <button className="icon-button" disabled={!canRedo} title={t("Повторить (Ctrl+Shift+Z)")} onClick={() => onAction('redo')}><Redo2 size={18} /></button>
-    <span className="toolbar-spacer" /><label className="language-picker" title={t('Язык')}><Globe size={16} /><select aria-label={t('Язык')} value={language} onChange={event => onLanguage(event.target.value as Language)}><option value="en">EN</option><option value="ru">RU</option></select></label>
+    <span className="toolbar-spacer" /><label className="language-picker" title={t('Язык')}><Globe size={16} /><select aria-label={t('Язык')} value={language} onChange={event => onLanguage(event.target.value as Language)}><option value="en">EN</option><option value="ru">RU</option></select><ChevronDown className="language-chevron" size={13} /></label>
     <ExportMenu disabled={!hasDocument} exportDiagram={onExport} />
     <button className="icon-button" title={dark ? t("Светлая тема") : t("Тёмная тема")} onClick={() => onAction('theme')}>{dark ? <Sun size={18} /> : <Moon size={18} />}</button>
   </header>;
