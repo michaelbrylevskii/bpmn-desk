@@ -17,6 +17,7 @@ import { configureModdle } from './generic-xml';
 import { configureModelCopy } from './model-copy';
 import { PreservationGuard } from './preservation-guard';
 import { configurePropertyPresence } from './property-presence';
+import { configureLabelPresence } from './label-presence';
 import { createDefinition, requireUnused } from './root-definitions';
 import type { Canvas, CommandStack, EventBus, Modeling, Registry, Selection } from './services';
 import { translationModule } from './translate';
@@ -48,6 +49,7 @@ export class BpmnEditor {
     this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values, target) => this.replaceExtensionValues(element, values, target));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
     configurePropertyPresence(this.modeler.get('eventBus'));
+    configureLabelPresence(this.modeler.get('eventBus'));
     configureModelCopy(this.modeler.get('eventBus'), this.modeler.get<Moddle>('moddle'), engineExtensionIds);
     configureModdle(this.modeler.get<Moddle>('moddle'));
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.attributes', AttributeCommand);

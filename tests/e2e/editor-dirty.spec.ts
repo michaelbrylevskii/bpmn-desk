@@ -20,7 +20,7 @@ for (const scenario of [
       await page.getByLabel('Название', { exact: true }).fill('Changed name');
       await page.getByLabel('Название', { exact: true }).blur();
     } else {
-      await page.locator('.properties details').filter({ has: page.getByRole('button', { name: 'Добавить executionListener', exact: true }) }).locator('summary').click();
+      await page.locator('.properties summary').filter({ hasText: 'executionListener' }).click();
       await page.getByRole('button', { name: 'Добавить executionListener', exact: true }).click();
     }
     await expect(page.locator('.dirty-dot')).toBeVisible();
@@ -38,3 +38,29 @@ for (const scenario of [
     expect(dirty).toBe(0);
   });
 }
+
+test('undo/redo названия сохраняет существующие границы и стиль внешней подписи', async ({ page }) => {
+  const { emptyDiagram } = await import('../../src/renderer/bpmn/template');
+  const xml = emptyDiagram.replace('</bpmndi:BPMNShape>', '<bpmndi:BPMNLabel labelStyle="LabelStyle_1"><dc:Bounds x="210" y="240" width="100" height="24" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>')
+    .replace('</bpmndi:BPMNDiagram>', '<bpmndi:BPMNLabelStyle id="LabelStyle_1"><dc:Font name="Arial" size="12" isBold="true" /></bpmndi:BPMNLabelStyle></bpmndi:BPMNDiagram>');
+  await page.goto('/');
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Открыть', exact: true }).first().click();
+  await (await chooser).setFiles({ name: 'label.bpmn', mimeType: 'application/xml', buffer: Buffer.from(xml) });
+  await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
+  let pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  const before = readFileSync((await (await pending).path())!, 'utf8');
+  await page.getByLabel('Название', { exact: true }).fill('Changed label');
+  await page.getByLabel('Название', { exact: true }).blur();
+  await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
+  await expect(page.locator('.dirty-dot')).toHaveCount(0);
+  await page.getByTitle('Повторить (Ctrl+Shift+Z)', { exact: true }).click();
+  await expect(page.locator('.dirty-dot')).toBeVisible();
+  await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
+  await expect(page.locator('.dirty-dot')).toHaveCount(0);
+  pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  const after = readFileSync((await (await pending).path())!, 'utf8');
+  expect(canonicalElement(requireBpmn(after).documentElement) === canonicalElement(requireBpmn(before).documentElement)).toBe(true);
+});
