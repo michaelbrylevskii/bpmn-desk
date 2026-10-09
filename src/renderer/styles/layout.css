@@ -47,5 +47,10 @@
 .diagram-profile-choice { display: flex; gap: 12px; align-items: center; border: 1px solid var(--border); background: var(--input); border-radius: 8px; padding: 14px; text-align: left; font-size: 14px; }
 .diagram-profile-choice:hover { border-color: var(--accent); background: var(--accent-soft); }
 .diagram-profile-choice svg { color: var(--accent); }.diagram-profile-choice[data-profile="flowable"] svg { color: #72b8a7; }.diagram-profile-choice[data-profile="camunda7"] svg { color: #df9675; }
+.export-menu { position: relative; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 7px; }
+.export-menu .export-primary { border-radius: 6px 0 0 6px; padding: 7px 9px; }.export-toggle { border-left: 1px solid var(--border); border-radius: 0 6px 6px 0; padding: 8px 5px; }
+.export-options { position: absolute; top: calc(100% + 7px); right: 0; z-index: 60; min-width: 240px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; box-shadow: var(--shadow); padding: 5px; }
+.export-options button { display: flex; align-items: center; gap: 7px; width: 100%; padding: 10px 9px; border-radius: 5px; font-size: 12px; text-align: left; white-space: nowrap; }.export-options button:hover, .export-options button:focus-visible { background: var(--accent-soft); }
+.export-check { width: 16px; color: var(--accent); }
 
 @media (max-width: 750px) { .toolbar .button { font-size: 0; gap: 0; }.toolbar .button svg { width: 18px; height: 18px; } }

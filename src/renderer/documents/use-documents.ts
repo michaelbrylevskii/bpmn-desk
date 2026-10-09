@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { OpenedFile } from '../../shared/contracts';
+import type { DiagramExport, OpenedFile } from '../../shared/contracts';
 import { errorMessage } from '../../shared/errors';
 import type { DocumentProfile } from '../engines/contracts';
 import type { EditorSnapshot } from '../bpmn/editor';
 import { diagramTemplate } from '../bpmn/template';
+import { pngFromSvg } from '../bpmn/image-export';
 import { useI18n } from '../i18n/provider';
 import { bridge } from '../platform/bridge';
 import { clearRecovery, readRecovery, writeRecovery } from './recovery';
@@ -85,10 +86,14 @@ export function useDocuments(report: (message: string) => void) {
     } finally { saving.current = false; }
   }, [active, report]);
 
-  const exportSvg = useCallback(async () => {
+  const exportDiagram = useCallback(async (format: DiagramExport) => {
     if (!active) return;
     const editor = editors.current.get(active.id);
-    if (editor) await bridge.saveFile({ name: active.name.replace(/\.(bpmn20\.xml|bpmn|xml)$/i, '') + '.svg', content: await editor.svg(), format: 'svg' });
+    if (!editor) return;
+    const svg = await editor.svg();
+    const name = active.name.replace(/\.(bpmn20\.xml|bpmn|xml)$/i, '');
+    if (format === 'svg') await bridge.saveFile({ name: `${name}.svg`, content: svg, format: 'svg' });
+    else await bridge.saveFile({ name: `${name}.png`, content: await pngFromSvg(svg, format === 'png-white'), format: 'png' });
   }, [active]);
 
   const restore = useCallback(() => {
@@ -113,5 +118,5 @@ export function useDocuments(report: (message: string) => void) {
     try { Promise.resolve(operation()).catch(error => report(errorMessage(error))); } catch (error) { report(errorMessage(error)); }
   }, [report]);
 
-  return { documents, active, activeId, setActiveId, editors, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportSvg, recovery, restore, discardRecovery, prepareClose, run };
+  return { documents, active, activeId, setActiveId, editors, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportDiagram, recovery, restore, discardRecovery, prepareClose, run };
 }

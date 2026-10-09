@@ -40,7 +40,7 @@ export function App() {
       case 'open': docs.run(docs.open); break;
       case 'save': docs.run(() => docs.save()); break;
       case 'save-as': docs.run(() => docs.save(true)); break;
-      case 'export': docs.run(docs.exportSvg); break;
+      case 'export': docs.run(() => docs.exportDiagram('svg')); break;
       case 'undo': editor?.undo(); break;
       case 'redo': editor?.redo(); break;
       case 'fit': editor?.fit(); break;
@@ -66,7 +66,7 @@ export function App() {
   return <div className="app" onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragging(true); } }}
     onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
     onDrop={event => { event.preventDefault(); setDragging(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
-    <Toolbar hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} dark={dark} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} />
+    <Toolbar hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} dark={dark} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} onExport={format => docs.run(() => docs.exportDiagram(format))} />
     {docs.documents.length > 0 && <nav className="document-tabs" aria-label={t("Открытые схемы")}>{docs.documents.map(record => <div key={record.id} className={`document-tab ${docs.activeId === record.id ? 'active' : ''}`}>
       <button title={record.path || record.name} onClick={() => docs.setActiveId(record.id)}><Workflow size={14} /><span>{record.name}</span>{isDirty(record) && <i className="dirty-dot" aria-label={t("Несохранённые изменения")} />}</button>
       <button title={t('Закрыть {name}', { name: record.name })} onClick={() => docs.close(record.id)}><X size={13} /></button>

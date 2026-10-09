@@ -55,4 +55,17 @@ describe('FileStore', () => {
     await store.save('<edited/>', opened.path, opened.token);
     expect(await readFile(path, 'utf8')).toBe('<edited/>');
   });
+
+  it('атомарный бинарный экспорт сохраняет байты и не выдаёт capability документа', async () => {
+    const store = new FileStore();
+    const opened = await store.open(path);
+    const image = join(directory, 'diagram.png');
+    const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 255, 128]);
+    expect((await store.saveExport(bytes, image)).token).toBe('');
+    expect(await readFile(image)).toEqual(Buffer.from(bytes));
+    expect(await readdir(directory)).toEqual(['diagram.png', 'process.bpmn']);
+    expect(() => store.pathFor('')).toThrow('не был открыт');
+    await store.save('<after-export/>', opened.path, opened.token);
+    expect(await readFile(path, 'utf8')).toBe('<after-export/>');
+  });
 });

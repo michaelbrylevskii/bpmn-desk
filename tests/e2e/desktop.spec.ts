@@ -54,6 +54,7 @@ test('native создание выбирает профиль, PNG проход�
   const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
   try {
     const page = await app.firstWindow();
+    await expect(page.getByRole('button', { name: 'Новая схема', exact: true })).toBeVisible();
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-diagram')!.click());
     await page.getByRole('dialog').getByRole('button', { name: 'Camunda 7', exact: true }).click();
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');

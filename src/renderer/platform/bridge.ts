@@ -32,7 +32,7 @@ const browserBridge: DesktopBridge = {
     return xml ? Promise.resolve({ token: '', path: '', name, xml }) : Promise.reject(new Error('Неизвестный пример.'));
   },
   saveFile: request => {
-    const url = URL.createObjectURL(new Blob([request.content], { type: request.format === 'svg' ? 'image/svg+xml' : 'application/xml' }));
+    const url = URL.createObjectURL(new Blob([request.format === 'png' ? new Uint8Array(request.content).buffer : request.content], { type: request.format === 'png' ? 'image/png' : request.format === 'svg' ? 'image/svg+xml' : 'application/xml' }));
     const link = document.createElement('a'); link.href = url; link.download = request.name; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     return Promise.resolve({ token: '', path: '', name: request.name });
