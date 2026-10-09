@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 BPMN Desk contributors. SPDX-License-Identifier: MIT -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:flowable="http://flowable.org/bpmn" xmlns:demo="urn:bpmn-desk:example" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="urn:bpmn-desk:examples">
+  <process id="documentReview" name="Document review" isExecutable="true" flowable:initiator="requester">
+    <startEvent id="reviewStart" name="Document received" />
+    <sequenceFlow id="receivedFlow" sourceRef="reviewStart" targetRef="prepareDocument" />
+    <serviceTask id="prepareDocument" name="Prepare document" flowable:async="true" flowable:exclusive="false" flowable:delegateExpression="${prepareDocumentDelegate}" demo:state="ready">
+      <extensionElements>
+        <flowable:failedJobRetryTimeCycle>R3/PT1M</flowable:failedJobRetryTimeCycle>
+        <flowable:executionListener event="start" delegateExpression="${auditListener}" />
+        <flowable:field name="category"><flowable:string>general</flowable:string></flowable:field>
+        <demo:metadata demo:version="1"><demo:labels><demo:label>sample</demo:label></demo:labels></demo:metadata>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="preparedFlow" sourceRef="prepareDocument" targetRef="approvalSubProcess" />
+    <subProcess id="approvalSubProcess" name="Review and approve">
+      <startEvent id="approvalStart" />
+      <sequenceFlow id="checkFlow" sourceRef="approvalStart" targetRef="reviewDocument" />
+      <serviceTask id="reviewDocument" name="Check document" flowable:delegateExpression="${reviewDocumentDelegate}" />
+      <sequenceFlow id="approvalFlow" sourceRef="reviewDocument" targetRef="approveDocument" />
+      <userTask id="approveDocument" name="Approve document" flowable:candidateGroups="reviewers">
+        <extensionElements>
+          <flowable:taskListener event="complete" delegateExpression="${approvalListener}" />
+          <flowable:formProperty id="comment" name="Review comment" type="string" required="false" />
+        </extensionElements>
+      </userTask>
+      <sequenceFlow id="approvedFlow" sourceRef="approveDocument" targetRef="approvalEnd" />
+      <endEvent id="approvalEnd" />
+    </subProcess>
+    <sequenceFlow id="completedFlow" sourceRef="approvalSubProcess" targetRef="reviewEnd" />
+    <endEvent id="reviewEnd" name="Review completed" demo:outcome="completed" />
+  </process>
+  <bpmndi:BPMNDiagram id="documentReviewDiagram"><bpmndi:BPMNPlane id="documentReviewPlane" bpmnElement="documentReview">
+    <bpmndi:BPMNShape id="reviewStartDI" bpmnElement="reviewStart"><dc:Bounds x="60" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="prepareDocumentDI" bpmnElement="prepareDocument"><dc:Bounds x="150" y="220" width="150" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="approvalSubProcessDI" bpmnElement="approvalSubProcess"><dc:Bounds x="350" y="160" width="550" height="220" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="approvalStartDI" bpmnElement="approvalStart"><dc:Bounds x="380" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="reviewDocumentDI" bpmnElement="reviewDocument"><dc:Bounds x="460" y="220" width="150" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="approveDocumentDI" bpmnElement="approveDocument"><dc:Bounds x="660" y="220" width="150" height="80" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="approvalEndDI" bpmnElement="approvalEnd"><dc:Bounds x="840" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="reviewEndDI" bpmnElement="reviewEnd"><dc:Bounds x="960" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNEdge id="receivedFlowDI" bpmnElement="receivedFlow"><di:waypoint x="96" y="260" /><di:waypoint x="150" y="260" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="preparedFlowDI" bpmnElement="preparedFlow"><di:waypoint x="300" y="260" /><di:waypoint x="350" y="260" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="checkFlowDI" bpmnElement="checkFlow"><di:waypoint x="416" y="260" /><di:waypoint x="460" y="260" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="approvalFlowDI" bpmnElement="approvalFlow"><di:waypoint x="610" y="260" /><di:waypoint x="660" y="260" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="approvedFlowDI" bpmnElement="approvedFlow"><di:waypoint x="810" y="260" /><di:waypoint x="840" y="260" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="completedFlowDI" bpmnElement="completedFlow"><di:waypoint x="900" y="260" /><di:waypoint x="960" y="260" /></bpmndi:BPMNEdge>
+  </bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
+</definitions>

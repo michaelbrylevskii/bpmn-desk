@@ -1,0 +1,58 @@
+appId: org.bpmndesk.app
+productName: BPMN Desk
+directories:
+  output: release
+files:
+  - out/**/*
+  - package.json
+  - LICENSE
+  - THIRD_PARTY_NOTICES.md
+extraResources:
+  - from: examples
+    to: examples
+    filter:
+      - '*.bpmn20.xml'
+      - provenance.json
+  - from: build/icon.png
+    to: icon.png
+  - from: licenses
+    to: licenses
+asar: true
+electronDownload:
+  cache: .cache/electron
+toolsets:
+  nsis: 1.2.1
+fileAssociations:
+  - ext: bpmn
+    name: BPMN diagram
+    mimeType: application/x-bpmn+xml
+    role: Editor
+linux:
+  target: AppImage
+  category: Development
+  icon: build/icon.png
+  syncDesktopName: true
+  desktop:
+    entry:
+      MimeType: application/x-bpmn+xml;
+  artifactName: BPMN-Desk-${version}-${arch}.AppImage
+win:
+  target:
+    - target: nsis
+      arch: x64
+    - target: portable
+      arch: x64
+  icon: build/icon.png
+nsis:
+  artifactName: BPMN-Desk-${version}-${arch}-Setup.exe
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  allowElevation: false
+  installerLanguages:
+    - en_US
+    - ru_RU
+  displayLanguageSelector: true
+portable:
+  artifactName: BPMN-Desk-${version}-${arch}-Portable.exe
+  requestExecutionLevel: user

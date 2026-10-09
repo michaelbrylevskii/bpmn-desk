@@ -1,0 +1,27 @@
+/* Поиск и замена: общий размер текста/контролов, отдельная скрываемая строка замены. */
+.code-editor .cm-panels {
+  background: var(--surface); color: var(--text); border-color: var(--border);
+}
+.code-editor .cm-search.xml-search-panel { padding: 7px 10px; font: inherit; }
+.xml-search-row { display: flex; align-items: center; gap: 5px; min-height: 30px; }
+.xml-search-row[hidden] { display: none; }
+.xml-replace-row { margin-top: 6px; }
+.code-editor .xml-search-input {
+  flex: 1; min-width: 90px; max-width: 360px; height: 30px;
+  padding: 5px 9px; border-radius: 5px; font-size: 12px; line-height: 18px;
+}
+.code-editor .xml-search-input[aria-invalid="true"] { border-color: #d97676; }
+.code-editor .xml-search-icon, .code-editor .xml-search-action {
+  display: inline-flex; align-items: center; justify-content: center; height: 30px;
+  border: 1px solid transparent; border-radius: 5px; color: var(--muted); background: transparent;
+  padding: 0 7px; font-size: 12px; line-height: 18px; white-space: nowrap; flex-shrink: 0;
+}
+.code-editor .xml-search-icon { width: 30px; padding: 0; font-size: 17px; }
+.code-editor .xml-search-flag { font-family: monospace; font-size: 12px; }
+.code-editor .whole-word { text-decoration: underline; text-underline-offset: 3px; }
+.code-editor .xml-search-icon:hover, .code-editor .xml-search-action:hover { background: var(--surface-raised); color: var(--text); }
+.code-editor .xml-search-icon[aria-pressed="true"], .code-editor .xml-search-icon[aria-expanded="true"] {
+  color: var(--accent); background: var(--accent-soft); border-color: var(--border);
+}
+.xml-search-count { min-width: 34px; color: var(--muted); font-size: 12px; text-align: center; white-space: nowrap; }
+@media (max-width: 1000px) { .xml-search-row { flex-wrap: wrap; }.code-editor .xml-search-input { max-width: none; }.xml-replace-row .xml-search-input { flex-basis: 100%; } }

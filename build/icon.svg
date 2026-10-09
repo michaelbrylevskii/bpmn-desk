@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Workflow: Lucide Icons and Contributors, ISC; полный текст: licenses/lucide-ISC.txt. -->
+  <rect x="22" y="22" width="468" height="468" rx="124" fill="#263759" stroke="#5f7cbb" stroke-width="12"/>
+  <g transform="translate(88 88) scale(14)" fill="none" stroke="#a1baff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="8" height="8" x="3" y="3" rx="2"/>
+    <path d="M7 11v4a2 2 0 0 0 2 2h4"/>
+    <rect width="8" height="8" x="13" y="13" rx="2"/>
+  </g>
+</svg>

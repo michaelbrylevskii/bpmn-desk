@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 BPMN Desk contributors. SPDX-License-Identifier: MIT -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:flowable="http://flowable.org/bpmn" xmlns:demo="urn:bpmn-desk:example" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="urn:bpmn-desk:examples">
+  <error id="ReviewFailure" name="Review failed" errorCode="REVIEW_FAILED" />
+  <process id="reviewWithFallback" name="Boundary event placement" isExecutable="true">
+    <startEvent id="requestStart" name="Request" />
+    <sequenceFlow id="requestFlow" sourceRef="requestStart" targetRef="reviewCall" />
+    <callActivity id="reviewCall" name="Review document" calledElement="documentReview" flowable:inheritVariables="true">
+      <extensionElements><flowable:in source="documentId" target="documentId" /></extensionElements>
+    </callActivity>
+    <sequenceFlow id="successFlow" sourceRef="reviewCall" targetRef="requestEnd" />
+    <endEvent id="requestEnd" name="Completed" />
+    <boundaryEvent id="reviewTimeout" name="Review timeout" attachedToRef="reviewCall" cancelActivity="false">
+      <timerEventDefinition><timeDuration>PT30M</timeDuration></timerEventDefinition>
+    </boundaryEvent>
+    <boundaryEvent id="reviewErrorBoundary" name="Review error" attachedToRef="reviewCall">
+      <errorEventDefinition errorRef="ReviewFailure" />
+    </boundaryEvent>
+    <sequenceFlow id="timeoutFlow" sourceRef="reviewTimeout" targetRef="fallbackEnd" />
+    <sequenceFlow id="errorFlow" sourceRef="reviewErrorBoundary" targetRef="fallbackEnd" />
+    <endEvent id="fallbackEnd" name="Needs attention" />
+  </process>
+  <bpmndi:BPMNDiagram id="reviewWithFallbackDiagram"><bpmndi:BPMNPlane id="reviewWithFallbackPlane" bpmnElement="reviewWithFallback">
+    <bpmndi:BPMNShape id="requestStartDI" bpmnElement="requestStart"><dc:Bounds x="100" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="reviewCallDI" bpmnElement="reviewCall"><dc:Bounds x="260" y="200" width="180" height="100" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="requestEndDI" bpmnElement="requestEnd"><dc:Bounds x="580" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="reviewTimeoutDI" bpmnElement="reviewTimeout"><dc:Bounds x="324" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="reviewErrorBoundaryDI" bpmnElement="reviewErrorBoundary"><dc:Bounds x="352" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="fallbackEndDI" bpmnElement="fallbackEnd"><dc:Bounds x="580" y="392" width="36" height="36" /></bpmndi:BPMNShape>
+    <bpmndi:BPMNEdge id="requestFlowDI" bpmnElement="requestFlow"><di:waypoint x="136" y="250" /><di:waypoint x="260" y="250" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="successFlowDI" bpmnElement="successFlow"><di:waypoint x="440" y="250" /><di:waypoint x="580" y="250" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="timeoutFlowDI" bpmnElement="timeoutFlow"><di:waypoint x="342" y="318" /><di:waypoint x="342" y="410" /><di:waypoint x="580" y="410" /></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="errorFlowDI" bpmnElement="errorFlow"><di:waypoint x="370" y="318" /><di:waypoint x="370" y="380" /><di:waypoint x="598" y="380" /><di:waypoint x="598" y="392" /></bpmndi:BPMNEdge>
+  </bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
+</definitions>

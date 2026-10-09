@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+release/
+coverage/
+test-results/
+playwright-report/
+.cache/
+.local-schemas/
+*.log
+tools/flowable-validation/target/
+SingletonCookie
+SingletonLock
+SingletonSocket

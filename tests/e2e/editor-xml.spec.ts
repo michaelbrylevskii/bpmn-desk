@@ -1,0 +1,61 @@
+import { test, expect } from './russian-fixture';
+
+test('XML поиск и переход к выбранному элементу сохраняют текст и историю', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'boundary-events', exact: true }).click();
+  await page.getByRole('button', { name: 'XML', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Найти элемент' }).fill('Review document');
+  await page.locator('.outline-item').filter({ hasText: 'reviewCall' }).click();
+  await expect(page.locator('.xml-panel .xml-location')).toContainText('reviewCall');
+  await expect(page.locator('.xml-element-tag').first()).toContainText('id="reviewCall"');
+  await expect(page.locator('.xml-element-tag').last()).toContainText(/<\/(?:bpmn:)?callActivity>/);
+  await expect(page.locator('.xml-element-tag').first()).toBeInViewport();
+  // Переход при непосредственном клике на диаграмме.
+  await page.locator('[data-element-id="reviewErrorBoundary"] .djs-hit').click();
+  await expect(page.locator('.xml-panel .xml-location')).toContainText('reviewErrorBoundary');
+  await expect(page.locator('.xml-element-tag').first()).toContainText('id="reviewErrorBoundary"');
+  await page.locator('.xml-panel').getByTitle('Поиск в XML (Ctrl+F)').click();
+  const search = page.locator('.xml-panel .cm-search input[name="search"]');
+  await search.press('Escape');
+  await page.getByLabel('XML схемы').focus();
+  await page.keyboard.press('Control+f');
+  await expect(search).toBeFocused();
+  await search.fill('documentReview');
+  await search.press('Enter');
+  await expect(page.locator('.cm-searchMatch')).not.toHaveCount(0);
+  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await page.getByLabel('XML схемы').click();
+  await page.keyboard.press('Control+Home');
+  await page.keyboard.insertText('<!-- XML заметка -->\n');
+  await page.getByTitle('Светлая тема', { exact: true }).click();
+  await expect(search).toHaveValue('documentReview');
+  await page.getByLabel('XML схемы').focus();
+  await page.keyboard.press('Control+z');
+  await expect(page.getByLabel('XML схемы')).not.toContainText('XML заметка');
+});
+
+test('компактный поиск выровнен, считает совпадения и поддерживает замену', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'XML', exact: true }).click();
+  await page.getByLabel('XML схемы').focus();
+  await page.keyboard.press('Control+f');
+  const panel = page.locator('.xml-panel .xml-search-panel');
+  const search = panel.getByRole('textbox', { name: 'Найти', exact: true });
+  await expect(panel.locator('.xml-replace-row')).toBeHidden();
+  await search.fill('Process_1');
+  await search.press('Enter');
+  await expect(panel.locator('.xml-search-count')).toHaveText('1/2');
+  const inputBox = await search.boundingBox();
+  const buttonBox = await panel.getByRole('button', { name: 'Следующее совпадение', exact: true }).boundingBox();
+  expect(Math.abs(inputBox!.height - buttonBox!.height)).toBeLessThan(1);
+  expect(Math.abs(inputBox!.y - buttonBox!.y)).toBeLessThan(1);
+  expect(await search.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(12);
+  await panel.getByRole('button', { name: 'Показать замену', exact: true }).click();
+  await panel.getByRole('textbox', { name: 'Заменить', exact: true }).fill('Process_2');
+  await panel.getByRole('button', { name: 'Заменить все', exact: true }).click();
+  await expect(page.getByLabel('XML схемы')).toContainText('Process_2');
+  await page.getByLabel('XML схемы').focus();
+  await page.keyboard.press('Control+z');
+  await expect(page.getByLabel('XML схемы')).not.toContainText('Process_2');
+});

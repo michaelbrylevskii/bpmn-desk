@@ -1,0 +1,43 @@
+.app { height: 100%; display: flex; flex-direction: column; }
+.toolbar { height: 62px; flex-shrink: 0; display: flex; align-items: center; gap: 5px; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: 14px; }
+.brand-icon { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #5f7cbb; border-radius: 9px; color: #a1baff; background: #263759; }
+.brand strong { font-size: 17px; letter-spacing: -.5px; }.brand strong span { font-weight: 400; margin-left: 4px; color: var(--muted); }
+.version { align-self: flex-start; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; font-size: 9px; padding: 2px 4px; margin-top: 4px; }
+.toolbar-divider { height: 23px; border-left: 1px solid var(--border); margin: 0 8px; }
+.toolbar-spacer, .status-spacer, .bottom-spacer { flex: 1; }
+.offline { color: var(--muted); display: flex; align-items: center; gap: 6px; font-size: 11px; margin-right: 12px; }.offline i { width: 5px; height: 5px; background: var(--green); border-radius: 50%; }
+.document-tabs { height: 40px; display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg); flex-shrink: 0; }
+.document-tab { display: flex; border-right: 1px solid var(--border); min-width: 150px; max-width: 330px; color: var(--muted); position: relative; }
+.document-tab.active { background: var(--surface); color: var(--text); }.document-tab.active::before { position: absolute; content: ""; height: 2px; background: var(--accent); top: 0; left: 0; right: 0; }
+.document-tab button:first-child { display: flex; gap: 9px; align-items: center; min-width: 0; padding: 0 12px; flex: 1; font-size: 11px; }
+.document-tab button:first-child span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.document-tab button:last-child { padding: 0 10px; opacity: .6; }.document-tab button:hover { color: var(--accent); }
+.new-tab { font-size: 20px; padding: 0 15px; color: var(--muted); }
+.workspaces { flex: 1; min-height: 0; position: relative; }
+.document-workspace { height: 100%; min-height: 0; }
+.statusbar { height: 28px; flex-shrink: 0; border-top: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 10px; display: flex; align-items: center; padding: 0 15px; gap: 24px; }
+.statusbar span { display: flex; align-items: center; gap: 6px; }.statusbar svg { color: var(--green); }
+.welcome { height: 100%; overflow-y: auto; background: radial-gradient(ellipse at 65% 20%, #7199ff0b, transparent 60%), var(--bg); }
+.welcome-inner { max-width: 900px; margin: auto; padding: 54px 36px 30px; }
+.welcome-icon { display: inline-flex; padding: 15px; background: var(--accent-soft); border: 1px solid var(--border); border-radius: 17px; color: var(--accent); margin-bottom: 25px; box-shadow: var(--shadow); }
+.eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 1px; margin-bottom: 17px; font-weight: 600; }
+.welcome h1 { font-size: clamp(30px, 3vw, 42px); line-height: 1.12; font-weight: 650; letter-spacing: -1px; margin-bottom: 20px; }.welcome h1 span { color: var(--muted); font-weight: 450; }
+.welcome-description { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 26px; }
+.welcome-actions { display: flex; gap: 12px; margin-bottom: 36px; }.welcome-actions .button { padding: 12px 18px; }
+.welcome-columns { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; border-top: 1px solid var(--border); padding-top: 25px; }
+.welcome-columns h3 { font-size: 13px; font-weight: 550; margin-bottom: 8px; }
+.welcome-file { width: 100%; padding: 10px 8px; display: flex; align-items: center; gap: 10px; border-radius: 6px; color: var(--muted); font-size: 12px; text-align: left; }
+.welcome-file span { flex: 1; min-width: 0; text-overflow: ellipsis; overflow: hidden; }.welcome-file:hover { color: var(--accent); background: var(--accent-soft); }
+.local-note { margin-top: 30px; color: var(--muted); display: flex; align-items: center; gap: 7px; font-size: 10px; opacity: .7; }
+.recovery-banner { display: flex; align-items: center; gap: 18px; justify-content: space-between; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft); padding: 14px; margin-bottom: 24px; font-size: 12px; }.recovery-banner div { display: flex; gap: 8px; }
+.pending-recovery { display: flex; align-items: center; gap: 10px; background: var(--accent-soft); padding: 6px 16px; font-size: 11px; border-bottom: 1px solid var(--border); }.pending-recovery span { margin-right: auto; }
+.toast { position: fixed; bottom: 43px; left: 50%; transform: translateX(-50%); max-width: min(800px, 90vw); display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 100; font-size: 12px; }
+.toast svg { flex-shrink: 0; color: var(--accent); }.toast span { white-space: pre-wrap; max-height: 180px; overflow: auto; }.toast button { display: flex; padding: 0; }
+.drop-overlay { position: absolute; inset: 12px; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--bg) 94%, transparent); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--accent); pointer-events: none; }.drop-overlay h2 { margin: 22px 0 8px; }
+
+@media (max-width: 900px) { .brand { margin-right: 3px; }.brand strong, .version { display: none; }.toolbar-divider { margin: 0 3px; }.toolbar .button { font-size: 11px; gap: 4px; padding: 8px; }.canvas-heading { gap: 5px; }.canvas-heading > span:first-child { min-width: 0; overflow: hidden; white-space: nowrap; }.statusbar { gap: 8px; }.statusbar > span:nth-child(2) { max-width: 120px; overflow: hidden; white-space: nowrap; } }
+
+.language-picker { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; color: var(--muted); }.language-picker select { width: 55px; padding: 5px 3px; border: 0; background: transparent; font-size: 11px; }
+
+@media (max-width: 750px) { .toolbar .button { font-size: 0; gap: 0; }.toolbar .button svg { width: 18px; height: 18px; } }
