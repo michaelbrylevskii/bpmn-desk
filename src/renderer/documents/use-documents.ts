@@ -9,7 +9,7 @@ import { bridge } from '../platform/bridge';
 import { clearRecovery, readRecovery, writeRecovery } from './recovery';
 import type { DocumentRecord, EditorRegistry } from './types';
 import { isDirty } from './types';
-export function useDocuments(report: (message: string) => void, newProfile: DocumentProfile = 'flowable') {
+export function useDocuments(report: (message: string) => void) {
   const { t } = useI18n();
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [activeId, setActiveId] = useState('');
@@ -35,7 +35,7 @@ export function useDocuments(report: (message: string) => void, newProfile: Docu
     setDocuments(previous => [...previous, record]); setActiveId(id);
   }, []);
 
-  const create = useCallback(() => add({ token: '', path: '', name: t('Новая схема.bpmn'), xml: diagramTemplate(t, newProfile) }), [add, t, newProfile]);
+  const create = useCallback((profile: DocumentProfile) => add({ token: '', path: '', name: t('Новая схема.bpmn'), xml: diagramTemplate(t, profile) }), [add, t]);
   useEffect(() => {
     const unsubscribe = bridge.onFiles(files => files.forEach(file => add(file)));
     bridge.initialFiles().then(files => files.forEach(file => add(file))).catch(error => report(errorMessage(error)));

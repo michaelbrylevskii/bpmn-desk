@@ -1,4 +1,5 @@
 export const engineMessages = {
+  'Выбери профиль схемы.': 'Choose the diagram profile.',
   'Профиль новой схемы': 'New diagram profile',
   'Свойства BPMN, Flowable и Camunda 7 доступны в редакторе.': 'Edit BPMN, Flowable and Camunda 7 properties.',
   'Примеры BPMN, Flowable и Camunda 7': 'BPMN, Flowable and Camunda 7 examples',

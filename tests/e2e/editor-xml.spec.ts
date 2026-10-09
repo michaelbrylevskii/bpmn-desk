@@ -37,6 +37,7 @@ test('XML поиск и переход к выбранному элементу 
 test('компактный поиск выровнен, считает совпадения и поддерживает замену', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('XML схемы').focus();
   await page.keyboard.press('Control+f');
