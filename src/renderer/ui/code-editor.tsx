@@ -1,7 +1,7 @@
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { xml } from '@codemirror/lang-xml';
 import { defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
-import { search, searchKeymap, openSearchPanel } from '@codemirror/search';
+import { search, searchKeymap, openSearchPanel, closeSearchPanel, searchPanelOpen } from '@codemirror/search';
 import { Annotation, Compartment, EditorState } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorView, lineNumbers, keymap, highlightActiveLine, drawSelection } from '@codemirror/view';
@@ -26,6 +26,7 @@ export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML с�
   const theme = useRef(new Compartment());
   const initialDark = useRef(dark);
   const [selected, setSelected] = useState<{ id?: string; line?: number }>({});
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = selected.id ? selected.line ? t('{id} · строка {line}', { id: selected.id, line: selected.line }) : t('{id} · не найден в XML', { id: selected.id }) : '';
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML с�
       search({ top: true, createPanel: view => new XmlSearchPanel(view) }), xmlSelection, theme.current.of(initialDark.current ? oneDark : []),
       locale.current.of([EditorState.phrases.of(searchPhrases(initialLocale.current.language)), EditorView.contentAttributes.of({ 'aria-label': initialLocale.current.label })]),
       EditorView.updateListener.of(update => {
+        setSearchOpen(searchPanelOpen(update.state));
         if (update.docChanged && !update.transactions.some(transaction => transaction.annotation(externalUpdate))) callback.current(update.state.doc.toString());
         const selection = update.state.field(xmlSelection);
         setSelected({ id: selection.id, line: selection.range ? update.state.doc.lineAt(selection.range.from).number : undefined });
@@ -63,7 +65,12 @@ export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML с�
   }, [selectedId]);
 
   return <div className="code-editor-shell"><div className="code-editor-tools">
-    <button className="button small ghost" title={t('Поиск в XML (Ctrl+F)')} onClick={() => { if (editor.current) openSearchPanel(editor.current); }}><Search size={13} />{t('Поиск')}</button>
+    <button className="button small ghost" title={t('Поиск в XML (Ctrl+F)')} aria-pressed={searchOpen} onClick={() => {
+      const view = editor.current;
+      if (!view) return;
+      if (searchPanelOpen(view.state)) { closeSearchPanel(view); view.focus(); }
+      else openSearchPanel(view);
+    }}><Search size={13} />{t('Поиск')}</button>
     <span className="xml-location" title={location}>{location}</span>
     {selectedId && <button className="icon-button" title={t('Перейти к XML выбранного элемента')} onClick={() => {
       const view = editor.current; const range = view?.state.field(xmlSelection).range;

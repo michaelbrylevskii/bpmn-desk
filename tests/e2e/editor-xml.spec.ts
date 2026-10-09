@@ -60,3 +60,26 @@ test('компактный поиск выровнен, считает совп�
   await page.keyboard.press('Control+z');
   await expect(page.getByLabel('XML схемы')).not.toContainText('Process_2');
 });
+
+test('кнопка поиска переключает панель и сохраняет запрос, Ctrl+F и Escape обновляют её состояние', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await page.getByRole('button', { name: 'XML', exact: true }).click();
+  const toggle = page.locator('.xml-panel').getByTitle('Поиск в XML (Ctrl+F)', { exact: true });
+  const search = page.locator('.xml-panel .cm-search input[name="search"]');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await toggle.click();
+  await search.fill('prepareDocument');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await toggle.click();
+  await expect(search).toHaveCount(0);
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await toggle.click();
+  await expect(search).toHaveValue('prepareDocument');
+  await search.press('Escape');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await page.getByLabel('XML схемы').focus();
+  await page.keyboard.press('Control+f');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.dirty-dot')).toHaveCount(0);
+});
