@@ -1,12 +1,15 @@
-import { Workflow, FilePlus2, FolderOpen, Save, Undo2, Redo2, Moon, Sun, CopyPlus, Globe, ChevronDown } from 'lucide-react';
+import { Workflow, FilePlus2, FolderOpen, Save, Undo2, Redo2, CopyPlus, Globe, ChevronDown } from 'lucide-react';
 import { version } from '../../../package.json';
 import type { Language } from '../../shared/i18n';
 import type { DiagramExport } from '../../shared/contracts';
 import { useI18n } from '../i18n/provider';
 import { ExportMenu } from './export-menu';
-export function Toolbar({ hasDocument, canUndo, canRedo, dark, onAction, onLanguage, onExport }: {
+import { ThemePicker } from './theme-picker';
+import type { ThemeMode } from './use-theme';
+export function Toolbar({ hasDocument, canUndo, canRedo, theme, onTheme, onAction, onLanguage, onExport }: {
   onExport: (format: DiagramExport) => void;
-  hasDocument: boolean; canUndo: boolean; canRedo: boolean; dark: boolean; onAction: (name: string) => void; onLanguage: (language: Language) => void;
+  theme: ThemeMode; onTheme: (mode: ThemeMode) => void;
+  hasDocument: boolean; canUndo: boolean; canRedo: boolean; onAction: (name: string) => void; onLanguage: (language: Language) => void;
 }) {
   const { t, language } = useI18n();
   return <header className="toolbar"><div className="brand"><div className="brand-icon"><Workflow size={21} /></div><strong>BPMN<span>Desk</span></strong><span className="version">{version}</span></div>
@@ -19,6 +22,6 @@ export function Toolbar({ hasDocument, canUndo, canRedo, dark, onAction, onLangu
     <button className="icon-button" disabled={!canRedo} title={t("Повторить (Ctrl+Shift+Z)")} onClick={() => onAction('redo')}><Redo2 size={18} /></button>
     <span className="toolbar-spacer" /><label className="language-picker" title={t('Язык')}><Globe size={16} /><select aria-label={t('Язык')} value={language} onChange={event => onLanguage(event.target.value as Language)}><option value="en">EN</option><option value="ru">RU</option></select><ChevronDown className="language-chevron" size={13} /></label>
     <ExportMenu disabled={!hasDocument} exportDiagram={onExport} />
-    <button className="icon-button" title={dark ? t("Светлая тема") : t("Тёмная тема")} onClick={() => onAction('theme')}>{dark ? <Sun size={18} /> : <Moon size={18} />}</button>
+    <ThemePicker mode={theme} change={onTheme} />
   </header>;
 }

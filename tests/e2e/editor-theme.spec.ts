@@ -1,6 +1,9 @@
 import { test, expect } from './russian-fixture';
 import { readFileSync } from 'node:fs';
 
+// Эти сценарии проверяют тёмную палитру явно; настройка нового профиля — auto.
+test.beforeEach(async ({ page }) => { await page.emulateMedia({ colorScheme: 'dark' }); });
+
 test('фокус холста использует акцент приложения в обеих темах', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();

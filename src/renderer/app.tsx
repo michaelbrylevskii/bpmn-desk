@@ -10,6 +10,7 @@ import { useDocuments } from './documents/use-documents';
 import { useI18n } from './i18n/provider';
 import { bridge } from './platform/bridge';
 import { Toolbar } from './ui/toolbar';
+import { useTheme } from './ui/use-theme';
 import { NewDiagramDialog } from './ui/new-diagram-dialog';
 import { Welcome } from './ui/welcome';
 import { DocumentWorkspace } from './workspace/document-workspace';
@@ -20,12 +21,11 @@ export function App() {
   const [creating, setCreating] = useState(false);
   const requestNew = useCallback(() => setCreating(true), []);
   const docs = useDocuments(report);
-  const [dark, setDark] = useState(() => localStorage.getItem('bpmn-desk:theme') !== 'light');
+  const { mode: theme, dark, setMode: setTheme } = useTheme();
   const [examples, setExamples] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
 
-  useEffect(() => { document.documentElement.dataset.theme = dark ? 'dark' : 'light'; localStorage.setItem('bpmn-desk:theme', dark ? 'dark' : 'light'); }, [dark]);
   useEffect(() => { void bridge.examples().then(setExamples).catch(error => report(errorMessage(error))); void bridge.recentFiles().then(setRecent).catch(error => report(errorMessage(error))); }, [report, docs.documents.length]);
 
   const onAction = useCallback((action: string) => {
@@ -44,7 +44,6 @@ export function App() {
       case 'undo': editor?.undo(); break;
       case 'redo': editor?.redo(); break;
       case 'fit': editor?.fit(); break;
-      case 'theme': setDark(value => !value); break;
       case 'prepare-close': docs.run(docs.prepareClose); break;
     }
   }, [docs, requestNew]);
@@ -66,7 +65,7 @@ export function App() {
   return <div className="app" onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragging(true); } }}
     onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
     onDrop={event => { event.preventDefault(); setDragging(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
-    <Toolbar hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} dark={dark} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} onExport={format => docs.run(() => docs.exportDiagram(format))} />
+    <Toolbar hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} theme={theme} onTheme={setTheme} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} onExport={format => docs.run(() => docs.exportDiagram(format))} />
     {docs.documents.length > 0 && <nav className="document-tabs" aria-label={t("Открытые схемы")}>{docs.documents.map(record => <div key={record.id} className={`document-tab ${docs.activeId === record.id ? 'active' : ''}`}>
       <button title={record.path || record.name} onClick={() => docs.setActiveId(record.id)}><Workflow size={14} /><span>{record.name}</span>{isDirty(record) && <i className="dirty-dot" aria-label={t("Несохранённые изменения")} />}</button>
       <button title={t('Закрыть {name}', { name: record.name })} onClick={() => docs.close(record.id)}><X size={13} /></button>

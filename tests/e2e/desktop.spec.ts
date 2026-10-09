@@ -25,6 +25,37 @@ test('Electron запускает packaged renderer, preload и встроенн
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
+test('nativeTheme переключает системную палитру; ручной режим переживает перезапуск', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-theme-'));
+  const env = { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(directory), ELECTRON_RENDERER_URL: '' };
+  const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
+  try {
+    const page = await app.firstWindow();
+    await expect(page.getByRole('button', { name: 'Системная тема', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    // Playwright по умолчанию эмулирует light; здесь проверяется тема самого Electron.
+    await page.emulateMedia({ colorScheme: null });
+    await app.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'dark'; });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await app.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'light'; });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await page.getByRole('button', { name: 'Тёмная тема', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(await page.evaluate(() => localStorage.getItem('bpmn-desk:theme'))).toBe('dark');
+  } finally { await app.close(); }
+  try {
+    const reopened = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
+    try {
+      const page = await reopened.firstWindow();
+      await expect(page.getByRole('button', { name: 'Тёмная тема', exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await page.emulateMedia({ colorScheme: null });
+      await reopened.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'light'; });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+      await page.getByRole('button', { name: 'Системная тема', exact: true }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    } finally { await reopened.close(); }
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
 test('Electron открывает Camunda 7 через CLI и сохраняет вложенный target в локальный файл', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-camunda-'));
   const path = resolve(directory, 'integration.bpmn20.xml');

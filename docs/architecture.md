@@ -51,6 +51,8 @@ PreservationGuard защищает исходные namespaced атрибуты 
 
 `desktop/interface-zoom` управляет Chromium zoom, меню и настройками профиля; BPMN viewport остаётся в адаптере. `bpmn/diagram-theme` отвечает за цвета отображения и самостоятельный SVG. `ui/xml-selection` хранит синтаксический диапазон выбранного ID и декорации CodeMirror, а `ui/code-editor` — ввод, поиск и переключение темы без пересоздания редактора.
 
+`ui/use-theme` хранит предпочтение auto/light/dark и вычисляет палитру через matchMedia; `ui/theme-picker` отвечает за три кнопки выбора. `bpmn/xml-fragment-format` выравнивает копию extensionElements для панели свойств, сохраняя значимый текст/CDATA/xml:space и исходную модель.
+
 `bpmn/property-presence` дополняет штатный undo восстановлением отсутствующих собственных свойств. `bpmn/label-presence` возвращает исходную DI подписи и её bounds после завершающих событий undo, включая различия импортированной геометрии. Формы отображают заданные значения акцентной боковой гранью. `bpmn/boundary-layout` отделяет диагностику и чистый план координат от выполнения перемещений через стандартный modeling и command stack. React не меняет DI напрямую.
 
 ## Локализация
