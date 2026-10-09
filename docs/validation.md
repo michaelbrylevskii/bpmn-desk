@@ -22,9 +22,20 @@
 
 Пять пользовательских схем из внешнего пакета прошли double roundtrip, пять UI-открытий/сохранений и официальный Flowable converter. Receipt проверяет контрольные суммы входов и экспортов. Исходные схемы/provenance не изменены и не входят в Git, дистрибутив или основной набор.
 
+## Нативный GitHub Actions
+
+[Прогон 37988254301](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37988254301) на merge-коммите `aeefcf7` завершён успешно:
+
+| Среда | Unit | E2E | Сборки |
+| --- | --- | --- | --- |
+| Ubuntu 24.04, Node.js 24, JDK 17 | 63 passed | 58 passed, 1 Windows skip | AppImage |
+| Windows Server 2022, Node.js 24, JDK 17 | 61 passed, 2 symlink skip | 58 passed, включая готовый EXE | NSIS installer и portable |
+
+Обе платформы выполнили strict TypeScript, ESLint, проверки UI и Electron, Flowable converter и Camunda Model API. Windows содержит 48 Chromium-сценариев, 9 Electron и один запуск собранного приложения. Дистрибутивы сохранены в artifacts. При публикации тег запускает такую же матрицу заново; ссылка на релизный прогон добавляется в описание GitHub Release.
+
 ## Границы
 
-Локальный прогон выполнен на Linux; Windows-сценарий пропущен по платформе. Нативную проверку Windows выполняет матрица публикации, её результат фиксируется отдельно. Пользовательское подтверждение Windows-инсталлятора относится к 0.2.0. macOS не проверялась. В локальной среде нет FUSE: тест запускает извлечённое содержимое AppImage.
+Локальный прогон выполнен на Linux; Windows-сценарий пропущен по платформе. Новая версия отдельно проверена нативно на Windows Server 2022 в CI. Эти тесты не запускают installer/portable launcher и не подтверждают ручную установку или ассоциации. Пользовательское подтверждение Windows-инсталлятора относится к 0.2.0. macOS не проверялась. В локальной среде нет FUSE: тест запускает извлечённое содержимое AppImage.
 
 Model API подтверждает XML/модель и сохранность данных, но не выполняет deployment, delegates, scripts, connectors или процесс. Примеры используют условные прикладные ресурсы. Camunda 8, DMN/CMMN и внешние дизайнеры форм не включены. Подробности: [camunda7.md](camunda7.md), [ADR 0014](adr/0014-engine-profiles.md).
 

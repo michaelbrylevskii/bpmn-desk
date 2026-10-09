@@ -2,6 +2,8 @@
 
 Версия приложения: 0.3.0. Целевая система: Windows 10/11 x64. EXE собираются нативно в GitHub Actions и могут быть собраны на Linux через Docker. CI запускает проверки UI, Electron и готового EXE на Windows Server 2022; результаты конкретной версии находятся в [отчёте проверки](validation.md). Ручная приёмка инсталлятора 0.2.0 отмечена отдельно ниже.
 
+Для 0.3.0 [прогон 37988254301](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37988254301) прошёл: 61 unit-тест с двумя пропущенными symlink-проверками, 58 E2E, Flowable/Camunda validators и нативная сборка NSIS/portable. Это проверка приложения из win-unpacked; сами launcher/installer и ручные ассоциации требуют отдельной приёмки.
+
 ## Готовые файлы
 
 Релизные файлы доступны на [GitHub Releases](https://github.com/michaelbrylevskii/bpmn-desk/releases); их размеры указаны рядом с файлами, контрольные суммы находятся в SHA256SUMS самого релиза.
