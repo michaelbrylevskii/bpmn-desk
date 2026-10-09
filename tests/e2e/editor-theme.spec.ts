@@ -1,6 +1,30 @@
 import { test, expect } from './russian-fixture';
 import { readFileSync } from 'node:fs';
 
+test('фокус холста использует акцент приложения в обеих темах', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  const canvas = page.locator('.bpmn-container .djs-container > svg');
+  await expect(canvas).toBeVisible();
+  for (const theme of ['light', 'dark']) {
+    if (theme === 'light') await page.getByTitle('Светлая тема', { exact: true }).click();
+    else await page.getByTitle('Тёмная тема', { exact: true }).click();
+    await canvas.focus();
+    await expect(canvas).toBeFocused();
+    const outline = await canvas.evaluate(el => {
+      const style = getComputedStyle(el);
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--accent)'; el.parentElement!.appendChild(probe);
+      const accent = getComputedStyle(probe).color; probe.remove();
+      return { color: style.outlineColor, accent, style: style.outlineStyle, width: style.outlineWidth };
+    });
+    expect(outline.color).toBe(outline.accent);
+    expect(outline.style).toBe('solid');
+    expect(outline.width).toBe('2px');
+  }
+  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+});
+
 test('тема холста меняется без изменения XML, экспорт SVG содержит готовые цвета', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
