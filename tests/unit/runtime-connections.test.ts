@@ -43,5 +43,18 @@ describe('подключения', () => {
     expect(() => connectionInput({ ...input, engine: 'camunda7' })).toThrow();
     expect(() => connectionInput({ ...input, baseUrl: 'file:///tmp' })).toThrow();
     expect(() => pageQuery({ start: -1 })).toThrow();
+    expect(() => pageQuery({ size: 10000 })).toThrow();
+    expect(() => pageQuery({ order: 'anything' })).toThrow();
+  });
+  it('проверка черновика не сохраняет профиль и использует секрет только при совпадении адреса и авторизации', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'desk-preview-'));
+    try {
+      const store = new ConnectionStore(dir, secrets);
+      expect(store.preview(input).secret).toBe(input.secret); expect(store.list().items).toHaveLength(0);
+      const saved = await store.save(input); const disk = await readFile(join(dir, 'connections.json'), 'utf8');
+      expect(store.preview({ ...input, id: saved.id, secret: undefined }).secret).toBe(input.secret);
+      expect(() => store.preview({ ...input, id: saved.id, secret: undefined, baseUrl: 'http://different.test/api/' })).toThrow();
+      expect(await readFile(join(dir, 'connections.json'), 'utf8')).toBe(disk);
+    } finally { await rm(dir, { recursive: true, force: true }); }
   });
 });

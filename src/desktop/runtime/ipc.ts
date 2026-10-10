@@ -3,7 +3,7 @@ import { runtimeChannels as channels } from '../../shared/runtime';
 import { ConnectionStore } from './connection-store';
 import { FlowableReader } from './flowable-reader';
 import { RuntimeHttp } from './http';
-import { connectionInput, identifier, pageQuery } from './validation';
+import { connectionInput, identifier, object, pageQuery } from './validation';
 
 export function registerRuntimeIpc(window: BrowserWindow): void {
   const store = new ConnectionStore(app.getPath('userData'), {
@@ -22,6 +22,10 @@ export function registerRuntimeIpc(window: BrowserWindow): void {
   ipcMain.handle(channels.save, async (event, input: unknown) => { await validate(event); return store.save(connectionInput(input)); });
   ipcMain.handle(channels.delete, async (event, id: unknown) => { await validate(event); return store.delete(identifier(id)); });
   ipcMain.handle(channels.test, async (event, id: unknown) => { await validate(event); return reader(id).test(); });
+  ipcMain.handle(channels.testDraft, async (event, input: unknown) => {
+    await validate(event); const value = connectionInput({ ...object(input), name: object(input).name || 'Тест подключения' });
+    const { connection, secret } = store.preview(value); return new FlowableReader(new RuntimeHttp(connection, secret)).test();
+  });
   ipcMain.handle(channels.definitions, async (event, id: unknown, query: unknown) => { await validate(event); return reader(id).definitions(pageQuery(query)); });
   ipcMain.handle(channels.instances, async (event, id: unknown, query: unknown) => { await validate(event); return reader(id).instances(pageQuery(query)); });
   ipcMain.handle(channels.deadLetters, async (event, id: unknown, query: unknown) => { await validate(event); return reader(id).deadLetters(pageQuery(query)); });

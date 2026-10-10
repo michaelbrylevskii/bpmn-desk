@@ -43,6 +43,15 @@ export class ConnectionStore {
     if (item.profile.authentication !== 'none' && !secret) throw new Error('Введи пароль или токен подключения.');
     return { connection: item.profile, secret };
   }
+  preview(value: ConnectionInput): { connection: Connection; secret: string } {
+    const input = connectionInput({ ...value, name: value.name || 'Тест подключения' });
+    const existing = this.items.find(item => item.profile.id === input.id)?.profile;
+    const sameAuth = existing?.baseUrl === input.baseUrl && existing.authentication === input.authentication && existing.username === input.username;
+    const secret = input.secret ?? (sameAuth ? this.credentials(existing!.id).secret : '');
+    if (input.authentication !== 'none' && !secret) throw new Error('Введи пароль или токен подключения.');
+    return { connection: { id: input.id ?? '', name: input.name, engine: input.engine, baseUrl: input.baseUrl, authentication: input.authentication,
+      username: input.username, hasSecret: !!secret, secretStored: false }, secret };
+  }
   save(value: ConnectionInput): Promise<Connection> {
     return this.mutate(async () => {
       const input = connectionInput(value); const id = input.id ?? randomUUID();

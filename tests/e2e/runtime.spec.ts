@@ -139,3 +139,19 @@ test('вызванный процесс открывает точную схем
     await expect(page.locator('.runtime-canvas .djs-element[data-element-id="Child"]')).toHaveClass(/runtime-active/);
   } finally { await close(app, directory); }
 });
+
+test('REST: тест черновика без сохранения, пагинация, metadata и дочерние экземпляры', async () => {
+  const { app, page, directory } = await launch();
+  try {
+    const result = await page.evaluate(async ({ url, parent }) => {
+      const api = window.runtime!; const before = await api.connections(); const id = before.items[0]!.id;
+      await api.testConnectionDraft({ name: '', engine: 'flowable', baseUrl: url, authentication: 'basic', username: 'desk-reader', secret: 'fixture-password', rememberSecret: false });
+      const definitions = await api.definitions(id, { size: 2, sort: 'version', order: 'desc' });
+      const instances = await api.instances(id, { definitionKey: 'deskParallel', suspended: false, size: 10 });
+      return { before: before.items.length, after: (await api.connections()).items.length, definitions, instances, snapshot: await api.snapshot(id, parent) };
+    }, { url: fixture.baseUrl, parent: fixture.parentInstanceId });
+    expect(result.after).toBe(result.before); expect(result.definitions.data).toHaveLength(2); expect(result.definitions.data[0]?.version).toBe(2);
+    expect(result.instances.data).toHaveLength(1); expect(result.instances.data[0]?.processDefinitionName).toBe('deskParallel');
+    expect(result.snapshot.children.map(child => child.id)).toContain(fixture.childInstanceId);
+  } finally { await close(app, directory); }
+});

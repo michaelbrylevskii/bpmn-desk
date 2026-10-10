@@ -18,7 +18,7 @@ export function definition(value: unknown): Definition {
 }
 export function instance(value: unknown): Instance {
   const d = object(value); return { id: identifier(d.id), name: text(d, 'name'), businessKey: text(d, 'businessKey'), processDefinitionId: identifier(d.processDefinitionId),
-    tenantId: text(d, 'tenantId'), suspended: flag(d, 'suspended'), startTime: text(d, 'startTime'), superProcessInstanceId: text(d, 'superProcessInstanceId') };
+    tenantId: text(d, 'tenantId'), suspended: flag(d, 'suspended'), startTime: text(d, 'startTime'), superProcessInstanceId: text(d, 'superProcessInstanceId'), processDefinitionName: text(d, 'processDefinitionName') };
 }
 export function execution(value: unknown): Execution {
   const d = object(value); return { id: identifier(d.id), parentId: text(d, 'parentId'), activityId: text(d, 'activityId'), processInstanceId: text(d, 'processInstanceId'), suspended: flag(d, 'suspended') };
