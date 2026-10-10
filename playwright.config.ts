@@ -9,5 +9,6 @@ export default defineConfig({
     { name: 'electron', testMatch: 'desktop.spec.ts' },
     { name: 'appimage', testMatch: 'appimage.spec.ts' },
     { name: 'windows', testMatch: 'windows.spec.ts' },
+    { name: 'runtime', testMatch: 'runtime*.spec.ts', timeout: 60000 },
   ],
 });

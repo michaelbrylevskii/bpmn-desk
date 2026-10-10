@@ -43,7 +43,7 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-          cache-dependency-path: 'tools/*-validation/pom.xml'
+          cache-dependency-path: 'tools/*/pom.xml'
       - run: npm ci
       - run: npm run setup:electron
       - run: npm run check
@@ -66,6 +66,12 @@ jobs:
       - name: UI, Electron и готовый EXE на Windows
         if: runner.os == 'Windows'
         run: npm run test:e2e -- --project=chromium --project=electron --project=windows
+      - name: Независимый Flowable runtime на Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:runtime
+      - name: Независимый Flowable runtime на Windows
+        if: runner.os == 'Windows'
+        run: npm run test:runtime
       - run: npm run validate:flowable
       - run: npm run validate:camunda
       - name: Сохранить проверенные дистрибутивы

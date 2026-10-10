@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -25,7 +26,7 @@ test('извлечённая AppImage открывает демонстраци�
     await expect(page.locator('.djs-element[data-element-id="reviewDocument"]')).toBeVisible();
     expect(await app.evaluate(({ app }) => app.commandLine.hasSwitch('no-sandbox'))).toBe(false);
     expect(await page.evaluate(() => 'require' in window)).toBe(false);
-    await expect(page.getByRole('combobox', { name: 'Language', exact: true })).toHaveValue('en');
+    await expect(page.getByRole('combobox', { name: 'Language', exact: true })).toHaveAttribute('data-value', 'en');
     await page.getByRole('button', { name: 'XML', exact: true }).click();
     await page.getByLabel('Diagram XML').focus();
     await page.keyboard.press('Control+f');
@@ -38,7 +39,7 @@ test('извлечённая AppImage открывает демонстраци�
     await page.getByLabel('Find element').fill('ArchiveOrder');
     await page.locator('.outline-item').first().click();
     await expect(page.getByLabel('External task topic', { exact: true })).toHaveValue('archive-order');
-    await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('ru');
+    await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
     await expect(page.getByLabel('Тема внешней задачи', { exact: true })).toHaveValue('archive-order');
     await page.getByRole('button', { name: 'Диагностика', exact: false }).click();
     await expect(page.locator('.diagnostics-panel')).toContainText('Проблем не обнаружено');

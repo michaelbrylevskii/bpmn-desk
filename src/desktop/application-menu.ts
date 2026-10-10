@@ -8,7 +8,7 @@ export function applicationMenu(window: BrowserWindow, language: Language, zoom:
   const action = (name: string) => () => window.webContents.send(channels.action, name);
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: t('Файл'), submenu: [
-      { id: 'new-diagram', label: t('Новая схема'), accelerator: 'CmdOrCtrl+N', click: action('new') },
+      { id: 'new-diagram', label: t('Новая вкладка'), accelerator: 'CmdOrCtrl+N', click: action('new') },
       { label: t('Открыть…'), accelerator: 'CmdOrCtrl+O', click: action('open') },
       { label: t('Сохранить'), accelerator: 'CmdOrCtrl+S', click: action('save') },
       { label: t('Сохранить как…'), accelerator: 'CmdOrCtrl+Shift+S', click: action('save-as') },
@@ -27,4 +27,5 @@ export function applicationMenu(window: BrowserWindow, language: Language, zoom:
       { id: 'language-ru', label: 'Русский', type: 'radio', checked: language === 'ru', click: () => changeLanguage('ru') },
     ] },
   ]));
+  if (process.platform !== 'darwin') window.setMenuBarVisibility(false);
 }

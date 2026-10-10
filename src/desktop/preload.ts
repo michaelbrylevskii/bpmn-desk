@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { channels, type DesktopBridge } from '../shared/contracts';
 import type { Language } from '../shared/i18n';
+import { runtimeBridge } from './runtime/preload';
 const bridge: DesktopBridge = {
   language: () => ipcRenderer.invoke(channels.language),
   setLanguage: language => ipcRenderer.invoke(channels.setLanguage, language),
@@ -31,3 +32,4 @@ const bridge: DesktopBridge = {
   },
 };
 contextBridge.exposeInMainWorld('desktop', bridge);
+contextBridge.exposeInMainWorld('runtime', runtimeBridge((channel, ...args) => ipcRenderer.invoke(channel, ...args)));

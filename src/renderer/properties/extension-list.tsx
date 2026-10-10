@@ -1,3 +1,4 @@
+import { Select } from '../ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import type { MessageKey } from '../../shared/i18n';
 import type { BpmnEditor } from '../bpmn/editor';
@@ -35,6 +36,6 @@ function FieldBody({ value, onCommit }: { value: ModdleElement; onCommit: (type:
   const child = (value.$children as ModdleElement[] ?? []).find(item => isFlowableExtension(item, 'expression') || isFlowableExtension(item, 'string'));
   const type = child && isFlowableExtension(child, 'expression') ? 'expression' : 'string';
   const body = typeof child?.$body === 'string' ? child.$body : '';
-  return <><label className="field"><span>{t("Тип значения")}</span><select value={type} onChange={event => onCommit(event.target.value, body)}><option value="string">{t("Строка")}</option><option value="expression">{t("Выражение")}</option></select></label>
+  return <><label className="field"><span>{t("Тип значения")}</span><Select label={t('Тип значения')} value={type} onChange={value => onCommit(value, body)} options={[{ value: 'string', label: t('Строка') }, { value: 'expression', label: t('Выражение') }]} /></label>
     <Field label={t("Значение поля")} value={body} multiline onCommit={text => onCommit(type, text)} /></>;
 }

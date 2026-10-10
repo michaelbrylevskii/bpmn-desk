@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Select } from './select';
 import { useI18n } from '../i18n/provider';
 export type Presence = 'explicit' | 'default' | 'unset';
 
@@ -16,7 +17,8 @@ export function BooleanField({ label, value, onCommit, presence = value ? 'expli
   label: string; value: string; onCommit: (value: string) => void; presence?: Presence; defaultValue?: string;
 }) {
   const { t } = useI18n();
-  return <label className="field compact" data-presence={presence}><span>{label}</span><select aria-label={label} value={presence === 'explicit' ? value : ''} onChange={event => onCommit(event.target.value)}>
-    <option value="">{defaultValue === undefined ? t("Не задано") : t('По умолчанию: {value}', { value: defaultValue === 'true' ? t('Да') : t('Нет') })}</option><option value="true">{t("Да")}</option><option value="false">{t("Нет")}</option>
-  </select></label>;
+  return <label className="field compact" data-presence={presence}><span>{label}</span><Select label={label} value={presence === 'explicit' ? value : ''} onChange={onCommit} options={[
+    { value: '', label: defaultValue === undefined ? t('Не задано') : t('По умолчанию: {value}', { value: defaultValue === 'true' ? t('Да') : t('Нет') }) },
+    { value: 'true', label: t('Да') }, { value: 'false', label: t('Нет') },
+  ]} /></label>;
 }

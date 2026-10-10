@@ -8,6 +8,7 @@ import { applicationMenu } from './application-menu';
 import { interfaceZoomMenu } from './interface-zoom';
 import { registerIpc } from './ipc';
 import { LanguageSettings } from './language-settings';
+import { registerRuntimeIpc } from './runtime/ipc';
 protocol.registerSchemesAsPrivileged([{ scheme: 'bpmn-desk', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 if (process.env.BPMN_DESK_USER_DATA) app.setPath('userData', resolve(process.env.BPMN_DESK_USER_DATA));
 const fileArguments = (args: string[]) => args.filter(arg => /\.(bpmn|bpmn20\.xml|xml)$/i.test(arg)).map(arg => arg.startsWith('file://') ? fileURLToPath(arg) : resolve(arg));
@@ -37,7 +38,7 @@ async function start(): Promise<void> {
   });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   const window = new BrowserWindow({
-    width: 1500, height: 960, minWidth: 1050, minHeight: 680, title: 'BPMN Desk', backgroundColor: '#10131b',
+    width: 1500, height: 960, minWidth: 1050, minHeight: 680, title: 'BPMN Desk', backgroundColor: '#10131b', autoHideMenuBar: true,
     webPreferences: { preload: join(import.meta.dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     icon: app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(app.getAppPath(), 'build/icon.png'),
   });
@@ -85,6 +86,7 @@ async function start(): Promise<void> {
   ipcMain.handle(channels.language, event => { validSender(event); return language.get(); });
   ipcMain.handle(channels.setLanguage, (event, value: unknown) => { validSender(event); return changeLanguage(value); });
   installMenu();
+  registerRuntimeIpc(window);
   openAdditional = await registerIpc(window, value => { dirty = value; }, pending, completeClose);
   if (process.env.ELECTRON_RENDERER_URL) await window.loadURL(process.env.ELECTRON_RENDERER_URL);
   else await window.loadURL('bpmn-desk://app/');

@@ -9,6 +9,8 @@ import './styles/theme.css';
 import './styles/layout.css';
 import './styles/editor.css';
 import './styles/xml-search.css';
+import './styles/runtime.css';
+import './styles/select.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Не найден root приложения.');

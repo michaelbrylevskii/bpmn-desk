@@ -1,3 +1,4 @@
+import { Select } from '../ui/select';
 import type { BpmnEditor } from '../bpmn/editor';
 import type { ExtensionPath } from '../bpmn/extension-commands';
 import { extensionChildren, isExtension } from '../bpmn/extensions';
@@ -15,6 +16,6 @@ export function CamundaFieldValue({ element, target = element.businessObject, va
   const kind = typeof value.expression === 'string' || (child && isExtension(child, camundaNamespace.uri, 'expression')) ? 'expression' : 'string';
   const body = typeof child?.$body === 'string' ? child.$body : typeof value.expression === 'string' ? value.expression : typeof value.stringValue === 'string' ? value.stringValue : '';
   const commit = (type: string, text: string) => run(() => editor.extensions.fieldBody(element, path, camundaNamespace, type, text, target));
-  return <><label className="field"><span>{t('Тип значения')}</span><select aria-label={t('Тип значения')} value={kind} onChange={event => commit(event.target.value, body)}><option value="string">{t('Строка')}</option><option value="expression">{t('Выражение')}</option></select></label>
+  return <><label className="field"><span>{t('Тип значения')}</span><Select label={t('Тип значения')} value={kind} onChange={value => commit(value, body)} options={[{ value: 'string', label: t('Строка') }, { value: 'expression', label: t('Выражение') }]} /></label>
     <Field label={t('Значение поля')} multiline value={body} presence={child || Object.hasOwn(value, 'expression') || Object.hasOwn(value, 'stringValue') ? 'explicit' : 'unset'} onCommit={text => commit(kind, text)} /></>;
 }

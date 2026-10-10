@@ -21,3 +21,8 @@
 - [0017 — Системная тема и ручной выбор палитры](0017-system-theme.md)
 - [0018 — Ошибки и время жизни уведомлений](0018-notification-errors-and-lifetime.md)
 - [0019 — Подключение тестов готового приложения](0019-packaged-test-connection.md)
+- [0020 — Подключения к движкам и чтение состояния](0020-runtime-connections.md)
+- [0021 — Общие вкладки, контролы и экспорт состояния](0021-workspace-tabs-and-runtime-export.md)
+- [0022 — Ограниченная сводка выбранной версии](0022-bounded-definition-summary.md)
+- [0023 — Стартовая страница как содержимое новой вкладки](0023-start-page-tabs.md)
+- [0024 — Общие настройки подключений](0024-global-connection-settings.md)

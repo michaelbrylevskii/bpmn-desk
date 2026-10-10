@@ -1,3 +1,4 @@
+import { Select } from '../ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import type { BpmnEditor } from '../bpmn/editor';
 import type { ExtensionPath } from '../bpmn/extension-commands';
@@ -26,9 +27,8 @@ export function CamundaExtensionNode({ element, target = element.businessObject,
       {definition.fields.map(name => <Field key={name} label={`${kind}: ${name}`} value={typeof value[name] === 'string' ? value[name] : ''} presence={Object.hasOwn(value, name) ? 'explicit' : 'unset'}
         onCommit={next => commit({ [name]: next, ...(kind === 'script' && name === 'resource' && next ? { $body: undefined } : {}) })} />)}
       {kind === 'field' && <CamundaFieldValue target={target} element={element} value={value} path={path} editor={editor} run={run} />}
-      {definition.value && <label className="field"><span>{t('Тип значения')}</span><select aria-label={t('Тип значения')} value={valueType} onChange={event => run(() => editor.extensions.valueType(element, path, camundaNamespace, event.target.value, target))}>
-        <option value="text">{t('Строка')} / {t('Выражение')}</option><option value="script">script</option><option value="list">list</option><option value="map">map</option>
-      </select></label>}
+      {definition.value && <label className="field"><span>{t('Тип значения')}</span><Select label={t('Тип значения')} value={valueType} onChange={value => run(() => editor.extensions.valueType(element, path, camundaNamespace, value, target))}
+        options={[{ value: 'text', label: `${t('Строка')} / ${t('Выражение')}` }, ...['script', 'list', 'map'].map(value => ({ value, label: value }))]} /></label>}
       {(definition.body || (definition.value && valueType === 'text')) && !(kind === 'script' && value.resource) && <Field label={t('Текст · {name}', { name: kind })} multiline value={typeof value.$body === 'string' ? value.$body : ''} presence={Object.hasOwn(value, '$body') ? 'explicit' : 'unset'} onCommit={body => commit({ $body: body })} />}
       {children.map((child, index) => kind === 'field' && ['string', 'expression'].some(name => isExtension(child, camundaNamespace.uri, name)) ? null : <CamundaExtensionNode target={target} key={index} element={element} value={child} path={[...path, index]} editor={editor} run={run} />)}
       {choices.length > 0 && <div className="extension-additions">{choices.map(choice => <button className="button small" key={choice.name} onClick={() => run(() => {
