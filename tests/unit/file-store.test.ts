@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, readdir, rm, symlink, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -29,6 +29,19 @@ describe('FileStore', () => {
     await writeFile(path, '<external/>');
     await expect(store.save('<edited/>', file.path, file.token)).rejects.toThrow('изменён другим приложением');
     expect(await readFile(path, 'utf8')).toBe('<external/>');
+  });
+
+  it('новый файл через псевдоним каталога имеет тот же путь при сохранении и повторном открытии', async () => {
+    const alias = join(directory, 'alias');
+    await symlink(directory, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    const store = new FileStore();
+    const saved = await store.save('<saved/>', join(alias, 'new.bpmn'));
+    const opened = await store.open(join(directory, 'new.bpmn'));
+    expect(saved.path).toBe(opened.path);
+    expect(store.pathFor(saved.token)).toBe(await realpath(join(directory, 'new.bpmn')));
+    await store.save('<edited/>', opened.path, saved.token);
+    await writeFile(opened.path, '<external/>');
+    await expect(store.save('<edited-again/>', saved.path, saved.token)).rejects.toThrow('изменён другим приложением');
   });
 
   it('отклоняет чужой токен', async () => {

@@ -2,7 +2,7 @@ import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
-import { mkdir, mkdtemp, rm, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, copyFile, readFile, writeFile, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 
@@ -247,10 +247,12 @@ test('новая вкладка открывает примеры и свежи�
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, path);
     await page.getByTitle('Сохранить (Ctrl+S)', { exact: true }).click(); await expect(page.getByRole('status')).toContainText('recent.bpmn');
+    const canonical = await realpath(path);
+    expect(await page.evaluate(() => window.desktop!.recentFiles())).toEqual([canonical]);
     await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await page.locator('.document-workspace:visible').getByLabel('Название', { exact: true }).fill('Несохранённый черновик'); await page.locator('.document-workspace:visible').getByLabel('Название', { exact: true }).blur();
     await page.locator('.new-tab').click(); const dialog = page.locator('.welcome');
-    await expect(dialog.getByRole('region', { name: 'Недавние файлы' }).getByRole('button', { name: 'recent.bpmn', exact: true })).toHaveAttribute('title', path);
+    await expect(dialog.getByRole('region', { name: 'Недавние файлы' }).getByRole('button', { name: 'recent.bpmn', exact: true })).toHaveAttribute('title', canonical);
     await dialog.getByRole('button', { name: 'camunda7-showcase', exact: true }).click(); await expect(page.locator('.document-tab')).toHaveCount(2);
     await page.locator('.new-tab').click(); await dialog.getByRole('region', { name: 'Недавние файлы' }).getByRole('button', { name: 'recent.bpmn', exact: true }).click();
     await expect(dialog).toHaveCount(0); await expect(page.locator('.document-tab')).toHaveCount(2);

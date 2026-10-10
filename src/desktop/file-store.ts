@@ -41,9 +41,10 @@ export class FileStore {
       }
     }
     await atomicWrite(path, content);
+    const canonical = await realpath(path);
     const nextToken = token ?? randomUUID();
-    this.files.set(nextToken, { path, revision: hash(content) });
-    return { token: nextToken, path, name: basename(path) };
+    this.files.set(nextToken, { path: canonical, revision: hash(content) });
+    return { token: nextToken, path: canonical, name: basename(canonical) };
   }
 
   async saveExport(content: string | Uint8Array, path: string): Promise<SavedFile> {

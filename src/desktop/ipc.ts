@@ -74,7 +74,7 @@ export async function registerIpc(window: BrowserWindow, setDirty: (value: boole
       token = undefined;
     } else path = store.pathFor(token);
     const saved = request.format === 'png' || request.format === 'svg' ? await store.saveExport(request.content, path) : await store.save(request.content, path, token);
-    if (!exporting) await recent.add(path);
+    if (!exporting) await recent.add(saved.path);
     return saved;
   });
   ipcMain.on(channels.dirty, (event, dirty: unknown) => {

@@ -6,7 +6,7 @@
 
 | Проверка | Результат |
 | --- | --- |
-| `npm run check` | strict TypeScript, ESLint; 83 unit-теста в 23 файлах |
+| `npm run check` | strict TypeScript, ESLint; 84 unit-теста в 23 файлах |
 | `npm run test:e2e` | 65 успешных проверок: 53 Chromium, 11 Electron, 1 AppImage; 14 пропусков — Windows и runtime без стенда |
 | `npm run test:runtime` | 13/13 на независимом Flowable 7.2/H2 через Electron |
 | `npm run package:linux` | AppImage 0.4.0 собрана штатной командой и запущена с sandbox |
@@ -36,6 +36,8 @@ ASAR содержит main/preload/renderer текущего `out`; стенд, 
 ## Нативный CI и публикация
 
 [Workflow](../.github/workflows/build.yml) выполняет нативные сборки на Ubuntu 24.04 и Windows Server 2022, Node.js 24 и JDK 17. Обе платформы проверяют UI/Electron, готовое приложение, независимый Flowable runtime и официальные библиотеки моделей. Ссылка на конкретный релизный прогон и проверенные дистрибутивы находятся в [релизе 0.4.0](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.4.0). Успешная матрица обеих ОС обязательна для автоматической публикации.
+
+Первый [прогон основной ветки](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38059740381) прошёл на Linux, но выявил на Windows дублирование вкладки при повторном открытии сохранённого файла (64/65 E2E). `FileStore.save` и список недавних приведены к каноническому пути, как `open`; добавлена регрессия через symlink/junction с проверкой capability и внешнего конфликта.
 
 ## Границы
 
