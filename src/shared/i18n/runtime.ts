@@ -2,7 +2,6 @@ export const runtimeMessages = {
   'Экземпляры из загруженной выборки. Для подробностей выбери экземпляр.': 'Instances from the loaded sample. Select an instance for details.',
   'В загруженной выборке нет экземпляров этого элемента.': 'The loaded sample has no instances at this element.',
   'Только последние версии': 'Latest versions only', 'Сводка версии': 'Version summary', 'Обновить сводку': 'Refresh summary', 'Скрыть сводку': 'Hide summary',
-  'Не приостановлен; ожидание и выполнение по списку не определяются.': 'Not suspended; the list does not determine whether it is waiting or executing.',
   'Два запроса, до 100 записей каждого вида, не дольше 8 секунд.': 'Two requests, up to 100 records each, within 8 seconds.',
   'Сводка версии: executions {executions}; dead-letter jobs {jobs}.': 'Version summary: executions {executions}; dead-letter jobs {jobs}.',
   'Бейджи показывают разные экземпляры у элемента; красные — экземпляры с dead-letter. Это не признак выполнения прямо сейчас.': 'Badges count distinct instances at an element; red badges count instances with dead-letter jobs. They do not indicate execution right now.',

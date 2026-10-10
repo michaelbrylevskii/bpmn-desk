@@ -21,6 +21,11 @@ test('несколько мониторов сохраняют собствен�
     const canvas = surface(page).locator('.runtime-canvas .djs-container'); const node = await canvas.elementHandle();
     const transform = await surface(page).locator('.viewport').getAttribute('transform');
     await newMonitor(page); await openInstance(page, fixture.failedInstanceId);
+    const failedRow = surface(page).locator('.runtime-row').filter({ hasText: fixture.failedInstanceId });
+    await expect(failedRow).toBeVisible(); await expect(failedRow.getByRole('img')).toHaveCount(0);
+    await expect(failedRow.getByText('Active', { exact: true })).toHaveCount(0);
+    await expect(surface(page).locator('.runtime-instance').getByText('Active', { exact: true })).toBeVisible();
+    await expect(surface(page).getByRole('button', { name: 'Dead-letter jobs present: 1', exact: true })).toBeVisible();
     const secondTab = page.getByRole('tab', { name: /deskFailure/ }); await expect(secondTab).toBeVisible();
     await expect(page.locator('.document-tab[data-kind=monitor]')).toHaveCount(2);
     await firstTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);

@@ -112,7 +112,9 @@ test('ограниченная сводка и медленный сервер �
     expect(summaryRequests()).toHaveLength(6);
     await openInstance(page, fixture.reviewInstanceId);
     await page.locator('.runtime-variables > input').fill('missing-variable'); await expect(page.locator('.runtime-variables')).toContainText('No results');
-    await expect(page.locator('.runtime-instance-status[aria-label="Active"]').first()).toBeVisible();
+    await expect(page.locator('.runtime-catalog .runtime-instance-status')).toHaveCount(0);
+    await expect(page.locator('.runtime-list').getByText('Active', { exact: true })).toHaveCount(0);
+    await expect(page.locator('.runtime-instance').getByText('Active', { exact: true })).toBeVisible();
     await expect(page.locator('.runtime-summary-notice')).toHaveCount(0);
     denyDetails = true; await page.getByTitle('Refresh state', { exact: true }).click();
     await expect(page.locator('.runtime-variables')).toContainText('State unavailable');
