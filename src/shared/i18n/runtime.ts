@@ -1,4 +1,13 @@
 export const runtimeMessages = {
+  'Только последние версии': 'Latest versions only', 'Сводка версии': 'Version summary', 'Обновить сводку': 'Refresh summary', 'Скрыть сводку': 'Hide summary',
+  'Не приостановлен; ожидание и выполнение по списку не определяются.': 'Not suspended; the list does not determine whether it is waiting or executing.',
+  'Два запроса, до 100 записей каждого вида, не дольше 8 секунд.': 'Two requests, up to 100 records each, within 8 seconds.',
+  'Сводка версии: executions {executions}; dead-letter jobs {jobs}.': 'Version summary: executions {executions}; dead-letter jobs {jobs}.',
+  'Бейджи показывают разные экземпляры у элемента; красные — экземпляры с dead-letter. Это не признак выполнения прямо сейчас.': 'Badges count distinct instances at an element; red badges count instances with dead-letter jobs. They do not indicate execution right now.',
+  'Сводка неполная: ≥ N означает не менее N экземпляров. Отсутствие метки не подтверждает отсутствие экземпляров или ошибок.': 'Partial summary: ≥ N means at least N instances. A missing badge does not confirm the absence of instances or errors.',
+  'Не удалось разместить задания на схеме: {count}': 'Jobs that could not be placed on the diagram: {count}',
+  'Экземпляры у элементов': 'Instances at elements', 'Экземпляры с dead-letter': 'Instances with dead-letter jobs',
+  'Превышено время ожидания API.': 'API request timed out.', 'API не соблюдает ограничение выборки сводки.': 'API did not respect the summary sample limit.',
   'Родительский execution': 'Parent execution',
   'Новая вкладка': 'New tab', 'Новая вкладка (Ctrl+N)': 'New tab (Ctrl+N)', 'Открытые вкладки': 'Open tabs', 'Локальная схема': 'Local diagram',
   'Открыть монитор': 'Open monitor', 'Проверить подключение': 'Test connection', 'Автообновление': 'Auto refresh', 'Фильтры': 'Filters',

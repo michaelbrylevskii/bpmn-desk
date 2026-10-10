@@ -3,13 +3,15 @@ import { errorMessage } from '../../shared/errors';
 import { RuntimeHttp } from './http';
 import * as decode from './flowable-decode';
 import { identifier } from './validation';
+import { readDefinitionSummary } from './definition-summary';
 
 const key = (value: string) => encodeURIComponent(identifier(value));
 export class FlowableReader {
   constructor(private readonly http: RuntimeHttp) {}
   async test(): Promise<void> { await this.definitions({}); }
+  summary(id: string) { return readDefinitionSummary(this.http, id); }
   definitions(query: PageQuery) {
-    return this.paged('repository/process-definitions', decode.definition, { ...this.pagination(query, ['key', 'name', 'version', 'id', 'deploymentId', 'category'], 'key'), nameLike: query.search ? `%${query.search}%` : undefined, tenantId: query.tenantId, key: query.definitionKey });
+    return this.paged('repository/process-definitions', decode.definition, { ...this.pagination(query, ['key', 'name', 'version', 'id', 'deploymentId', 'category'], 'key'), nameLike: query.search ? `%${query.search}%` : undefined, tenantId: query.tenantId, key: query.definitionKey, latest: query.latest ? 'true' : undefined });
   }
   instances(query: PageQuery) {
     return this.paged('runtime/process-instances', decode.instance, { ...this.pagination(query, ['id', 'processDefinitionId', 'processDefinitionKey', 'tenantId'], 'id'), processDefinitionId: query.definitionId, businessKey: query.search || undefined, tenantId: query.tenantId,
@@ -27,20 +29,21 @@ export class FlowableReader {
   async snapshot(id: string): Promise<InstanceSnapshot> {
     const process = decode.instance(await this.http.get(`runtime/process-instances/${key(id)}`));
     const warnings: string[] = [];
-    const optional = async <T>(name: string, action: () => Promise<T>, fallback: T): Promise<T> => {
-      try { return await action(); } catch (error) { warnings.push(`${name}: ${errorMessage(error)}`); return fallback; }
+    const unavailable: InstanceSnapshot['unavailable'] = [];
+    const optional = async <T>(section: InstanceSnapshot['unavailable'][number], name: string, action: () => Promise<T>, fallback: T): Promise<T> => {
+      try { return await action(); } catch (error) { unavailable.push(section); warnings.push(`${name}: ${errorMessage(error)}`); return fallback; }
     };
     const params = { processInstanceId: id };
     const [executions, activeIds, tasks, variables, deadLetters, children] = await Promise.all([
-      optional('Executions', () => this.all('runtime/executions', decode.execution, params, warnings), []),
-      optional('Active activities', async () => decode.array(await this.http.get(`runtime/executions/${key(id)}/activities`), identifier), []),
-      optional('Tasks', () => this.all('runtime/tasks', decode.task, params, warnings), []),
-      optional('Variables', async () => decode.array(await this.http.get(`runtime/process-instances/${key(id)}/variables`), decode.variable), []),
-      optional('Dead-letter jobs', () => this.all('management/deadletter-jobs', decode.deadLetter, params, warnings), []),
-      optional('Child instances', () => this.all('runtime/process-instances', decode.instance, { superProcessInstanceId: id }, warnings), []),
+      optional('executions', 'Executions', () => this.all('runtime/executions', decode.execution, params, warnings), []),
+      optional('activeIds', 'Active activities', async () => decode.array(await this.http.get(`runtime/executions/${key(id)}/activities`), identifier), []),
+      optional('tasks', 'Tasks', () => this.all('runtime/tasks', decode.task, params, warnings), []),
+      optional('variables', 'Variables', async () => decode.array(await this.http.get(`runtime/process-instances/${key(id)}/variables`), decode.variable), []),
+      optional('deadLetters', 'Dead-letter jobs', () => this.all('management/deadletter-jobs', decode.deadLetter, params, warnings), []),
+      optional('children', 'Child instances', () => this.all('runtime/process-instances', decode.instance, { superProcessInstanceId: id }, warnings), []),
     ]);
     return { instance: process, executions, activeIds: [...new Set([...activeIds, ...executions.map(item => item.activityId), ...tasks.map(item => item.taskDefinitionKey)].filter(Boolean))],
-      tasks, variables, deadLetters, children, warnings, capturedAt: new Date().toISOString() };
+      tasks, variables, deadLetters, children, warnings, unavailable, capturedAt: new Date().toISOString() };
   }
   async executionVariables(id: string): Promise<Variable[]> {
     return decode.array(await this.http.get(`runtime/executions/${key(id)}/variables`), decode.variable);

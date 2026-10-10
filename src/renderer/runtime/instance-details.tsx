@@ -34,15 +34,15 @@ export function InstanceDetails({ connection, snapshot, selected, focus, openIns
       {selected && <p className="runtime-selection">{t('Выбранный элемент')}: <code>{selected}</code></p>}
     </div>
     <nav className="runtime-tabs">{([{ id: 'variables', label: 'Переменные процесса' }, { id: 'executions', label: 'Executions' }, { id: 'jobs', label: 'Dead-letter jobs' }, { id: 'tasks', label: 'Задачи' }] as const).map(item =>
-      <button key={item.id} ref={item.id === 'jobs' ? jobsTab : undefined} aria-pressed={tab === item.id} onClick={() => setTab(item.id)}>{t(item.label)}{item.id === 'jobs' && ` (${snapshot.deadLetters.length})`}</button>)}</nav>
+      <button key={item.id} ref={item.id === 'jobs' ? jobsTab : undefined} aria-pressed={tab === item.id} onClick={() => setTab(item.id)}>{t(item.label)}{item.id === 'jobs' && ` (${snapshot.unavailable.includes('deadLetters') ? '—' : snapshot.deadLetters.length})`}</button>)}</nav>
     <div className="runtime-detail-body">
-      {tab === 'variables' && <Variables variables={snapshot.variables} />}
-      {tab === 'executions' && <>{!snapshot.executions.length && <p className="runtime-empty">{t('Нет результатов')}</p>}{snapshot.executions.map(item => <article className={`runtime-execution ${selected && item.activityId === selected ? 'selected' : ''}`} key={item.id}>
+      {tab === 'variables' && <Variables variables={snapshot.variables} unavailable={snapshot.unavailable.includes('variables')} />}
+      {tab === 'executions' && <>{!snapshot.executions.length && <p className="runtime-empty">{t(snapshot.unavailable.includes('executions') ? 'Состояние недоступно' : 'Нет результатов')}</p>}{snapshot.executions.map(item => <article className={`runtime-execution ${selected && item.activityId === selected ? 'selected' : ''}`} key={item.id}>
         <>{item.activityId ? <button className="runtime-link" onClick={() => focus(item.activityId)}>{item.activityId}</button> : <span>Scope</span>}</><code>{item.id}</code><small>{t('Родительский execution')}: {item.parentId || '—'}</small>
         <button className="button small" aria-pressed={execution === item.id} onClick={() => setExecution(item.id)}>{t('Открыть переменные execution')}</button>
       </article>)}{execution && <section><h3>{t('Переменные execution')}: {execution}</h3>{error ? <p role="alert" className="runtime-error">{text(error)}</p> : local ? <Variables variables={local} /> : <p>{t('Загрузка состояния…')}</p>}</section>}</>}
-      {tab === 'jobs' && <>{!snapshot.deadLetters.length && <p className="runtime-empty">{t('Нет результатов')}</p>}{snapshot.deadLetters.map(job => <JobDetails key={job.id} connection={connection} job={job} activityId={job.elementId || snapshot.executions.find(item => item.id === job.executionId)?.activityId} focus={focus} />)}</>}
-      {tab === 'tasks' && <>{!snapshot.tasks.length && <p className="runtime-empty">{t('Нет результатов')}</p>}{snapshot.tasks.map(task => <article key={task.id} className={`runtime-execution ${selected && task.taskDefinitionKey === selected ? 'selected' : ''}`}>
+      {tab === 'jobs' && <>{!snapshot.deadLetters.length && <p className="runtime-empty">{t(snapshot.unavailable.includes('deadLetters') ? 'Состояние недоступно' : 'Нет результатов')}</p>}{snapshot.deadLetters.map(job => <JobDetails key={job.id} connection={connection} job={job} activityId={job.elementId || snapshot.executions.find(item => item.id === job.executionId)?.activityId} focus={focus} />)}</>}
+      {tab === 'tasks' && <>{!snapshot.tasks.length && <p className="runtime-empty">{t(snapshot.unavailable.includes('tasks') ? 'Состояние недоступно' : 'Нет результатов')}</p>}{snapshot.tasks.map(task => <article key={task.id} className={`runtime-execution ${selected && task.taskDefinitionKey === selected ? 'selected' : ''}`}>
         <>{task.taskDefinitionKey ? <button className="runtime-link" onClick={() => focus(task.taskDefinitionKey)}>{task.name || task.taskDefinitionKey}</button> : <span>{task.name || task.id}</span>}</><code>{task.id}</code><span>{t('Исполнитель')}: {task.assignee || '—'}</span>
       </article>)}</>}
     </div>

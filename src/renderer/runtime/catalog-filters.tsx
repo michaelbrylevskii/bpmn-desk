@@ -12,6 +12,7 @@ export function CatalogFilters({ kind, query, apply }: { kind: CatalogKind; quer
   const names: Record<string, string> = { id: 'ID', key: 'Ключ процесса', name: 'Имя процесса', version: 'Версия', processDefinitionId: 'ID определения', processDefinitionKey: 'Ключ процесса', tenantId: 'Tenant ID', processInstanceId: 'ID экземпляра', executionId: 'ID execution', retries: 'Повторы', dueDate: 'Срок выполнения' };
   return <details className="catalog-filters"><summary><SlidersHorizontal size={14} />{t('Фильтры')}</summary>
     <form onSubmit={event => { event.preventDefault(); apply({ ...draft, sort: draft.sort || sorts[0], order: draft.order ?? 'asc', start: 0 }); }}>
+      {kind === 'definitions' && <label className="runtime-check"><input type="checkbox" checked={draft.latest ?? false} onChange={event => update('latest', event.target.checked)} />{t('Только последние версии')}</label>}
       <label>{t('Tenant ID')}<input value={draft.tenantId ?? ''} onChange={event => update('tenantId', event.target.value)} /></label>
       {kind !== 'jobs' && <label>{t('Ключ процесса')}<input value={draft.definitionKey ?? ''} onChange={event => update('definitionKey', event.target.value)} /></label>}
       {kind === 'instances' && <label>{t('Состояние')}<Select label={t('Состояние')} value={draft.suspended === undefined ? '' : String(draft.suspended)} onChange={value => update('suspended', value === '' ? undefined : value === 'true')}

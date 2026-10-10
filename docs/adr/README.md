@@ -23,3 +23,4 @@
 - [0019 — Подключение тестов готового приложения](0019-packaged-test-connection.md)
 - [0020 — Подключения к движкам и чтение состояния](0020-runtime-connections.md)
 - [0021 — Общие вкладки, контролы и экспорт состояния](0021-workspace-tabs-and-runtime-export.md)
+- [0022 — Ограниченная сводка выбранной версии](0022-bounded-definition-summary.md)

@@ -84,3 +84,8 @@
 @media (max-width: 1300px) { .runtime-toolbar-tools > .button { font-size: 0; gap: 0; padding: 8px; }.runtime-toolbar-tools > .button svg { width: 18px; height: 18px; }.toolbar:has(.runtime-toolbar-tools) { padding: 0 12px; gap: 3px; }.toolbar:has(.runtime-toolbar-tools) .brand { margin-right: 2px; }.toolbar:has(.runtime-toolbar-tools) .brand strong, .toolbar:has(.runtime-toolbar-tools) .version { display: none; } }
 
 .runtime-job-alert { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0; text-align: left; }.runtime-job-alert span { flex: 1; }.runtime-job-alert svg { flex-shrink: 0; }.runtime-job-alert:hover { border-color: var(--danger); }
+.runtime-summary-button { flex-shrink: 0; white-space: nowrap; }
+.runtime-summary-notice { flex-shrink: 0; max-height: 150px; overflow-y: auto; padding: 6px 12px; border-bottom: 1px solid var(--border); color: var(--muted); background: var(--surface); font-size: 11px; line-height: 1.5; }
+.runtime-summary-notice p { margin: 4px 0; }.runtime-summary-notice .runtime-warning, .runtime-summary-notice .runtime-error { padding: 6px 8px; }.runtime-summary-notice time { white-space: nowrap; }
+.catalog-filters label.runtime-check { display: flex; align-items: center; }
+.runtime-row-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }.runtime-instance-status { display: inline-block; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }.runtime-instance-status.suspended { background: transparent; border-radius: 0; border-left: 3px solid var(--muted); border-right: 3px solid var(--muted); width: 8px; height: 9px; }

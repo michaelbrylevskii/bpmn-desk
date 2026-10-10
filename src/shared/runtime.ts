@@ -13,7 +13,7 @@ export interface Connections { items: Connection[]; secureStorage: boolean }
 export interface PageQuery {
   start?: number; size?: number; search?: string; definitionId?: string; tenantId?: string;
   instanceId?: string; definitionKey?: string; executionId?: string; elementId?: string; suspended?: boolean;
-  sort?: string; order?: 'asc' | 'desc';
+  sort?: string; order?: 'asc' | 'desc'; latest?: boolean;
 }
 export interface RuntimePage<T> { data: T[]; total: number; start: number }
 export interface Definition {
@@ -34,8 +34,14 @@ export interface DeadLetterJob {
 export interface InstanceSnapshot {
   instance: Instance; executions: Execution[]; activeIds: string[]; tasks: RuntimeTask[];
   variables: Variable[]; deadLetters: DeadLetterJob[]; children: Instance[]; warnings: string[]; capturedAt: string;
+  unavailable: ('executions' | 'activeIds' | 'tasks' | 'variables' | 'deadLetters' | 'children')[];
 }
 export interface DeployedDiagram { definition: Definition; xml: string }
+/** Ограниченная выборка, а не полный обход версии процесса. Ошибка отличается от пустого результата. */
+export interface RuntimeSample<T> { data: T[]; total?: number; complete: boolean; error?: string }
+export interface DefinitionSummary {
+  executions: RuntimeSample<Execution>; deadLetters: RuntimeSample<DeadLetterJob>; capturedAt: string;
+}
 export interface RuntimeBridge {
   connections(): Promise<Connections>;
   saveConnection(input: ConnectionInput): Promise<Connection>;
@@ -47,11 +53,12 @@ export interface RuntimeBridge {
   deadLetters(id: string, query: PageQuery): Promise<RuntimePage<DeadLetterJob>>;
   diagram(id: string, definitionId: string): Promise<DeployedDiagram>;
   snapshot(id: string, instanceId: string): Promise<InstanceSnapshot>;
+  summary(id: string, definitionId: string): Promise<DefinitionSummary>;
   executionVariables(id: string, executionId: string): Promise<Variable[]>;
   stacktrace(id: string, jobId: string): Promise<string>;
 }
 export const runtimeChannels = {
   connections: 'runtime:connections', save: 'runtime:save-connection', delete: 'runtime:delete-connection', test: 'runtime:test', testDraft: 'runtime:test-draft',
   definitions: 'runtime:definitions', instances: 'runtime:instances', deadLetters: 'runtime:dead-letters',
-  diagram: 'runtime:diagram', snapshot: 'runtime:snapshot', executionVariables: 'runtime:execution-variables', stacktrace: 'runtime:stacktrace',
+  diagram: 'runtime:diagram', snapshot: 'runtime:snapshot', summary: 'runtime:summary', executionVariables: 'runtime:execution-variables', stacktrace: 'runtime:stacktrace',
 } as const;

@@ -32,9 +32,10 @@ export function pageQuery(value: unknown): PageQuery {
   if (data.size !== undefined && (typeof data.size !== 'number' || !Number.isInteger(data.size) || data.size < 1 || data.size > 100)) throw new Error('Недопустимый размер страницы API.');
   if (data.order !== undefined && data.order !== 'asc' && data.order !== 'desc') throw new Error('Недопустимая сортировка API.');
   if (data.suspended !== undefined && typeof data.suspended !== 'boolean') throw new Error('Недопустимый статус экземпляра.');
+  if (data.latest !== undefined && typeof data.latest !== 'boolean') throw new Error('Недопустимый фильтр версий.');
   return { start: data.start as number | undefined, search: data.search === undefined ? undefined : text(data.search),
     definitionId: data.definitionId ? identifier(data.definitionId) : undefined, tenantId: data.tenantId === undefined ? undefined : text(data.tenantId),
     size: data.size === undefined ? undefined : Number(data.size), sort: data.sort === undefined ? undefined : text(data.sort), order: data.order as PageQuery['order'], suspended: data.suspended as boolean | undefined,
-    instanceId: data.instanceId ? identifier(data.instanceId) : undefined, definitionKey: data.definitionKey ? text(data.definitionKey) : undefined,
+    latest: data.latest as boolean | undefined, instanceId: data.instanceId ? identifier(data.instanceId) : undefined, definitionKey: data.definitionKey ? text(data.definitionKey) : undefined,
     executionId: data.executionId ? identifier(data.executionId) : undefined, elementId: data.elementId ? identifier(data.elementId) : undefined };
 }

@@ -8,6 +8,7 @@ export function runtimeBridge(invoke: (channel: string, ...args: unknown[]) => P
     testConnectionDraft: input => call(c.testDraft, input),
     definitions: (id, query) => call(c.definitions, id, query), instances: (id, query) => call(c.instances, id, query), deadLetters: (id, query) => call(c.deadLetters, id, query),
     diagram: (id, definition) => call(c.diagram, id, definition), snapshot: (id, instance) => call(c.snapshot, id, instance),
+    summary: (id, definition) => call(c.summary, id, definition),
     executionVariables: (id, execution) => call(c.executionVariables, id, execution), stacktrace: (id, job) => call(c.stacktrace, id, job),
   };
 }

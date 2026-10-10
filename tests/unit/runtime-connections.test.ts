@@ -45,6 +45,8 @@ describe('подключения', () => {
     expect(() => pageQuery({ start: -1 })).toThrow();
     expect(() => pageQuery({ size: 10000 })).toThrow();
     expect(() => pageQuery({ order: 'anything' })).toThrow();
+    expect(() => pageQuery({ latest: 'true' })).toThrow();
+    expect(pageQuery({ latest: true }).latest).toBe(true);
   });
   it('проверка черновика не сохраняет профиль и использует секрет только при совпадении адреса и авторизации', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'desk-preview-'));

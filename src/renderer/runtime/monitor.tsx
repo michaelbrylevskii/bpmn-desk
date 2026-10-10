@@ -13,6 +13,7 @@ import { RuntimeDiagram } from './diagram';
 import { InstanceDetails } from './instance-details';
 import { JobDetails } from './job-details';
 import { useSnapshot } from './use-snapshot';
+import { useSummary } from './use-summary';
 
 export function RuntimeMonitor({ id, connection, revision, active, copy, publish }: { id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
@@ -23,6 +24,7 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
   const refreshSnapshot = snapshot.refresh;
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
   const desiredDefinition = snapshot.data?.instance.processDefinitionId ?? definitionId;
+  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && !!desiredDefinition);
   const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
   const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
   const diagramError = loaded?.key === diagramKey ? loaded.error : undefined;
@@ -64,7 +66,7 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
       <div className="runtime-center">{snapshot.error && <p role="alert" className="runtime-error">{text(snapshot.error)} {snapshot.data && t('Последний снимок устарел.')}</p>}
         {snapshot.data?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
-        {diagram ? <RuntimeDiagram diagram={diagram} snapshot={snapshot.data} select={select} viewer={viewer} onReady={setReady} /> : <p className="runtime-empty">{desiredDefinition || snapshot.busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
+        {diagram ? <RuntimeDiagram diagram={diagram} snapshot={snapshot.data} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !diagramError && <p className="runtime-empty">{desiredDefinition || snapshot.busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
         {snapshot.data && <div className="runtime-freshness"><time dateTime={snapshot.data.capturedAt}>{t('Время снимка')}: {new Date(snapshot.data.capturedAt).toLocaleTimeString()}</time><span>{t('Снимок собирается несколькими запросами и может измениться во время чтения.')}</span></div>}
       </div>
       {snapshot.data ? <InstanceDetails key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot.data} selected={selected} focus={focus} openInstance={openInstance} jobSelection={selectedJob} /> :

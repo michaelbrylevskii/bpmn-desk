@@ -27,6 +27,7 @@ it('использует GET, дочитывает страницы executions �
     const snapshot = await new FlowableReader(new RuntimeHttp(profile, '')).snapshot('p1');
     expect(snapshot.executions).toHaveLength(101); expect(snapshot.activeIds).toEqual(['Task_A']);
     expect(snapshot.variables[0]?.value).toEqual({ ok: true }); expect(snapshot.warnings.join(' ')).toContain('403');
+    expect(snapshot.unavailable).toContain('deadLetters'); expect(snapshot.unavailable).not.toContain('executions');
     expect(requests.every(request => request.startsWith('GET /process-api/'))).toBe(true);
     expect(requests.some(request => request.includes('start=100'))).toBe(true);
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
