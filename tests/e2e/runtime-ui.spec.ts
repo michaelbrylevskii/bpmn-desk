@@ -38,6 +38,9 @@ test('несколько мониторов сохраняют собствен�
     await page.getByRole('button', { name: 'Discard XML edits', exact: true }).click(); await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
     await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
     await local.locator('..').getByRole('button').click(); await expect(firstTab).toHaveAttribute('aria-selected', 'true');
+    await page.locator('.new-tab').click(); await page.getByRole('dialog').getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await firstTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
   } finally { await close(app, directory); }
 });
 

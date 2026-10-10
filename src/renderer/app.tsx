@@ -37,7 +37,12 @@ export function App() {
   const { mode: theme, dark, setMode: setTheme } = useTheme(); const [examples, setExamples] = useState<string[]>([]); const [recent, setRecent] = useState<string[]>([]); const [dragging, setDragging] = useState(false);
   const addDocument = docs.add;
   const copy = useCallback((diagram: DeployedDiagram) => { addDocument({ name: `${diagram.definition.key}.bpmn20.xml`, path: '', token: '', xml: diagram.xml }); }, [addDocument]);
-  useEffect(() => { void bridge.examples().then(setExamples).catch(error => report(errorNotice(error))); void bridge.recentFiles().then(setRecent).catch(error => report(errorNotice(error))); }, [report, docs.documents.length]);
+  useEffect(() => { void bridge.examples().then(setExamples).catch(error => report(errorNotice(error))); }, [report]);
+  useEffect(() => {
+    let disposed = false;
+    void bridge.recentFiles().then(items => { if (!disposed) setRecent(items); }).catch(error => { if (!disposed) report(errorNotice(error)); });
+    return () => { disposed = true; };
+  }, [report, docs.documents.length, creating]);
   const exportDiagram = useCallback((format: DiagramExport) => docs.run(() => monitoring ? controls?.exportDiagram(format) : docs.exportDiagram(format, active?.id)), [docs, monitoring, controls, active?.id]);
   const onAction = useCallback((action: string) => {
     if ((action === 'undo' || action === 'redo') && document.activeElement instanceof HTMLElement) {
@@ -72,7 +77,7 @@ export function App() {
   }, [onAction]);
   return <div className="app" onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragging(true); } }}
     onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
-    onDrop={event => { event.preventDefault(); setDragging(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
+    onDrop={event => { event.preventDefault(); setDragging(false); setCreating(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
     <Toolbar hasDocument={!!active?.snapshot} canUndo={!!active?.snapshot?.canUndo} canRedo={!!active?.snapshot?.canRedo} theme={theme} onTheme={setTheme} onAction={onAction}
       onLanguage={value => docs.run(() => setLanguage(value))} onExport={exportDiagram} canExport={monitoring ? !!controls?.canExport : !!active?.snapshot}
       runtimeTools={monitoring ? <RuntimeToolbar connectionId={activeTab.connectionId} connections={profiles.data.items} controls={controls} choose={id => { tabs.changeConnection(activeTab.id, id); profiles.remember(id); }} manage={setManaging} /> : undefined} />
@@ -89,6 +94,7 @@ export function App() {
     {notice && <NotificationToast key={notice.id} notice={notice} close={() => setNotice(undefined)} />}
     {dragging && <div className="drop-overlay"><Workflow size={44} /><h2>{t('Отпусти BPMN-файлы здесь')}</h2><p>{t('Схемы откроются в отдельных вкладках')}</p></div>}
     {creating && <NewDiagramDialog close={() => setCreating(false)} create={profile => { docs.create(profile); setCreating(false); }} connections={profiles.data.items} savedId={profiles.preferredId}
+      examples={examples} recent={recent} openExample={name => { setCreating(false); docs.run(() => docs.openExample(name)); }} openRecent={path => { setCreating(false); docs.run(() => docs.openRecent(path)); }}
       monitor={id => { tabs.createMonitor(id); profiles.remember(id); setCreating(false); }} manage={() => setManaging('')} />}
     {managing !== undefined && <ConnectionsDialog connections={profiles.data} initialId={managing} close={() => setManaging(undefined)} changed={profiles.refresh} />}
     {creating && profiles.error && <NotificationToast notice={{ severity: 'error', message: text(profiles.error) }} close={() => setCreating(false)} />}
