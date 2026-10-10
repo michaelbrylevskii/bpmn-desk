@@ -119,5 +119,5 @@ export function useDocuments(report: ReportNotice) {
     try { Promise.resolve(operation()).catch(error => report(errorNotice(error, failure))); } catch (error) { report(errorNotice(error, failure)); }
   }, [report]);
 
-  return { documents, active, activeId, setActiveId, editors, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportDiagram, recovery, restore, discardRecovery, prepareClose, run };
+  return { documents, active, activeId, setActiveId, editors, add, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportDiagram, recovery, restore, discardRecovery, prepareClose, run };
 }

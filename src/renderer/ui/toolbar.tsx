@@ -1,4 +1,4 @@
-import { Workflow, FilePlus2, FolderOpen, Save, Undo2, Redo2, CopyPlus, Globe, ChevronDown } from 'lucide-react';
+import { Workflow, FilePlus2, FolderOpen, Save, Undo2, Redo2, CopyPlus, Globe, ChevronDown, Server } from 'lucide-react';
 import { version } from '../../../package.json';
 import type { Language } from '../../shared/i18n';
 import type { DiagramExport } from '../../shared/contracts';
@@ -6,7 +6,8 @@ import { useI18n } from '../i18n/provider';
 import { ExportMenu } from './export-menu';
 import { ThemePicker } from './theme-picker';
 import type { ThemeMode } from './use-theme';
-export function Toolbar({ hasDocument, canUndo, canRedo, theme, onTheme, onAction, onLanguage, onExport }: {
+export function Toolbar({ hasDocument, canUndo, canRedo, theme, onTheme, onAction, onLanguage, onExport, monitoring }: {
+  monitoring: boolean;
   onExport: (format: DiagramExport) => void;
   theme: ThemeMode; onTheme: (mode: ThemeMode) => void;
   hasDocument: boolean; canUndo: boolean; canRedo: boolean; onAction: (name: string) => void; onLanguage: (language: Language) => void;
@@ -20,7 +21,8 @@ export function Toolbar({ hasDocument, canUndo, canRedo, theme, onTheme, onActio
     <button className="icon-button" disabled={!hasDocument} title={t("Сохранить как (Ctrl+Shift+S)")} onClick={() => onAction('save-as')}><CopyPlus size={18} /></button>
     <div className="toolbar-divider" /><button className="icon-button" disabled={!canUndo} title={t("Отменить (Ctrl+Z)")} onClick={() => onAction('undo')}><Undo2 size={18} /></button>
     <button className="icon-button" disabled={!canRedo} title={t("Повторить (Ctrl+Shift+Z)")} onClick={() => onAction('redo')}><Redo2 size={18} /></button>
-    <span className="toolbar-spacer" /><label className="language-picker" title={t('Язык')}><Globe size={16} /><select aria-label={t('Язык')} value={language} onChange={event => onLanguage(event.target.value as Language)}><option value="en">EN</option><option value="ru">RU</option></select><ChevronDown className="language-chevron" size={13} /></label>
+    <span className="toolbar-spacer" /><button className="button ghost monitor-toggle" aria-pressed={monitoring} onClick={() => onAction('runtime')}><Server size={17} />{t('Состояние процессов')}</button>
+    <label className="language-picker" title={t('Язык')}><Globe size={16} /><select aria-label={t('Язык')} value={language} onChange={event => onLanguage(event.target.value as Language)}><option value="en">EN</option><option value="ru">RU</option></select><ChevronDown className="language-chevron" size={13} /></label>
     <ExportMenu disabled={!hasDocument} exportDiagram={onExport} />
     <ThemePicker mode={theme} change={onTheme} />
   </header>;

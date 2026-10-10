@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "node scripts/playwright.mjs test",
+    "test:runtime": "npm run build && node scripts/test-runtime.mjs",
     "test:extra": "node scripts/test-extra.mjs",
     "check": "npm run typecheck && npm run lint && npm test",
     "package:linux": "npm run build:icon && npm run build && node scripts/package.mjs --linux AppImage",

@@ -16,6 +16,7 @@ import { useTheme } from './ui/use-theme';
 import { NewDiagramDialog } from './ui/new-diagram-dialog';
 import { Welcome } from './ui/welcome';
 import { DocumentWorkspace } from './workspace/document-workspace';
+import { RuntimeWorkspace } from './runtime/workspace';
 export function App() {
   const { t, setLanguage } = useI18n();
   const [notice, setNotice] = useState<Notice & { id: string }>();
@@ -27,16 +28,22 @@ export function App() {
   const [examples, setExamples] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [monitoring, setMonitoring] = useState(false);
+  const [runtimeVisited, setRuntimeVisited] = useState(false);
 
   useEffect(() => { void bridge.examples().then(setExamples).catch(error => report(errorNotice(error))); void bridge.recentFiles().then(setRecent).catch(error => report(errorNotice(error))); }, [report, docs.documents.length]);
 
   const onAction = useCallback((action: string) => {
+    if (action === 'runtime') { setRuntimeVisited(true); setMonitoring(value => !value); return; }
+    if (action === 'new' || action === 'open') setMonitoring(false);
+    if (monitoring && ['save', 'save-as', 'export', 'fit'].includes(action)) return;
     const editor = docs.editors.current.get(docs.activeId);
     if ((action === 'undo' || action === 'redo') && document.activeElement instanceof HTMLElement) {
       const view = EditorView.findFromDOM(document.activeElement);
       if (view) { (action === 'undo' ? undo : redo)(view); return; }
       if (document.activeElement.matches('input, textarea')) { document.execCommand(action); return; }
     }
+    if (monitoring && (action === 'undo' || action === 'redo')) return;
     switch (action) {
       case 'new': requestNew(); break;
       case 'open': docs.run(docs.open); break;
@@ -48,7 +55,7 @@ export function App() {
       case 'fit': editor?.fit(); break;
       case 'prepare-close': docs.run(docs.prepareClose); break;
     }
-  }, [docs, requestNew]);
+  }, [docs, requestNew, monitoring]);
 
   useEffect(() => bridge.onAction(onAction), [onAction]);
   useEffect(() => {
@@ -66,18 +73,21 @@ export function App() {
 
   return <div className="app" onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragging(true); } }}
     onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
-    onDrop={event => { event.preventDefault(); setDragging(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
-    <Toolbar hasDocument={!!docs.active?.snapshot} canUndo={!!docs.active?.snapshot?.canUndo} canRedo={!!docs.active?.snapshot?.canRedo} theme={theme} onTheme={setTheme} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} onExport={format => docs.run(() => docs.exportDiagram(format))} />
+    onDrop={event => { event.preventDefault(); setDragging(false); setMonitoring(false); docs.run(() => docs.drop(Array.from(event.dataTransfer.files))); }}>
+    <Toolbar monitoring={monitoring} hasDocument={!monitoring && !!docs.active?.snapshot} canUndo={!monitoring && !!docs.active?.snapshot?.canUndo} canRedo={!monitoring && !!docs.active?.snapshot?.canRedo} theme={theme} onTheme={setTheme} onAction={onAction} onLanguage={value => docs.run(() => setLanguage(value))} onExport={format => docs.run(() => docs.exportDiagram(format))} />
     {docs.documents.length > 0 && <nav className="document-tabs" aria-label={t("Открытые схемы")}>{docs.documents.map(record => <div key={record.id} className={`document-tab ${docs.activeId === record.id ? 'active' : ''}`}>
-      <button title={record.path || record.name} onClick={() => docs.setActiveId(record.id)}><Workflow size={14} /><span>{record.name}</span>{isDirty(record) && <i className="dirty-dot" aria-label={t("Несохранённые изменения")} />}</button>
+      <button title={record.path || record.name} onClick={() => { setMonitoring(false); docs.setActiveId(record.id); }}><Workflow size={14} /><span>{record.name}</span>{isDirty(record) && <i className="dirty-dot" aria-label={t("Несохранённые изменения")} />}</button>
       <button title={t('Закрыть {name}', { name: record.name })} onClick={() => docs.close(record.id)}><X size={13} /></button>
-    </div>)}<button className="new-tab" title={t("Новая схема")} onClick={requestNew}>+</button></nav>}
+    </div>)}<button className="new-tab" title={t("Новая схема")} onClick={() => onAction('new')}>+</button></nav>}
     {docs.documents.length > 0 && docs.recovery.length > 0 && <div className="pending-recovery"><span>{t('Остались несохранённые документы предыдущей сессии: {count}', { count: docs.recovery.length })}</span><button className="button small" onClick={docs.restore}>{t("Восстановить")}</button><button className="button small ghost" onClick={docs.discardRecovery}>{t("Отбросить")}</button></div>}
-    <div className="workspaces">{docs.documents.length ? docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={record.id === docs.activeId}
+    <div className="workspaces"><div className="workspace-surface" hidden={monitoring}>{docs.documents.length ? docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={!monitoring && record.id === docs.activeId}
       editors={docs.editors.current} dark={dark} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />) :
       <Welcome create={requestNew} open={() => docs.run(docs.open)} examples={examples} recent={recent} openExample={name => docs.run(() => docs.openExample(name))}
         openRecent={path => docs.run(() => docs.openRecent(path))} recovery={docs.recovery.length} restore={docs.restore} discardRecovery={docs.discardRecovery} />}</div>
-    <footer className="statusbar"><span><CircleCheck size={13} />{docs.active ? t('{count} элементов', { count: docs.active.snapshot?.items.length ?? 0 }) : t("Готово")}</span><span>{docs.active?.snapshot && <span className="engine-badge">{docs.active.snapshot.engines.map(id => engineProfiles[id].title).join(" + ") || "BPMN 2.0"}</span>}{docs.active?.snapshot?.selected?.id ?? 'BPMN 2.0 · Flowable · Camunda 7'}</span><span className="status-spacer" /><span>{docs.active && isDirty(docs.active) ? t("Есть несохранённые изменения") : docs.active && !docs.active.path ? t("Без файла · сохрани копию") : t("Все изменения сохранены")}</span></footer>
+      {runtimeVisited && <div className="workspace-surface" hidden={!monitoring}><RuntimeWorkspace active={monitoring} copy={diagram => {
+        docs.add({ name: `${diagram.definition.key}.bpmn20.xml`, path: '', token: '', xml: diagram.xml }); setMonitoring(false);
+      }} /></div>}</div>
+    <footer className="statusbar"><span><CircleCheck size={13} />{monitoring ? t("Состояние процессов") : docs.active ? t('{count} элементов', { count: docs.active.snapshot?.items.length ?? 0 }) : t("Готово")}</span><span>{!monitoring && docs.active?.snapshot && <span className="engine-badge">{docs.active.snapshot.engines.map(id => engineProfiles[id].title).join(" + ") || "BPMN 2.0"}</span>}{monitoring ? 'Flowable REST API' : docs.active?.snapshot?.selected?.id ?? 'BPMN 2.0 · Flowable · Camunda 7'}</span><span className="status-spacer" /><span>{monitoring ? t("Только чтение") : docs.active && isDirty(docs.active) ? t("Есть несохранённые изменения") : docs.active && !docs.active.path ? t("Без файла · сохрани копию") : t("Все изменения сохранены")}</span></footer>
     {notice && <NotificationToast key={notice.id} notice={notice} close={() => setNotice(undefined)} />}
     {dragging && <div className="drop-overlay"><Workflow size={44} /><h2>{t("Отпусти BPMN-файлы здесь")}</h2><p>{t("Схемы откроются в отдельных вкладках")}</p></div>}
     {creating && <NewDiagramDialog close={() => setCreating(false)} create={(profile: DocumentProfile) => { docs.create(profile); setCreating(false); }} />}

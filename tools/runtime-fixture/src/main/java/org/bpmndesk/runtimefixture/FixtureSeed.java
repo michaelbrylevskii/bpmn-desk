@@ -25,13 +25,15 @@ public class FixtureSeed {
             repository.createDeployment().name("BPMN Desk fixture").addClasspathResource("processes/" + name + ".bpmn20.xml").deploy();
         }
         var first = repository.createProcessDefinitionQuery().processDefinitionKey("deskReview").singleResult();
-        var vars = Map.<String, Object>of("documentId", "DOC-001", "amount", 42, "approved", false, "reviewers", List.of("alice", "bob", "carol"));
+        var payload = new ObjectMapper().valueToTree(Map.of("nested", Map.of("ready", true), "items", List.of("first", "second")));
+        var vars = Map.<String, Object>of("documentId", "DOC-001", "amount", 42, "approved", false, "reviewers", List.of("alice", "bob", "carol"), "payload", payload);
         var review = engine.getRuntimeService().startProcessInstanceById(first.getId(), "review-v1", vars);
         var source = new String(getClass().getResourceAsStream("/processes/review.bpmn20.xml").readAllBytes(), StandardCharsets.UTF_8);
         repository.createDeployment().name("Review v2").addString("processes/review.bpmn20.xml", source.replace("Review document", "Review document v2")).deploy();
         var parallel = engine.getRuntimeService().startProcessInstanceByKey("deskParallel", "parallel-review", vars);
         var failure = engine.getRuntimeService().startProcessInstanceByKey("deskFailure", "failed-delivery", vars);
         var parent = engine.getRuntimeService().startProcessInstanceByKey("deskParent", "parent-review", vars);
+        var child = engine.getRuntimeService().createProcessInstanceQuery().superProcessInstanceId(parent.getId()).singleResult();
         // Ошибка создаётся настоящим async executor и сохраняется самим движком.
         var deadline = System.nanoTime() + 60_000_000_000L;
         while (engine.getManagementService().createDeadLetterJobQuery().processInstanceId(failure.getId()).count() == 0) {
@@ -45,7 +47,7 @@ public class FixtureSeed {
         Files.writeString(output, new ObjectMapper().writeValueAsString(Map.of(
             "baseUrl", "http://127.0.0.1:" + context.getWebServer().getPort() + "/process-api/",
             "reviewInstanceId", review.getId(), "reviewDefinitionId", first.getId(), "parallelInstanceId", parallel.getId(),
-            "failedInstanceId", failure.getId(), "deadLetterId", job.getId(), "parentInstanceId", parent.getId()
+            "failedInstanceId", failure.getId(), "deadLetterId", job.getId(), "parentInstanceId", parent.getId(), "childInstanceId", child.getId()
         )));
     }
 }
