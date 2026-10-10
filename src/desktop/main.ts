@@ -37,7 +37,7 @@ async function start(): Promise<void> {
   });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   const window = new BrowserWindow({
-    width: 1500, height: 960, minWidth: 1050, minHeight: 680, title: 'BPMN Desk', backgroundColor: '#10131b',
+    width: 1500, height: 960, minWidth: 1050, minHeight: 680, title: 'BPMN Desk', backgroundColor: '#10131b', autoHideMenuBar: true,
     webPreferences: { preload: join(import.meta.dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
     icon: app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(app.getAppPath(), 'build/icon.png'),
   });

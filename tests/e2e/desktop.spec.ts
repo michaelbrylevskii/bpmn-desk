@@ -18,6 +18,8 @@ test('Electron запускает packaged renderer, preload и встроенн
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     expect(await page.evaluate(() => !!window.desktop)).toBe(true);
     expect(await page.evaluate(() => 'require' in window)).toBe(false);
+    expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isMenuBarVisible())).toBe(false);
+    expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isMenuBarAutoHide())).toBe(true);
     await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await expect(page.locator('.import-error')).toHaveCount(0);

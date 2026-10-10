@@ -27,4 +27,5 @@ export function applicationMenu(window: BrowserWindow, language: Language, zoom:
       { id: 'language-ru', label: 'Русский', type: 'radio', checked: language === 'ru', click: () => changeLanguage('ru') },
     ] },
   ]));
+  if (process.platform !== 'darwin') window.setMenuBarVisibility(false);
 }
