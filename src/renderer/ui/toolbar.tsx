@@ -20,7 +20,7 @@ export function Toolbar({ hasDocument, canUndo, canRedo, theme, onTheme, onActio
       <button className="icon-button" disabled={!hasDocument} title={t('Сохранить как (Ctrl+Shift+S)')} onClick={() => onAction('save-as')}><CopyPlus size={18} /></button>
       <div className="toolbar-divider" /><button className="icon-button" disabled={!canUndo} title={t('Отменить (Ctrl+Z)')} onClick={() => onAction('undo')}><Undo2 size={18} /></button>
       <button className="icon-button" disabled={!canRedo} title={t('Повторить (Ctrl+Shift+Z)')} onClick={() => onAction('redo')}><Redo2 size={18} /></button></>}
-    <span className="toolbar-spacer" /><div className="language-picker" title={t('Язык')}><Globe size={16} /><Select label={t('Язык')} value={language} onChange={value => onLanguage(value as Language)} options={[{ value: 'en', label: 'EN' }, { value: 'ru', label: 'RU' }]} /></div>
+    <span className="toolbar-spacer" /><Select className="language-picker" icon={<Globe size={16} />} label={t('Язык')} value={language} onChange={value => onLanguage(value as Language)} options={[{ value: 'en', label: 'EN' }, { value: 'ru', label: 'RU' }]} />
     <ExportMenu disabled={!canExport} exportDiagram={onExport} /><ThemePicker mode={theme} change={onTheme} />
   </header>;
 }

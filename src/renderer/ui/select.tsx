@@ -1,12 +1,12 @@
 import { Check, ChevronDown } from 'lucide-react';
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface SelectOption { value: string; label: string; disabled?: boolean; action?: () => void }
 /** Общий listbox с клавиатурой. Popup живёт в ближайшем dialog или body, не обрезается панелью. */
-export function Select({ label, value, options, onChange, disabled, className = '', placeholder = '—' }: {
+export function Select({ label, value, options, onChange, disabled, className = '', placeholder = '—', icon }: {
   label: string; value: string; options: readonly SelectOption[]; onChange: (value: string) => void;
-  disabled?: boolean; className?: string; placeholder?: string;
+  disabled?: boolean; className?: string; placeholder?: string; icon?: ReactNode;
 }) {
   const id = useId(); const root = useRef<HTMLDivElement>(null); const trigger = useRef<HTMLButtonElement>(null); const popup = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false); const [highlight, setHighlight] = useState(0);
@@ -71,7 +71,7 @@ export function Select({ label, value, options, onChange, disabled, className = 
           const index = options.findIndex(option => !option.disabled && option.label.toLocaleLowerCase().startsWith(typed.current.value));
           if (index >= 0) { setHighlight(index); setOpen(true); }
         }
-      }}><span>{selected?.label || placeholder}</span><ChevronDown size={14} /></button>
+      }}>{icon && <span className="select-icon" aria-hidden="true">{icon}</span>}<span className="select-label">{selected?.label || placeholder}</span><ChevronDown size={14} /></button>
     {open && createPortal(<div id={id} ref={popup} className="select-options" role="listbox" aria-label={label}
       style={{ position: 'fixed', top: position.top, left: position.left, width: position.width, maxHeight: position.height }}>
       {options.map((option, index) => <button type="button" role="option" aria-selected={!option.action && option.value === value} aria-disabled={option.disabled || undefined}

@@ -8,5 +8,6 @@
 .select-check { width: 14px; flex: 0 0 14px; color: var(--accent); margin-top: 1px; }
 .field[data-presence="explicit"] .select-trigger { border-left: 2px solid var(--accent); }
 .field[data-presence="default"] .select-trigger { color: var(--muted); }
-.language-picker .select-control { width: 61px; }.language-picker .select-trigger { min-height: 32px; padding: 4px 6px; border: 0; background: transparent; font-weight: 550; }
+.select-icon { display: flex; flex-shrink: 0; color: var(--muted); pointer-events: none; }.select-label { flex: 1; }
+.select-control.language-picker { width: 98px; flex-shrink: 0; }.language-picker .select-trigger { height: 34px; padding: 7px 9px; background: var(--surface); font-weight: 550; }
 .field.compact .select-control { width: 155px; max-width: 50%; flex-shrink: 0; }
