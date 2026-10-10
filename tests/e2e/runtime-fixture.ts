@@ -28,4 +28,3 @@ export async function openInstance(page: Page, id: string) {
   await expect(page.locator('.workspace-surface:not([hidden]) .runtime-instance > code')).toHaveText(id);
 }
 export async function close(app: ElectronApplication, directory: string) { await app.close(); await rm(directory, { recursive: true, force: true }); }
-

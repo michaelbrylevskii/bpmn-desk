@@ -84,13 +84,18 @@ test('подключения: несколько профилей, выбор, �
     await page.getByRole('button', { name: 'Manage connections', exact: true }).click();
     await page.getByRole('button', { name: 'Test connection', exact: true }).click();
     await expect(page.getByRole('status')).toContainText('Connection verified');
+    await page.keyboard.press('Escape'); await selectOption(page.getByLabel('Select a connection'), { label: 'No credentials' });
+    await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('401');
   } finally { await app.close(); }
   const reopened = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
   try {
     const page = await reopened.firstWindow(); await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
     await page.getByLabel('Select a connection').click();
     await expect(page.getByRole('option')).toHaveCount(3); await page.keyboard.press('Escape');
+    await expect(page.getByRole('combobox', { name: 'Select a connection' })).toContainText('No credentials');
     await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('401');
+    await selectOption(page.getByLabel('Select a connection'), { label: 'Fixture engine' });
     await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('Enter the connection password or token');
   } finally { await close(reopened, directory); }
 });

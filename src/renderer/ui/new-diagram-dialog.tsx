@@ -9,8 +9,10 @@ export function NewDiagramDialog({ create, close, connections, savedId, monitor,
   connections: Connection[]; savedId: string; monitor: (id: string) => void; manage: () => void }) {
   const { t } = useI18n(); const dialog = useRef<HTMLDialogElement>(null); const [connection, setConnection] = useState(savedId || connections[0]?.id || '');
   useEffect(() => { const node = dialog.current; node?.showModal(); return () => node?.close(); }, []);
-  useEffect(() => { if (savedId && connections.some(item => item.id === savedId)) setConnection(savedId); }, [savedId, connections]);
-  useEffect(() => { if (!connections.some(item => item.id === connection)) setConnection(connections[0]?.id ?? ''); }, [connection, connections]);
+  useEffect(() => {
+    setConnection(current => connections.some(item => item.id === savedId) ? savedId :
+      connections.some(item => item.id === current) ? current : connections[0]?.id ?? '');
+  }, [savedId, connections]);
   return <dialog ref={dialog} className="new-diagram-dialog" aria-labelledby="new-diagram-title" onClose={close}>
     <div className="panel-heading"><h2 id="new-diagram-title">{t('Новая вкладка')}</h2><button className="icon-button" title={t('Закрыть')} onClick={close}><X size={16} /></button></div>
     <p>{t('Локальная схема')}</p><div className="diagram-profile-choices">
