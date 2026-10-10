@@ -1,0 +1,23 @@
+{
+  "license": "MIT",
+  "author": "BPMN Desk contributors",
+  "origin": "Оригинальные тестовые схемы BPMN Desk; созданы для независимого Flowable-стенда.",
+  "files": [
+    {
+      "name": "failure.bpmn20.xml",
+      "sha256": "360e803b6f80afe728a46f127b4c554078044fed8fc852660532afe259cf1a0c"
+    },
+    {
+      "name": "parallel.bpmn20.xml",
+      "sha256": "1f63b5f89b1e99cc1b9213d61e9dd7c86e9a226843587fc98be8bfb3156a648b"
+    },
+    {
+      "name": "parent.bpmn20.xml",
+      "sha256": "58e1c23d4be1ad3facdeb5e0ea9ebddfc8c7d9efa0ba8f8c8bb88692ad770e2c"
+    },
+    {
+      "name": "review.bpmn20.xml",
+      "sha256": "33f9f1d36316b00865fafe1bc42aa1e97693aa26c86592035ada20e08669db02"
+    }
+  ]
+}

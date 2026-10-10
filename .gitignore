@@ -10,6 +10,7 @@ playwright-report/
 *.log
 tools/flowable-validation/target/
 tools/camunda-validation/target/
+tools/runtime-fixture/target/
 SingletonCookie
 SingletonLock
 SingletonSocket
