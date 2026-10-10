@@ -7,7 +7,7 @@ test('браузерное preview оставляет монитор недос�
   await page.getByTitle('Новая вкладка (Ctrl+N)', { exact: true }).click();
   await expect(page.getByRole('button', { name: 'Открыть монитор', exact: true })).toBeDisabled();
   await expect(page.getByRole('combobox', { name: 'Выбери подключение', exact: true })).toBeDisabled();
-  await page.keyboard.press('Escape');
+  await page.getByTitle('Закрыть Новая вкладка', { exact: true }).click();
   await expect(page.getByLabel('Название', { exact: true })).toHaveValue('Local draft');
   await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
   await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);

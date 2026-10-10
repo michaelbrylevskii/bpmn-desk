@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { test, expect } from '@playwright/test';
 import { emptyDiagram } from '../../src/renderer/bpmn/template';
@@ -10,8 +11,8 @@ test.beforeEach(async ({ page }) => {
 for (const kind of ['malformed', 'body-text'] as const) {
   test(`${kind}: применение XML явно сообщает об отказе, сохраняет черновик, модель и undo`, async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: 'New tab', exact: true }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+    await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
+    await createDiagram(page, 'Flowable');
     await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await page.getByLabel('Name', { exact: true }).fill('Retained name');
     await page.getByLabel('Name', { exact: true }).blur();
@@ -76,8 +77,8 @@ test('ошибка XML расширений выделяется в обеих �
 
 test('успешное применение автоматически исчезает после плавного затухания', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New tab', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'BPMN 2.0', exact: true }).click();
+  await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'BPMN 2.0');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByRole('button', { name: 'Apply XML', exact: true }).click();
   const notice = page.getByRole('status');
@@ -90,8 +91,8 @@ test('успешное применение автоматически исче�
 
 test('наведение останавливает затухание, уход курсора возобновляет его с дебаунсом', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New tab', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+  await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Flowable');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('Diagram XML', { exact: true }).fill('<broken>');
   await page.getByRole('button', { name: 'Apply XML', exact: true }).click();
@@ -117,8 +118,8 @@ test('наведение останавливает затухание, уход
 
 test('подробности и клавиатурный фокус удерживают уведомление, повторная ошибка обновляет таймер', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New tab', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+  await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Flowable');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('Diagram XML', { exact: true }).fill('<broken>');
   const apply = page.getByRole('button', { name: 'Apply XML', exact: true });

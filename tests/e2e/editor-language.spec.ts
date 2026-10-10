@@ -1,12 +1,13 @@
+import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { test, expect } from '@playwright/test';
 
 test('английский по умолчанию, смена языка сохраняет модель, поиск и XML undo', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'New tab', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Create diagram', exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Language', exact: true })).toHaveAttribute('data-value', 'en');
-  await page.getByRole('button', { name: 'New tab', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+  await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Flowable');
   await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
   await page.getByLabel('Name', { exact: true }).fill('Название пользователя');
   await page.getByLabel('Name', { exact: true }).blur();
@@ -48,16 +49,16 @@ test('английский по умолчанию, смена языка сох
 test('выбранный русский язык восстанавливается после обновления', async ({ page }) => {
   await page.goto('/');
   await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
-  await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Создать схему', exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('combobox', { name: 'Язык', exact: true })).toHaveAttribute('data-value', 'ru');
-  await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Создать схему', exact: true })).toBeVisible();
 });
 
 test('смена языка сохраняет действия выбранного элемента и контролы поиска', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New tab', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+  await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Flowable');
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   const entries = page.locator('.djs-context-pad .entry');
   const initial = await entries.count(); expect(initial).toBeGreaterThan(1);

@@ -1,4 +1,6 @@
 export const runtimeMessages = {
+  'Стартовая страница': 'Start page',
+  'Создать схему': 'Create diagram', 'Тип новой схемы': 'New diagram type', 'РЕДАКТОР И МОНИТОР BPMN': 'BPMN EDITOR AND MONITOR',
   'Экземпляры из загруженной выборки. Для подробностей выбери экземпляр.': 'Instances from the loaded sample. Select an instance for details.',
   'В загруженной выборке нет экземпляров этого элемента.': 'The loaded sample has no instances at this element.',
   'Только последние версии': 'Latest versions only', 'Сводка версии': 'Version summary', 'Обновить сводку': 'Refresh summary', 'Скрыть сводку': 'Hide summary',

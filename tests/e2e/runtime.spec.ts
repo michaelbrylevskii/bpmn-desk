@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -46,7 +47,7 @@ test('реальный Flowable: multi-instance, executions и локальны�
     const immediate = await time.getAttribute('datetime'); await expect(time).not.toHaveAttribute('datetime', immediate!, { timeout: 10000 });
     await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('3');
     await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
-    await page.getByRole('button', { name: 'BPMN 2.0', exact: true }).click();
+    await createDiagram(page, 'BPMN 2.0');
     await page.locator('.document-tab[data-kind=monitor]').getByRole('tab').click();
     await expect(page.locator('.runtime-canvas .viewport')).toHaveAttribute('transform', transform!);
     await page.screenshot({ path: 'test-results/runtime-parallel.png' });

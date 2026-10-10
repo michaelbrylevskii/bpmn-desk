@@ -17,7 +17,6 @@ export async function launch(baseUrl?: string): Promise<{ app: ElectronApplicati
   try {
     app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
     const page = await app.firstWindow();
-    await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
     await selectOption(page.getByRole('combobox', { name: 'Select a connection', exact: true }), '@new');
     await page.getByLabel('Connection name').fill('Fixture engine'); await page.getByLabel('REST API URL').fill(baseUrl ?? fixture.baseUrl);
     await page.getByLabel('Username', { exact: true }).fill('desk-reader'); await page.getByLabel('Password or token').fill('fixture-password');

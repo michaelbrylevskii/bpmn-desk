@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { test, expect } from './russian-fixture';
 import { readFileSync } from 'node:fs';
 
@@ -30,8 +31,8 @@ test('фокус холста использует акцент приложен
 
 test('тема холста меняется без изменения XML, экспорт SVG содержит готовые цвета', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+  await page.getByTitle('Новая вкладка (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Flowable');
   const circle = page.locator('[data-element-id="StartEvent_1"] .djs-visual circle').first();
   await expect(circle).toBeVisible();
   const darkFill = await circle.evaluate(el => getComputedStyle(el).fill);

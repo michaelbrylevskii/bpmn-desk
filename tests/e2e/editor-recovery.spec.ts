@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { test, expect } from '@playwright/test';
 
 test('после перезапуска восстанавливаются все 21 изменённая вкладка', async ({ page }) => {
@@ -5,7 +6,7 @@ test('после перезапуска восстанавливаются вс�
   await page.goto('/');
   for (let index = 0; index < 21; index++) {
     await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+    await createDiagram(page, 'Flowable');
     const workspace = page.locator('.document-workspace:visible');
     await workspace.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await workspace.getByLabel('Name', { exact: true }).fill(`Recovered process ${index}`);

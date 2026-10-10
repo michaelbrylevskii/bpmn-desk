@@ -79,8 +79,6 @@
 .runtime-detail-body, .runtime-instance, .runtime-variable, .runtime-job, .runtime-execution { min-width: 0; }
 .connection-fields { display: grid; gap: 14px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .connections-dialog [role="status"] { color: var(--green); font-size: 12px; padding: 10px 0; }
-.new-monitor-choice { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; border-top: 1px solid var(--border); margin: 20px 20px 0; padding-top: 18px; }
-.new-monitor-choice h3 { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 550; }.new-monitor-choice h3 svg { color: var(--accent); }
 @media (max-width: 1300px) { .runtime-toolbar-tools > .button { font-size: 0; gap: 0; padding: 8px; }.runtime-toolbar-tools > .button svg { width: 18px; height: 18px; }.toolbar:has(.runtime-toolbar-tools) { padding: 0 12px; gap: 3px; }.toolbar:has(.runtime-toolbar-tools) .brand { margin-right: 2px; }.toolbar:has(.runtime-toolbar-tools) .brand strong, .toolbar:has(.runtime-toolbar-tools) .version { display: none; } }
 
 .runtime-job-alert { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0; text-align: left; }.runtime-job-alert span { flex: 1; }.runtime-job-alert svg { flex-shrink: 0; }.runtime-job-alert:hover { border-color: var(--danger); }

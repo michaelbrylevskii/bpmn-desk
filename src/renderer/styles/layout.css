@@ -18,14 +18,14 @@
 .statusbar { height: 28px; flex-shrink: 0; border-top: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 10px; display: flex; align-items: center; padding: 0 15px; gap: 24px; }
 .statusbar span { display: flex; align-items: center; gap: 6px; }.statusbar svg { color: var(--green); }
 .welcome { height: 100%; overflow-y: auto; background: radial-gradient(ellipse at 65% 20%, #7199ff0b, transparent 60%), var(--bg); }
-.welcome-inner { max-width: 900px; margin: auto; padding: 54px 36px 30px; }
+.welcome-inner { max-width: 900px; margin: auto; padding: 32px 36px 30px; }
 .welcome-icon { display: inline-flex; padding: 15px; background: var(--accent-soft); border: 1px solid var(--border); border-radius: 17px; color: var(--accent); margin-bottom: 25px; box-shadow: var(--shadow); }
 .eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 1px; margin-bottom: 17px; font-weight: 600; }
 .welcome h1 { font-size: clamp(30px, 3vw, 42px); line-height: 1.12; font-weight: 650; letter-spacing: -1px; margin-bottom: 20px; }.welcome h1 span { color: var(--muted); font-weight: 450; }
 .welcome-description { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 26px; }
-.welcome-actions { display: flex; gap: 12px; margin-bottom: 36px; }.welcome-actions .button { padding: 12px 18px; }
-.welcome-columns { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; border-top: 1px solid var(--border); padding-top: 25px; }
+.welcome-columns { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; border-top: 1px solid var(--border); padding-top: 25px; }
 .welcome-columns h3 { font-size: 13px; font-weight: 550; margin-bottom: 8px; }
+.welcome-columns section { min-width: 0; }
 .welcome-file { width: 100%; padding: 10px 8px; display: flex; align-items: center; gap: 10px; border-radius: 6px; color: var(--muted); font-size: 12px; text-align: left; }
 .welcome-file span { flex: 1; min-width: 0; text-overflow: ellipsis; overflow: hidden; }.welcome-file:hover { color: var(--accent); background: var(--accent-soft); }
 .local-note { margin-top: 30px; color: var(--muted); display: flex; align-items: center; gap: 7px; font-size: 10px; opacity: .7; }
@@ -42,14 +42,6 @@
 @media (max-width: 900px) { .brand { margin-right: 3px; }.brand strong, .version { display: none; }.toolbar-divider { margin: 0 3px; }.toolbar .button { font-size: 11px; gap: 4px; padding: 8px; }.canvas-heading { gap: 5px; }.canvas-heading > span:first-child { min-width: 0; overflow: hidden; white-space: nowrap; }.statusbar { gap: 8px; }.statusbar > span:nth-child(2) { max-width: 120px; overflow: hidden; white-space: nowrap; } }
 
 .engine-badge { border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; color: var(--accent); white-space: nowrap; }
-.new-diagram-dialog { width: min(720px, calc(100vw - 40px)); max-height: calc(100vh - 40px); padding: 0; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
-.new-diagram-dialog::backdrop { background: #0008; }
-.new-diagram-dialog .panel-heading { justify-content: space-between; }.new-diagram-dialog h2 { font-size: 15px; margin: 0; }
-.new-diagram-dialog p { margin: 20px 20px 14px; color: var(--muted); font-size: 13px; }
-.diagram-profile-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 20px; }
-.diagram-profile-choice { display: flex; flex-direction: column; gap: 10px; align-items: center; border: 1px solid var(--border); background: var(--input); border-radius: 8px; padding: 14px; text-align: left; font-size: 14px; }
-.diagram-profile-choice:hover { border-color: var(--accent); background: var(--accent-soft); }
-.diagram-profile-choice svg { color: var(--accent); }.diagram-profile-choice[data-profile="flowable"] svg { color: #72b8a7; }.diagram-profile-choice[data-profile="camunda7"] svg { color: #df9675; }
 .export-menu { position: relative; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 7px; }
 .export-menu .export-primary { border-radius: 6px 0 0 6px; padding: 7px 9px; }.export-toggle { border-left: 1px solid var(--border); border-radius: 0 6px 6px 0; padding: 8px 5px; }
 .export-options { position: absolute; top: calc(100% + 7px); right: 0; z-index: 60; min-width: 240px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; box-shadow: var(--shadow); padding: 5px; }
@@ -60,9 +52,12 @@
 
 @media (max-width: 750px) { .toolbar .button { font-size: 0; gap: 0; }.toolbar .button svg { width: 18px; height: 18px; } }
 
-.new-diagram-dialog[open] { display: flex; flex-direction: column; }
-.new-diagram-dialog > .panel-heading { flex-shrink: 0; }.new-tab-content { min-height: 0; overflow-y: auto; padding-bottom: 20px; }
-.new-tab-library { padding: 0 20px; margin-top: 20px; }.new-tab-library .welcome-columns { gap: 24px; padding-top: 18px; }
-.new-tab-library p { margin: 0 0 8px; font-size: 11px; line-height: 1.6; }.welcome-columns section { min-width: 0; }
 .welcome-file > svg { flex-shrink: 0; }.welcome-file span { white-space: nowrap; }
-@media (max-width: 600px) { .new-tab-library .welcome-columns { grid-template-columns: 1fr; gap: 18px; } }
+
+.workspace-launcher { display: grid; gap: 22px; }
+.launcher-actions { display: flex; flex-wrap: wrap; gap: 12px; }.launcher-actions .button { padding: 11px 16px; }
+.launcher-monitor { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.launcher-monitor h3 { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 550; }.launcher-monitor h3 svg { color: var(--accent); }.launcher-monitor .runtime-error { grid-column: 1 / -1; margin: 0; }
+.create-diagram-options { width: 240px; }.create-diagram-options > button { align-items: center; gap: 10px; padding: 12px 10px; }.create-diagram-options svg { color: var(--accent); flex-shrink: 0; }.create-diagram-options [data-profile="flowable"] { color: #72b8a7; }.create-diagram-options [data-profile="camunda7"] { color: #df9675; }
+.create-diagram-options > button:focus-visible { background: var(--accent-soft); color: var(--accent); }
+@media (max-width: 600px) { .welcome-inner { padding: 24px 18px; }.welcome-columns { grid-template-columns: 1fr; gap: 18px; }.launcher-monitor { grid-template-columns: 1fr; }.launcher-monitor h3 { grid-column: 1; } }

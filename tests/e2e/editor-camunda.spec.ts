@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
@@ -24,8 +25,8 @@ async function openXml(page: Page, xml: string) {
 
 test('новые профили, автоматическое определение и восстановление Camunda 7', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Camunda 7', exact: true }).click();
+  await page.getByTitle('Новая вкладка (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Camunda 7');
   await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
   await expect(page.locator('[data-profile="flowable"]')).toHaveCount(0);
   await select(page, 'StartEvent_1');
@@ -40,7 +41,7 @@ test('новые профили, автоматическое определен
   await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
   expect(await savedXml(page)).toContain('camunda:initiator="starter"');
   await page.getByTitle('Новая вкладка (Ctrl+N)').click();
-  await page.getByRole('dialog').getByRole('button', { name: 'BPMN 2.0', exact: true }).click();
+  await createDiagram(page, 'BPMN 2.0');
   await expect(page.locator('.document-workspace:visible [data-profile]')).toHaveCount(0);
   expect(await savedXml(page)).not.toContain('xmlns:camunda');
 });

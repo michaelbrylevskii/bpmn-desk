@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
@@ -88,9 +89,9 @@ test('native создание выбирает профиль, PNG проход�
   const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
   try {
     const page = await app.firstWindow();
-    await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Создать схему', exact: true })).toBeVisible();
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-diagram')!.click());
-    await page.getByRole('dialog').getByRole('button', { name: 'Camunda 7', exact: true }).click();
+    await createDiagram(page, 'Camunda 7');
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, png);
     await expect(page.evaluate(() => window.desktop!.saveFile({ format: 'png', name: 'bad.png', content: new Uint8Array([1, 2, 3]) }))).rejects.toThrow('Недопустимый запрос');
@@ -212,21 +213,21 @@ test('native меню языка меняет интерфейс, сохраня
   let app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
   try {
     const page = await app.firstWindow();
-    await expect(page.getByRole('button', { name: 'New tab', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create diagram', exact: true })).toBeVisible();
     expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-menu')!.label)).toBe('Language');
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-ru')!.click());
-    await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Создать схему', exact: true })).toBeVisible();
     expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-menu')!.label)).toBe('Язык');
     await selectOption(page.getByRole('combobox', { name: 'Язык', exact: true }), 'en');
-    await expect(page.getByRole('button', { name: 'New tab', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create diagram', exact: true })).toBeVisible();
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-ru')!.click());
-    await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Создать схему', exact: true })).toBeVisible();
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.webContents.sendInputEvent({ type: 'keyDown', keyCode: '=', modifiers: ['control'] }));
     await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.webContents.getZoomFactor())).toBeCloseTo(1.1);
     expect(JSON.parse(await readFile(resolve(directory, 'language.json'), 'utf8'))).toBe('ru');
     await app.close();
     app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
-    await expect((await app.firstWindow()).getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
+    await expect((await app.firstWindow()).getByRole('button', { name: 'Создать схему', exact: true })).toBeVisible();
     expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-ru')!.checked)).toBe(true);
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
@@ -236,13 +237,13 @@ test('новая вкладка открывает примеры и свежи�
   const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
   try {
     const page = await app.firstWindow(); await page.getByTitle('Новая вкладка (Ctrl+N)', { exact: true }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+    await createDiagram(page, 'Flowable');
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, path);
     await page.getByTitle('Сохранить (Ctrl+S)', { exact: true }).click(); await expect(page.getByRole('status')).toContainText('recent.bpmn');
     await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await page.locator('.document-workspace:visible').getByLabel('Название', { exact: true }).fill('Несохранённый черновик'); await page.locator('.document-workspace:visible').getByLabel('Название', { exact: true }).blur();
-    await page.locator('.new-tab').click(); const dialog = page.getByRole('dialog');
+    await page.locator('.new-tab').click(); const dialog = page.locator('.welcome');
     await expect(dialog.getByRole('region', { name: 'Недавние файлы' }).getByRole('button', { name: 'recent.bpmn', exact: true })).toHaveAttribute('title', path);
     await dialog.getByRole('button', { name: 'camunda7-showcase', exact: true }).click(); await expect(page.locator('.document-tab')).toHaveCount(2);
     await page.locator('.new-tab').click(); await dialog.getByRole('region', { name: 'Недавние файлы' }).getByRole('button', { name: 'recent.bpmn', exact: true }).click();
@@ -250,7 +251,26 @@ test('новая вкладка открывает примеры и свежи�
     await expect(page.locator('.document-tab').first().getByRole('tab')).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('.document-workspace:visible').getByLabel('Название', { exact: true })).toHaveValue('Несохранённый черновик');
     await rm(path); await page.locator('.new-tab').click(); await dialog.getByRole('region', { name: 'Недавние файлы' }).getByRole('button', { name: 'recent.bpmn', exact: true }).click();
-    await expect(dialog).toHaveCount(0); await expect(page.getByRole('alert')).toContainText('recent.bpmn');
+    await expect(dialog).toBeVisible(); await expect(page.getByRole('alert')).toContainText('recent.bpmn');
+    await page.locator('.document-tab[data-kind=document]').first().getByRole('tab').click();
     await expect(page.locator('.document-workspace:visible').getByLabel('Название', { exact: true })).toHaveValue('Несохранённый черновик');
+  } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
+test('отмена выбора файла оставляет стартовую вкладку, открытие файла заменяет её и сохраняет соседний черновик', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-start-'));
+  const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' } });
+  try {
+    await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; });
+    const page = await app.firstWindow(); await createDiagram(page, 'Flowable');
+    await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click(); await page.getByLabel('Name', { exact: true }).fill('Preserved draft'); await page.getByLabel('Name', { exact: true }).blur();
+    await page.locator('.new-tab').click();
+    await app.evaluate(({ dialog }) => { dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] }); });
+    await page.getByRole('button', { name: 'Open diagram', exact: true }).click();
+    await expect(page.locator('.document-tab[data-kind=home]')).toHaveCount(1); await expect(page.locator('.document-tab')).toHaveCount(2);
+    await app.evaluate(({ dialog }, path) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path] }); }, resolve('examples/camunda7-showcase.bpmn20.xml'));
+    await page.getByRole('button', { name: 'Open diagram', exact: true }).click();
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7'); await expect(page.locator('.document-tab[data-kind=home]')).toHaveCount(0); await expect(page.locator('.document-tab')).toHaveCount(2);
+    await page.locator('.document-tab').first().getByRole('tab').click(); await expect(page.locator('.document-workspace:visible').getByLabel('Name', { exact: true })).toHaveValue('Preserved draft');
   } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });

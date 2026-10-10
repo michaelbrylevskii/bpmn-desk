@@ -45,10 +45,10 @@ export function useDocuments(report: ReportNotice) {
     bridge.initialFiles().then(files => files.forEach(file => add(file))).catch(error => report(errorNotice(error)));
     return unsubscribe;
   }, [add, report]);
-  const open = useCallback(async () => { for (const file of await bridge.openFiles()) add(file); }, [add]);
-  const openExample = useCallback(async (name: string) => { add(await bridge.openExample(name)); }, [add]);
-  const openRecent = useCallback(async (path: string) => { add(await bridge.openRecent(path)); }, [add]);
-  const drop = useCallback(async (files: File[]) => { for (const file of await bridge.openDropped(files)) add(file); }, [add]);
+  const open = useCallback(async () => { return (await bridge.openFiles()).map(file => add(file)); }, [add]);
+  const openExample = useCallback(async (name: string) => { return add(await bridge.openExample(name)); }, [add]);
+  const openRecent = useCallback(async (path: string) => { return add(await bridge.openRecent(path)); }, [add]);
+  const drop = useCallback(async (files: File[]) => { return (await bridge.openDropped(files)).map(file => add(file)); }, [add]);
 
   const sync = useCallback((id: string, snapshot: EditorSnapshot) => {
     setDocuments(previous => previous.map(document => document.id === id ? {
@@ -102,8 +102,8 @@ export function useDocuments(report: ReportNotice) {
   }, [active]);
 
   const restore = useCallback(() => {
-    for (const record of recovery) add({ token: '', path: '', name: record.name, xml: record.xml }, record);
-    setRecovery([]);
+    const ids = recovery.map(record => add({ token: '', path: '', name: record.name, xml: record.xml }, record));
+    setRecovery([]); return ids;
   }, [add, recovery]);
   const discardRecovery = useCallback(() => { clearRecovery(); setRecovery([]); }, []);
 

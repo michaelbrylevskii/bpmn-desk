@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -30,7 +31,7 @@ test('несколько мониторов сохраняют собствен�
     await expect(page.locator('.document-tab[data-kind=monitor]')).toHaveCount(2);
     await firstTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
     await expect(surface(page).locator('.viewport')).toHaveAttribute('transform', transform!); expect(await node?.evaluate(element => element.isConnected)).toBe(true);
-    await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click(); await page.getByRole('button', { name: 'Flowable', exact: true }).click();
+    await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click(); await createDiagram(page, 'Flowable');
     await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await page.getByLabel('Name', { exact: true }).fill('Retained draft'); await page.getByLabel('Name', { exact: true }).blur();
     await page.getByRole('button', { name: 'XML', exact: true }).click(); await page.getByLabel('Diagram XML', { exact: true }).focus();
@@ -44,7 +45,7 @@ test('несколько мониторов сохраняют собствен�
     await page.getByRole('button', { name: 'Discard XML edits', exact: true }).click(); await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
     await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
     await local.locator('..').getByRole('button').click(); await expect(firstTab).toHaveAttribute('aria-selected', 'true');
-    await page.locator('.new-tab').click(); await page.getByRole('dialog').getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+    await page.locator('.new-tab').click(); await page.locator('.welcome').getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
     await firstTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
   } finally { await close(app, directory); }

@@ -1,3 +1,4 @@
+import { createDiagram } from './create-diagram';
 import { test, expect } from './russian-fixture';
 
 test('XML поиск и переход к выбранному элементу сохраняют текст и историю', async ({ page }) => {
@@ -36,8 +37,8 @@ test('XML поиск и переход к выбранному элементу 
 
 test('компактный поиск выровнен, считает совпадения и поддерживает замену', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
+  await page.getByTitle('Новая вкладка (Ctrl+N)', { exact: true }).click();
+  await createDiagram(page, 'Flowable');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('XML схемы').focus();
   await page.keyboard.press('Control+f');
