@@ -7,13 +7,13 @@
 | `src/desktop` | Окно Electron, меню, IPC, файлы, недавние пути | BPMN-модель и UI |
 | `src/shared` | Контракты IPC и общие ошибки | Electron, React, Node API |
 | `src/renderer/platform` | Адаптер preload и браузерный preview | Моделирование |
-| `src/renderer/documents` | Вкладки, dirty state, сохранение, восстановление | Внутреннее устройство bpmn-js |
+| `src/renderer/documents` | Жизненный цикл документов, dirty state, сохранение, восстановление | Внутреннее устройство bpmn-js |
 | `src/renderer/bpmn` | bpmn-js, команды, XML, диагностика, защита данных | Компоненты React и файловая система |
 | `src/renderer/flowable` | Namespace, реестр форм, generic extensions Flowable | Electron и жизненный цикл вкладок |
 | `src/renderer/camunda` | Формы, структуры расширений и диагностика Camunda 7 | Сериализация, Electron и жизненный цикл вкладок |
 | `src/renderer/engines` | Контракты профилей, их состав и определение по URI | Переключение языка и файловая система |
 | `src/renderer/properties` | Формы выбранного элемента и определения | Прямое изменение модели |
-| `src/renderer/workspace` | Холст, поиск, панели XML/диагностики | Файловая система |
+| `src/renderer/workspace` | Порядок и выбор вкладок, холст, поиск, панели XML/диагностики | Файловая система |
 | `src/renderer/ui`, `styles` | Переиспользуемые элементы и оформление | BPMN-модель |
 | `src/desktop/runtime` | Профили, секреты, ограниченный HTTP и Flowable REST, IPC | React и отображение схем |
 | `src/renderer/runtime` | Каталог процессов, снимки экземпляров, панель переменных/jobs | HTTP, секреты и команды моделирования |

@@ -1,6 +1,6 @@
 {
   "name": "bpmn-desk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Локальный BPMN-редактор с поддержкой Flowable и Camunda 7",
   "private": true,
   "type": "module",
