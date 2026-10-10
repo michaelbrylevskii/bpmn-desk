@@ -39,6 +39,25 @@ ASAR содержит main/preload/renderer текущего `out`; стенд, 
 
 Первый [прогон основной ветки](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38059740381) прошёл на Linux, но выявил на Windows дублирование вкладки при повторном открытии сохранённого файла (64/65 E2E). `FileStore.save` и список недавних приведены к каноническому пути, как `open`; добавлена регрессия через symlink/junction с проверкой capability и внешнего конфликта.
 
+## Опубликованный релиз
+
+[Матрица основной ветки](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38060371965) и [релизная матрица](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38060956883) прошли на коммите `9a59f14524fc16b958954836d1430317099e3ad5`. Аннотированный тег `v0.4.0` указывает на этот коммит.
+
+| Среда | Unit | Общий E2E | Flowable runtime |
+| --- | --- | --- | --- |
+| Ubuntu 24.04 | 84 passed | 65 passed, включая AppImage | 13 passed |
+| Windows Server 2022 | 82 passed, 2 symlink skip | 65 passed, включая готовый EXE | 13 passed |
+
+Обе ОС выполнили strict TypeScript, ESLint, нативную упаковку и официальные валидаторы Flowable/Camunda. Регрессия сохранения через symlink/junction проходит на обеих платформах.
+
+[Релиз 0.4.0](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.4.0) опубликован 2026-10-10 и отмечен latest. Все артефакты собраны в GitHub Actions. Скачаны и проверены ровно три дистрибутива и `SHA256SUMS`; размеры соответствуют API, суммы файлов и самого manifest совпадают с asset.digest. Локальные сборки не загружались.
+
+```text
+379e974c45702f7269b93f85d934a7e1d790d8033e0033683e146a09c104477f  BPMN-Desk-0.4.0-x86_64.AppImage
+ed1d9ead4d7335eb4413742999b26ac2a5cf9167ea63d6d83e0c04a41b051137  BPMN-Desk-0.4.0-x64-Setup.exe
+42c266f8a857e2184b8ab2a539769c513defb625d37f0bb6255651f56779fd3d  BPMN-Desk-0.4.0-x64-Portable.exe
+```
+
 ## Границы
 
 Локальный Windows-прогон не выполнялся; нативную проверку предоставляет GitHub Actions. Запуск `win-unpacked` не подтверждает ручную установку, удаление или ассоциации Windows 10/11. Ручное подтверждение инсталлятора предыдущей версии не переносится на 0.4.0. macOS не проверялась и не поставляется. В локальной среде AppImage проверяется с распаковкой без FUSE.

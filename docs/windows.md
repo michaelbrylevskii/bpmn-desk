@@ -2,7 +2,7 @@
 
 Версия приложения: 0.4.0. Целевая система: Windows 10/11 x64. EXE собираются нативно в GitHub Actions и могут быть собраны на Linux через Docker. CI запускает проверки UI, Electron и готового EXE на Windows Server 2022; результаты конкретной версии находятся в [отчёте проверки](validation.md). Ручная приёмка инсталлятора 0.2.0 отмечена отдельно ниже.
 
-Матрица GitHub Actions проверяет также независимый Flowable/H2: подключения, экземпляры, переменные и dead-letter. Автоматический запуск приложения из `win-unpacked` не заменяет ручную проверку installer/portable launcher и ассоциаций файлов.
+[Релизная матрица 0.4.0](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38060956883) прошла на Windows Server 2022: 82 unit-теста и два symlink skip, 65 E2E, 13 сценариев независимого Flowable/H2, официальные валидаторы моделей и нативные NSIS/portable сборки. Автоматический запуск приложения из `win-unpacked` не заменяет ручную проверку installer/portable launcher и ассоциаций файлов.
 
 ## Готовые файлы
 
