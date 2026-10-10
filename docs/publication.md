@@ -8,14 +8,14 @@
 
 ## Проверки и сборки
 
-Workflow `.github/workflows/build.yml` запускается на push основной ветки, pull request и вручную. Для Linux и Windows выполняются `npm ci`, настройка Electron/Chromium, `npm run check`, нативная упаковка, UI/Electron, официальный конвертер Flowable и BPMN Model API Camunda 7. Проверяются только встроенные схемы.
+Workflow `.github/workflows/build.yml` запускается на push основной ветки, pull request и вручную. Для Linux и Windows выполняются `npm ci`, настройка Electron/Chromium, `npm run check`, нативная упаковка, UI/Electron, независимый Flowable runtime, официальный конвертер Flowable и BPMN Model API Camunda 7. Проверяются встроенные схемы и оригинальные схемы независимого стенда; пользовательские серверы не подключаются.
 
 При успешной проверке Actions сохраняет AppImage и два EXE на 14 дней. При ошибке UI сохраняются диагностические результаты тестов на 7 дней. Пользовательские наборы в CI не подключаются; их отдельные прогоны остаются локальными.
 
 ## Выпуск новой версии
 
 1. Обновить версию package/lock и добавить `docs/releases/<версия>.md`. Зафиксировать изменения отдельным коммитом; сообщения коммитов — на английском, документация — на русском.
-2. Локально выполнить `npm run check`, `npm run package:linux`, `npm run test:e2e`, `npm run validate:flowable` и `npm run validate:camunda`. Проверить состав артефактов, лицензии и provenance. Windows требует отдельной проверки на своей ОС.
+2. Локально выполнить `npm run check`, `npm run package:linux`, `npm run test:e2e`, `npm run test:runtime`, `npm run validate:flowable` и `npm run validate:camunda`. Проверить состав артефактов, лицензии и provenance. Windows требует отдельной проверки на своей ОС.
 3. Отправить основную ветку и дождаться успешной матрицы GitHub Actions.
 4. Создать тег `v<версия>` на проверенном коммите и отправить только этот тег. Push тега заново собирает и проверяет обе платформы, создаёт SHA256SUMS, загружает три дистрибутива в черновик release и публикует его после успешной загрузки.
 5. Проверить опубликованные assets, их суммы и ссылку на запуск workflow. Хеши локальных и CI-сборок могут отличаться из-за временных меток упаковки; для конкретного релиза используются его SHA256SUMS.
