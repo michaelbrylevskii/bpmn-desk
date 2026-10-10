@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import type { Authentication, Connection, ConnectionInput } from '../../shared/runtime';
 import { useI18n } from '../i18n/provider';
 import { Select } from '../ui/select';
-export function ConnectionForm({ connection, secure, busy, save, test, edited }: { connection?: Connection; secure: boolean; busy: boolean;
+export function ConnectionForm({ connection, secure, busy, save, test, edited, remove }: { connection?: Connection; secure: boolean; busy: boolean; remove?: () => void;
   save: (input: ConnectionInput) => void; test: (input: ConnectionInput) => void; edited: () => void }) {
   const { t } = useI18n();
   const [name, setName] = useState(connection?.name ?? ''); const [url, setUrl] = useState(connection?.baseUrl ?? '');
@@ -24,7 +25,8 @@ export function ConnectionForm({ connection, secure, busy, save, test, edited }:
         {!secure && <p className="runtime-hint">{t('Хранилище секретов ОС недоступно.')}</p>}
         {!remember && <p className="runtime-hint">{t('Секрет будет доступен только до закрытия приложения.')}</p>}</>}
       <div className="runtime-actions"><button className="button primary" type="submit">{t('Сохранить подключение')}</button>
-        <button className="button" type="button" onClick={() => test(input())}>{t('Проверить подключение')}</button></div>
+        <button className="button" type="button" onClick={() => test(input())}>{t('Проверить подключение')}</button>
+        {remove && <button className="icon-button danger connection-delete" type="button" title={t('Удалить')} onClick={remove}><Trash2 size={16} /></button>}</div>
     </fieldset>
   </form>;
 }

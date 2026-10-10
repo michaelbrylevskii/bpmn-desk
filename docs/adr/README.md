@@ -25,3 +25,4 @@
 - [0021 — Общие вкладки, контролы и экспорт состояния](0021-workspace-tabs-and-runtime-export.md)
 - [0022 — Ограниченная сводка выбранной версии](0022-bounded-definition-summary.md)
 - [0023 — Стартовая страница как содержимое новой вкладки](0023-start-page-tabs.md)
+- [0024 — Общие настройки подключений](0024-global-connection-settings.md)

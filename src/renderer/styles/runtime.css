@@ -78,6 +78,7 @@
 .related-instance span { min-width: 0; display: grid; gap: 5px; }.related-instance strong { font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }.related-instance code { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
 .runtime-detail-body, .runtime-instance, .runtime-variable, .runtime-job, .runtime-execution { min-width: 0; }
 .connection-fields { display: grid; gap: 14px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.connection-form .runtime-actions { align-items: center; flex-wrap: wrap; }.connection-delete { margin-left: auto; }
 .connections-dialog [role="status"] { color: var(--green); font-size: 12px; padding: 10px 0; }
 @media (max-width: 1300px) { .runtime-toolbar-tools > .button { font-size: 0; gap: 0; padding: 8px; }.runtime-toolbar-tools > .button svg { width: 18px; height: 18px; }.toolbar:has(.runtime-toolbar-tools) { padding: 0 12px; gap: 3px; }.toolbar:has(.runtime-toolbar-tools) .brand { margin-right: 2px; }.toolbar:has(.runtime-toolbar-tools) .brand strong, .toolbar:has(.runtime-toolbar-tools) .version { display: none; } }
 

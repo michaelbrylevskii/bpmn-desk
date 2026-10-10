@@ -34,6 +34,10 @@ test('несколько мониторов сохраняют собствен�
     await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click(); await createDiagram(page, 'Flowable');
     await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await page.getByLabel('Name', { exact: true }).fill('Retained draft'); await page.getByLabel('Name', { exact: true }).blur();
+    await page.getByTitle('Manage connections', { exact: true }).click();
+    await expect(page.getByRole('dialog').getByLabel('Connection name')).toHaveValue('Fixture engine');
+    await page.getByRole('dialog').getByTitle('Close', { exact: true }).click();
+    await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Retained draft');
     await page.getByRole('button', { name: 'XML', exact: true }).click(); await page.getByLabel('Diagram XML', { exact: true }).focus();
     await page.keyboard.press('Control+Home'); await page.keyboard.insertText('<!-- retained XML draft -->\n');
     await secondTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.failedInstanceId);
@@ -45,7 +49,11 @@ test('несколько мониторов сохраняют собствен�
     await page.getByRole('button', { name: 'Discard XML edits', exact: true }).click(); await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
     await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
     await local.locator('..').getByRole('button').click(); await expect(firstTab).toHaveAttribute('aria-selected', 'true');
-    await page.locator('.new-tab').click(); await page.locator('.welcome').getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+    await page.locator('.new-tab').click();
+    await page.getByTitle('Manage connections', { exact: true }).click();
+    await expect(page.getByRole('dialog').getByLabel('Connection name')).toHaveValue('Fixture engine');
+    await page.getByRole('dialog').getByTitle('Close', { exact: true }).click();
+    await page.locator('.welcome').getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
     await firstTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
   } finally { await close(app, directory); }
@@ -54,7 +62,26 @@ test('несколько мониторов сохраняют собствен�
 test('тестирование нового и изменённого подключения читает поля формы и ничего не сохраняет', async () => {
   const { app, page, directory } = await launch();
   try {
+    await expect(page.getByTitle('Manage connections', { exact: true })).toHaveCount(1);
+    for (const theme of ['Light theme', 'Dark theme']) {
+      await page.getByTitle(theme, { exact: true }).click(); await page.getByTitle('Manage connections', { exact: true }).click();
+      await selectOption(page.getByRole('combobox', { name: 'Authentication', exact: true }), 'none');
+      const form = page.locator('.connection-form');
+      const save = await form.getByRole('button', { name: 'Save connection', exact: true }).boundingBox();
+      const check = await form.getByRole('button', { name: 'Test connection', exact: true }).boundingBox();
+      const remove = await form.getByTitle('Delete', { exact: true }).boundingBox();
+      expect(save).not.toBeNull(); expect(check).not.toBeNull(); expect(remove).not.toBeNull();
+      expect(Math.abs(save!.y + save!.height / 2 - check!.y - check!.height / 2)).toBeLessThan(1);
+      expect(Math.abs(save!.y + save!.height / 2 - remove!.y - remove!.height / 2)).toBeLessThan(1);
+      expect(remove!.x).toBeGreaterThan(check!.x + check!.width);
+      await page.screenshot({ path: `test-results/connections-actions-${theme.startsWith('Light') ? 'light' : 'dark'}.png` });
+      page.once('dialog', dialog => void dialog.dismiss()); await form.getByTitle('Delete', { exact: true }).click();
+      await expect(form.getByTitle('Delete', { exact: true })).toBeEnabled();
+      expect((await page.evaluate(() => window.runtime!.connections())).items).toHaveLength(1);
+      await page.getByRole('dialog').getByTitle('Close', { exact: true }).click();
+    }
     await page.getByTitle('Manage connections', { exact: true }).click(); await page.getByRole('button', { name: 'New connection', exact: true }).click();
+    await expect(page.getByRole('dialog').getByTitle('Delete', { exact: true })).toHaveCount(0);
     await page.getByLabel('REST API URL').fill(fixture.baseUrl); await page.getByLabel('Username', { exact: true }).fill('desk-reader');
     await page.getByLabel('Password or token').fill('wrong-password'); await page.getByRole('button', { name: 'Test connection', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('401');
