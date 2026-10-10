@@ -64,6 +64,15 @@ test('реальный Flowable: dead-letter список, место ошибк
     await page.locator('.runtime-details').getByRole('button', { name: 'Process variables', exact: true }).click();
     await page.locator('.runtime-variable').filter({ hasText: 'amount' }).locator('summary').click();
     await expect(page.locator('.runtime-variable').filter({ hasText: 'amount' })).toContainText('42');
+    await page.getByRole('button', { name: 'Dead-letter jobs present: 1', exact: true }).click();
+    await expect(page.locator('.runtime-details').getByRole('button', { name: 'Dead-letter jobs (1)', exact: true })).toBeFocused();
+    await expect(page.locator('.runtime-job summary')).toBeVisible();
+    await page.locator('.runtime-details .runtime-job > .runtime-link').click();
+    await expect(page.locator('.runtime-canvas .djs-element[data-element-id="Delivery"]')).toHaveClass(/selected/);
+    await page.locator('.runtime-details').getByRole('button', { name: 'Tasks', exact: true }).click();
+    await expect(page.locator('.runtime-detail-body')).toHaveText('No results');
+    await page.locator('.runtime-details').getByRole('button', { name: 'Executions', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Scope', exact: true })).toHaveCount(0);
     await page.locator('.runtime-catalog .runtime-row').filter({ hasText: 'Send document' }).click();
     await expect(page.locator('.runtime-job summary')).toBeVisible();
     await page.screenshot({ path: 'test-results/runtime-dead-letter.png' });

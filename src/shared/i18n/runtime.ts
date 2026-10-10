@@ -1,4 +1,5 @@
 export const runtimeMessages = {
+  'Родительский execution': 'Parent execution',
   'Новая вкладка': 'New tab', 'Новая вкладка (Ctrl+N)': 'New tab (Ctrl+N)', 'Открытые вкладки': 'Open tabs', 'Локальная схема': 'Local diagram',
   'Открыть монитор': 'Open monitor', 'Проверить подключение': 'Test connection', 'Автообновление': 'Auto refresh', 'Фильтры': 'Filters',
   'Сортировать по': 'Sort by', 'Порядок': 'Order', 'По возрастанию': 'Ascending', 'По убыванию': 'Descending', 'Размер страницы': 'Page size',
