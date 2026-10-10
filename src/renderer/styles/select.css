@@ -1,0 +1,12 @@
+.select-control { min-width: 0; width: 100%; }
+.select-trigger { width: 100%; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 8px 10px; text-align: left; background: var(--input); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; }
+.select-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.select-trigger > svg { flex-shrink: 0; color: var(--muted); }
+.select-trigger:hover:not(:disabled) { border-color: var(--accent); }.select-trigger:focus, .select-trigger[aria-expanded="true"] { outline: 2px solid var(--accent); outline-offset: -2px; }
+.select-options { z-index: 1000; overflow: auto; overscroll-behavior: contain; padding: 5px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); }
+.select-options > button { width: 100%; display: flex; gap: 7px; align-items: flex-start; padding: 9px 8px; border-radius: 5px; font-size: 12px; line-height: 1.4; text-align: left; }
+.select-options > button > span:last-child { min-width: 0; overflow-wrap: anywhere; }.select-options > button.highlighted:not(:disabled), .select-options > button:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+.select-check { width: 14px; flex: 0 0 14px; color: var(--accent); margin-top: 1px; }
+.field[data-presence="explicit"] .select-trigger { border-left: 2px solid var(--accent); }
+.field[data-presence="default"] .select-trigger { color: var(--muted); }
+.language-picker .select-control { width: 61px; }.language-picker .select-trigger { min-height: 32px; padding: 4px 6px; border: 0; background: transparent; font-weight: 550; }
+.field.compact .select-control { width: 155px; max-width: 50%; flex-shrink: 0; }

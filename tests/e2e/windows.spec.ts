@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
 import { copyFile, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -25,12 +26,12 @@ test('готовое Windows-приложение открывает, измен
       await expect(page.locator('.document-tab')).toContainText('Документ.bpmn20.xml');
       await expect(page.locator('.djs-element[data-element-id="prepareDocument"]')).toBeVisible();
       await expect(page.locator('.import-error')).toHaveCount(0);
-      await expect(page.getByRole('combobox', { name: 'Language', exact: true })).toHaveValue('en');
+      await expect(page.getByRole('combobox', { name: 'Language', exact: true })).toHaveAttribute('data-value', 'en');
       await page.getByRole('button', { name: 'XML', exact: true }).click();
       await page.getByLabel('Diagram XML').focus();
       await page.keyboard.press('Control+f');
       await expect(page.locator('.xml-panel').getByRole('textbox', { name: 'Find', exact: true })).toBeVisible();
-      await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('ru');
+      await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
       await page.getByRole('textbox', { name: 'Найти элемент' }).fill('prepareDocument');
       await page.locator('.outline-item').first().click();
       const field = page.getByLabel('Выражение делегата', { exact: true });

@@ -8,7 +8,7 @@ import { ConnectionForm } from './connection-form';
 
 export function ConnectionsDialog({ connections, initialId, close, changed }: { connections: Connections; initialId: string; close: () => void; changed: (selected?: string) => Promise<void> }) {
   const { t, text } = useI18n(); const dialog = useRef<HTMLDialogElement>(null);
-  const [items, setItems] = useState(connections.items); const [selected, setSelected] = useState<string>(items.some(item => item.id === initialId) ? initialId : items[0]?.id ?? '');
+  const [items, setItems] = useState(connections.items); const [selected, setSelected] = useState<string>(initialId);
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
   const current = items.find(item => item.id === selected);
   useEffect(() => { dialog.current?.showModal(); const node = dialog.current; return () => node?.close(); }, []);
@@ -26,8 +26,8 @@ export function ConnectionsDialog({ connections, initialId, close, changed }: { 
     <div className="panel-heading"><h2 id="connections-title">{t('Управление подключениями')}</h2><button className="icon-button" title={t('Закрыть')} onClick={close}><X size={18} /></button></div>
     <div className="connections-body"><aside><button className="button" disabled={busy} onClick={() => { setSelected(''); setError(''); }}><Plus size={16} />{t('Новое подключение')}</button>
       {items.map(item => <button key={item.id} className={`connection-item ${selected === item.id ? 'selected' : ''}`} disabled={busy} onClick={() => { setSelected(item.id); setError(''); setSuccess(''); }}><strong>{item.name}</strong><small>{item.baseUrl}</small></button>)}</aside>
-      <div><ConnectionForm key={selected} connection={current} secure={connections.secureStorage} busy={busy} save={save} />
-        {current && <div className="runtime-actions"><button className="button" disabled={busy} onClick={() => void run(async () => { await runtimeBridge().testConnection(current.id); setSuccess(t('Подключение проверено.')); })}>{t('Проверить сохранённое подключение')}</button>
+      <div><ConnectionForm key={selected} connection={current} secure={connections.secureStorage} busy={busy} save={save} edited={() => { setError(''); setSuccess(''); }} test={input => void run(async () => { await runtimeBridge().testConnectionDraft(input); setSuccess(t('Подключение проверено.')); })} />
+        {current && <div className="runtime-actions">
           <button className="icon-button danger" title={t('Удалить')} disabled={busy} onClick={() => remove(current)}><Trash2 size={16} /></button></div>}
         {error && <p role="alert" className="runtime-error">{text(error)}</p>}{success && <p role="status">{success}</p>}
       </div></div>

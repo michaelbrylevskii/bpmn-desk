@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { preservationIssues } from '../../src/renderer/bpmn/xml';
@@ -23,7 +24,7 @@ async function openXml(page: Page, xml: string) {
 
 test('новые профили, автоматическое определение и восстановление Camunda 7', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Camunda 7', exact: true }).click();
   await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
   await expect(page.locator('[data-profile="flowable"]')).toHaveCount(0);
@@ -38,7 +39,7 @@ test('новые профили, автоматическое определен
   await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
   await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
   expect(await savedXml(page)).toContain('camunda:initiator="starter"');
-  await page.getByTitle('Новая схема (Ctrl+N)').click();
+  await page.getByTitle('Новая вкладка (Ctrl+N)').click();
   await page.getByRole('dialog').getByRole('button', { name: 'BPMN 2.0', exact: true }).click();
   await expect(page.locator('.document-workspace:visible [data-profile]')).toHaveCount(0);
   expect(await savedXml(page)).not.toContain('xmlns:camunda');
@@ -54,8 +55,8 @@ test('пример Camunda 7 сохраняет семантику и редак
   await download.saveAs('.cache/camunda-exports/camunda7-showcase.bpmn20.xml');
   expect(preservationIssues(original, readFileSync((await download.path())!, 'utf8'))).toEqual([]);
   await select(page, 'ArchiveOrder');
-  await expect(page.getByLabel('Тип реализации', { exact: true })).toHaveValue('external');
-  await expect(page.getByLabel('Последовательное выполнение заданий', { exact: true }).locator('..')).toHaveAttribute('data-presence', 'explicit');
+  await expect(page.getByLabel('Тип реализации', { exact: true })).toHaveAttribute('data-value', 'external');
+  await expect(page.getByLabel('Последовательное выполнение заданий', { exact: true }).locator('xpath=ancestor::label')).toHaveAttribute('data-presence', 'explicit');
   await page.getByLabel('Тема внешней задачи', { exact: true }).fill('archive-edited');
   await page.getByLabel('Тема внешней задачи', { exact: true }).blur();
   await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
@@ -105,15 +106,15 @@ test('параметр переключается между текстом, map
   const parameters = page.locator('[data-extension-kind="inputOutput"]');
   await parameters.locator('summary').click();
   const parameter = parameters.locator('[data-extension-path="0.1"]');
-  await parameter.getByLabel('Тип значения', { exact: true }).selectOption('map');
+  await selectOption(parameter.getByLabel('Тип значения', { exact: true }), 'map');
   await parameter.getByRole('button', { name: 'Добавить entry', exact: true }).click();
   await parameter.getByLabel('Текст · entry', { exact: true }).fill('${computed}');
   await parameter.getByLabel('Текст · entry', { exact: true }).blur();
-  await parameter.getByLabel('Тип значения', { exact: true }).first().selectOption('list');
+  await selectOption(parameter.getByLabel('Тип значения', { exact: true }).first(), 'list');
   await expect(parameter.getByLabel('entry: key')).toHaveCount(0);
   await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
   await expect(parameter.getByLabel('Текст · entry', { exact: true })).toHaveValue('${computed}');
-  await parameter.getByLabel('Тип значения', { exact: true }).first().selectOption('script');
+  await selectOption(parameter.getByLabel('Тип значения', { exact: true }).first(), 'script');
   await parameter.getByLabel('Текст · script', { exact: true }).fill('execution.getVariable("result")');
   await parameter.getByLabel('Текст · script', { exact: true }).blur();
   expect(await savedXml(page)).toContain('scriptFormat="javascript"');

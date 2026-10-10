@@ -30,7 +30,7 @@ test('фокус холста использует акцент приложен
 
 test('тема холста меняется без изменения XML, экспорт SVG содержит готовые цвета', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   const circle = page.locator('[data-element-id="StartEvent_1"] .djs-visual circle').first();
   await expect(circle).toBeVisible();

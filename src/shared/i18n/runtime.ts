@@ -1,5 +1,11 @@
 export const runtimeMessages = {
-  'Обновить': 'Refresh', 'Удалить': 'Delete', 'Состояние': 'State',
+  'Новая вкладка': 'New tab', 'Новая вкладка (Ctrl+N)': 'New tab (Ctrl+N)', 'Открытые вкладки': 'Open tabs', 'Локальная схема': 'Local diagram',
+  'Открыть монитор': 'Open monitor', 'Проверить подключение': 'Test connection', 'Автообновление': 'Auto refresh', 'Фильтры': 'Filters',
+  'Сортировать по': 'Sort by', 'Порядок': 'Order', 'По возрастанию': 'Ascending', 'По убыванию': 'Descending', 'Размер страницы': 'Page size',
+  'Ключ процесса': 'Process key', 'ID execution': 'Execution ID', 'ID элемента': 'Element ID', 'Любое состояние': 'Any state',
+  'Применить фильтры': 'Apply filters', 'Сбросить фильтры': 'Reset filters', 'Связанные экземпляры': 'Related instances', 'Дочерние экземпляры': 'Child instances',
+  'Дочерний экземпляр: {id}': 'Child instance: {id}', 'Подключение удалено. Выбери другое подключение.': 'Connection deleted. Select another connection.',
+  'ID определения': 'Definition ID', 'Срок выполнения': 'Due date', 'Обновить': 'Refresh', 'Удалить': 'Delete', 'Состояние': 'State',
   'Есть dead-letter jobs': 'Dead-letter jobs present',
   'Начат': 'Started', 'Создано': 'Created',
   'Подключения к движкам доступны в desktop-приложении.': 'Engine connections are available in the desktop application.',

@@ -23,7 +23,8 @@ try {
     await page.screenshot({ path: 'docs/images/editor.png' });
     await page.getByTitle('Light theme', { exact: true }).click();
     await page.screenshot({ path: 'docs/images/editor-light.png' });
-    await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('ru');
+    await page.getByRole('combobox', { name: 'Language', exact: true }).click();
+    await page.getByRole('option', { name: 'RU', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Сохранить', exact: true })).toBeVisible();
     await page.screenshot({ path: 'docs/images/editor-russian.png' });
   } finally { await browser.close(); }

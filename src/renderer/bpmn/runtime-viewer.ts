@@ -6,22 +6,25 @@ import type { Language } from '../../shared/i18n';
 import type { InstanceSnapshot } from '../../shared/runtime';
 import type { Canvas, Registry } from './services';
 import type { DiagramElement } from './types';
+import { runtimeSvg, type RuntimeMark } from './runtime-export';
 
 interface MarkedCanvas extends Canvas { addMarker(id: string, marker: string): void; removeMarker(id: string, marker: string): void; findRoot(element: DiagramElement): DiagramElement; setRootElement(element: DiagramElement): void }
 interface Overlays { add(id: string, type: string, options: { position: { bottom: number; right: number }; html: HTMLElement }): void; remove(options: { type: string }): void }
-/** Состояние исполнения — только отображение; моделирование и экспорт не вызываются. */
+/** Состояние исполнения — только отображение; XML и команды моделирования не изменяются. */
 export class RuntimeViewer {
   private readonly viewer: Viewer;
   private marked: { id: string; marker: string }[] = [];
+  private marks: RuntimeMark[] = [];
   constructor(container: HTMLElement, language: () => Language, selected: (id: string) => void) {
     this.viewer = new Viewer({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
     configureDiagramTheme(this.viewer.get('bpmnRenderer'));
-    this.viewer.get<{ on(event: string, listener: (value: { element: DiagramElement }) => void): void }>('eventBus').on('element.click', event => selected((event.element.labelTarget ?? event.element).id));
+    this.viewer.get<{ on(event: string, listener: (value: { newSelection: DiagramElement[] }) => void): void }>('eventBus').on('selection.changed', event => selected((event.newSelection[0]?.labelTarget ?? event.newSelection[0])?.id ?? ''));
   }
   async import(xml: string): Promise<void> {
     this.marked = []; await this.viewer.importXML(normalizeDiagram(xml)); this.fit();
   }
   fit(): void { this.viewer.get<Canvas>('canvas').zoom('fit-viewport', 'auto'); }
+  async svg(): Promise<string> { const { svg } = await this.viewer.saveSVG(); return runtimeSvg(svg, this.marks); }
   resize(): void { this.viewer.get<Canvas>('canvas').resized(); }
   focus(id: string): boolean {
     const element = this.viewer.get<Registry>('elementRegistry').get(id); if (!element) return false;
@@ -32,7 +35,7 @@ export class RuntimeViewer {
   state(snapshot: InstanceSnapshot | undefined): string[] {
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); const registry = this.viewer.get<Registry>('elementRegistry');
     for (const { id, marker } of this.marked) if (registry.get(id)) canvas.removeMarker(id, marker);
-    this.marked = []; const overlays = this.viewer.get<Overlays>('overlays'); overlays.remove({ type: 'desk-runtime' });
+    this.marked = []; this.marks = []; const overlays = this.viewer.get<Overlays>('overlays'); overlays.remove({ type: 'desk-runtime' });
     if (!snapshot) return [];
     const counts = new Map<string, number>(); const failed = new Map<string, number>();
     const parents = new Set(snapshot.executions.map(item => item.parentId).filter(Boolean));
@@ -46,8 +49,11 @@ export class RuntimeViewer {
       if (!registry.get(id)) { missing.push(id); continue; }
       const marker = failed.has(id) ? 'runtime-failed' : 'runtime-active'; canvas.addMarker(id, marker); this.marked.push({ id, marker });
       const badge = document.createElement('span'); badge.className = `runtime-badge ${failed.has(id) ? 'failed' : ''}`;
-      badge.textContent = failed.has(id) ? `! ${failed.get(id)}` : `${counts.get(id) ?? '●'}`;
+      const label = failed.has(id) ? `! ${failed.get(id)}` : counts.has(id) ? String(counts.get(id)) : '';
+      if (label) badge.textContent = label; else { const dot = document.createElement('span'); dot.className = 'runtime-badge-dot'; badge.append(dot); }
       badge.dataset.activityId = id;
+      const element = registry.get(id)!;
+      if (element.x !== undefined && element.y !== undefined) this.marks.push({ id, marker, label, x: element.x + (element.width ?? 0) - 8, y: element.y + (element.height ?? 0) - 8 });
       overlays.add(id, 'desk-runtime', { position: { bottom: 8, right: 8 }, html: badge });
     }
     return missing;

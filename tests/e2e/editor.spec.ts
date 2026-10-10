@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { test, expect } from './russian-fixture';
 import provenance from '../../examples/provenance.json' with { type: 'json' };
 import { readFileSync } from 'node:fs';
@@ -40,9 +41,9 @@ test('все встроенные схемы отображаются и сох�
     await page.getByRole('button', { name, exact: true }).click();
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await expect(page.locator('.import-error')).toHaveCount(0);
-    await page.getByRole('combobox', { name: 'Язык', exact: true }).selectOption('en');
+    await selectOption(page.getByRole('combobox', { name: 'Язык', exact: true }), 'en');
     await expect(page.getByLabel('Unsaved changes', { exact: true })).toHaveCount(0);
-    await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('ru');
+    await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
     const pending = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
     const download = await pending;
@@ -54,7 +55,7 @@ test('все встроенные схемы отображаются и сох�
 
 test('кастомные атрибуты и XML расширений редактируются и отменяются', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByText('Дополнительные атрибуты', { exact: true }).click();
@@ -81,13 +82,13 @@ test('кастомные атрибуты и XML расширений редак
 
 test('вкладки независимы, локальное восстановление сохраняет изменения', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByLabel('Название', { exact: true }).fill('Восстановленный старт');
   await page.getByLabel('Название', { exact: true }).blur();
   await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
-  await page.getByTitle('Новая схема (Ctrl+N)').click();
+  await page.getByTitle('Новая вкладка (Ctrl+N)').click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await expect(page.locator('.document-tab')).toHaveCount(2);
   await page.reload();
@@ -98,7 +99,7 @@ test('вкладки независимы, локальное восстанов
 
 test('ошибочный XML не заменяет диаграмму', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await expect(page.locator('.outline-item').first()).toBeVisible();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
@@ -110,7 +111,7 @@ test('ошибочный XML не заменяет диаграмму', async ({
 
 test('listeners, поля и определения редактируются через формы с undo/redo', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новая схема', exact: true }).click();
+  await page.getByRole('button', { name: 'Новая вкладка', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByText('Обработчики процесса · executionListener', { exact: true }).click();

@@ -1,3 +1,4 @@
+import { Select } from '../ui/select';
 import type { BpmnEditor } from '../bpmn/editor';
 import type { DiagramElement, ModdleElement } from '../bpmn/types';
 import { useI18n } from '../i18n/provider';
@@ -26,9 +27,8 @@ export function StandardProperties({ element, editor, run }: { element: DiagramE
       {target.$descriptor.properties.filter(p => p.isReference && !p.isMany && !['sourceRef', 'targetRef', 'attachedToRef', 'incoming', 'outgoing'].includes(p.name)).map(property => {
         const options = property.name === 'default' ? target.get<ModdleElement[]>('outgoing') ?? [] : editor.allModelElements().filter(item => item.id && item.$instanceOf(property.type));
         const selected = target.get<ModdleElement | undefined>(property.name)?.id ?? '';
-        return <label key={property.name} className="field" data-presence={selected ? 'explicit' : 'unset'}><span>{property.name}</span><select value={selected} onChange={event => run(() => editor.update(element, property.name, options.find(item => item.id === event.target.value), target))}>
-          <option value="">{t("Не задано")}</option>{options.map(item => <option key={item.id} value={item.id}>{item.name || item.id}</option>)}
-        </select></label>;
+        return <label key={property.name} className="field" data-presence={selected ? 'explicit' : 'unset'}><span>{property.name}</span><Select label={property.name} value={selected} onChange={value => run(() => editor.update(element, property.name, options.find(item => item.id === value), target))}
+          options={[{ value: '', label: t('Не задано') }, ...options.map(item => ({ value: item.id!, label: item.name || item.id! }))]} /></label>;
       })}
       {target.$descriptor.properties.filter(p => p.type === 'bpmn:Expression' && !p.isMany).map(property =>
         <Field key={property.name} label={property.name} value={target.get<ModdleElement | undefined>(property.name)?.get<string>('body') ?? ''} multiline

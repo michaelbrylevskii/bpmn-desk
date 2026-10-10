@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { test, expect } from '@playwright/test';
 import { emptyDiagram } from '../../src/renderer/bpmn/template';
 
@@ -9,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 for (const kind of ['malformed', 'body-text'] as const) {
   test(`${kind}: применение XML явно сообщает об отказе, сохраняет черновик, модель и undo`, async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: 'New diagram', exact: true }).click();
+    await page.getByRole('button', { name: 'New tab', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
     await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
     await page.getByLabel('Name', { exact: true }).fill('Retained name');
@@ -36,7 +37,7 @@ for (const kind of ['malformed', 'body-text'] as const) {
       await expect(alert.locator('pre')).not.toContainText('Import may change data');
       await page.screenshot({ path: '.cache/notification-error-details-preview.png' });
     } else await expect(alert.locator('pre')).toContainText('Invalid XML');
-    await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('ru');
+    await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
     await expect(alert.locator('strong')).toHaveText('Не удалось применить XML.');
     await expect(alert.getByText('Технические подробности', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Отменить правки XML', exact: true }).click();
@@ -75,7 +76,7 @@ test('ошибка XML расширений выделяется в обеих �
 
 test('успешное применение автоматически исчезает после плавного затухания', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New diagram', exact: true }).click();
+  await page.getByRole('button', { name: 'New tab', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'BPMN 2.0', exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByRole('button', { name: 'Apply XML', exact: true }).click();
@@ -89,7 +90,7 @@ test('успешное применение автоматически исче�
 
 test('наведение останавливает затухание, уход курсора возобновляет его с дебаунсом', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New diagram', exact: true }).click();
+  await page.getByRole('button', { name: 'New tab', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('Diagram XML', { exact: true }).fill('<broken>');
@@ -116,7 +117,7 @@ test('наведение останавливает затухание, уход
 
 test('подробности и клавиатурный фокус удерживают уведомление, повторная ошибка обновляет таймер', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'New diagram', exact: true }).click();
+  await page.getByRole('button', { name: 'New tab', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Flowable', exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByLabel('Diagram XML', { exact: true }).fill('<broken>');

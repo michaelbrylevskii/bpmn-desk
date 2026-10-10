@@ -22,3 +22,4 @@
 - [0018 — Ошибки и время жизни уведомлений](0018-notification-errors-and-lifetime.md)
 - [0019 — Подключение тестов готового приложения](0019-packaged-test-connection.md)
 - [0020 — Подключения к движкам и чтение состояния](0020-runtime-connections.md)
+- [0021 — Общие вкладки, контролы и экспорт состояния](0021-workspace-tabs-and-runtime-export.md)

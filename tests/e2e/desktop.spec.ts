@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
 import { mkdir, mkdtemp, rm, copyFile, readFile, writeFile } from 'node:fs/promises';
@@ -87,7 +88,7 @@ test('native создание выбирает профиль, PNG проход�
   const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(resolve(directory, 'profile')), ELECTRON_RENDERER_URL: '' } });
   try {
     const page = await app.firstWindow();
-    await expect(page.getByRole('button', { name: 'Новая схема', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-diagram')!.click());
     await page.getByRole('dialog').getByRole('button', { name: 'Camunda 7', exact: true }).click();
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
@@ -211,21 +212,21 @@ test('native меню языка меняет интерфейс, сохраня
   let app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
   try {
     const page = await app.firstWindow();
-    await expect(page.getByRole('button', { name: 'New diagram', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'New tab', exact: true })).toBeVisible();
     expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-menu')!.label)).toBe('Language');
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-ru')!.click());
-    await expect(page.getByRole('button', { name: 'Новая схема', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
     expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-menu')!.label)).toBe('Язык');
-    await page.getByRole('combobox', { name: 'Язык', exact: true }).selectOption('en');
-    await expect(page.getByRole('button', { name: 'New diagram', exact: true })).toBeVisible();
+    await selectOption(page.getByRole('combobox', { name: 'Язык', exact: true }), 'en');
+    await expect(page.getByRole('button', { name: 'New tab', exact: true })).toBeVisible();
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-ru')!.click());
-    await expect(page.getByRole('button', { name: 'Новая схема', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.webContents.sendInputEvent({ type: 'keyDown', keyCode: '=', modifiers: ['control'] }));
     await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.webContents.getZoomFactor())).toBeCloseTo(1.1);
     expect(JSON.parse(await readFile(resolve(directory, 'language.json'), 'utf8'))).toBe('ru');
     await app.close();
     app = await electron.launch({ args: ['.'], chromiumSandbox: true, env });
-    await expect((await app.firstWindow()).getByRole('button', { name: 'Новая схема', exact: true })).toBeVisible();
+    await expect((await app.firstWindow()).getByRole('button', { name: 'Новая вкладка', exact: true })).toBeVisible();
     expect(await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('language-ru')!.checked)).toBe(true);
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });

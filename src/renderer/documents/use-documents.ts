@@ -15,6 +15,7 @@ export function useDocuments(report: ReportNotice) {
   const { t } = useI18n();
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [activeId, setActiveId] = useState('');
+  const [activationRevision, setActivationRevision] = useState(0);
   const [recovery, setRecovery] = useState(readRecovery);
   const editors = useRef<EditorRegistry>(new Map());
   const current = useRef(documents); current.current = documents;
@@ -30,11 +31,12 @@ export function useDocuments(report: ReportNotice) {
 
   const add = useCallback((file: OpenedFile, restored?: import('./recovery').RecoveryRecord) => {
     const existing = file.path && current.current.find(document => document.path === file.path);
-    if (existing) { setActiveId(existing.id); return; }
+    setActivationRevision(value => value + 1);
+    if (existing) { setActiveId(existing.id); return existing.id; }
     const id = crypto.randomUUID();
     const record: DocumentRecord = { id, name: file.name, path: file.path, token: file.token || undefined,
       sourceXml: file.xml, xml: file.xml, savedXml: restored?.savedXml ?? null, draft: restored?.draft };
-    setDocuments(previous => [...previous, record]); setActiveId(id);
+    setDocuments(previous => [...previous, record]); setActiveId(id); return id;
   }, []);
 
   const create = useCallback((profile: DocumentProfile) => add({ token: '', path: '', name: t('Новая схема.bpmn'), xml: diagramTemplate(t, profile) }), [add, t]);
@@ -72,27 +74,29 @@ export function useDocuments(report: ReportNotice) {
     });
   }, [activeId, t]);
 
-  const save = useCallback(async (saveAs = false) => {
-    if (!active || saving.current) return;
-    const editor = editors.current.get(active.id);
+  const save = useCallback(async (saveAs = false, documentId?: string) => {
+    const target = documentId ? current.current.find(item => item.id === documentId) : active;
+    if (!target || saving.current) return;
+    const editor = editors.current.get(target.id);
     if (!editor) return;
-    if (active.draft !== undefined && active.draft !== active.xml) throw new Error('Примени или отмени изменения XML перед сохранением.');
+    if (target.draft !== undefined && target.draft !== target.xml) throw new Error('Примени или отмени изменения XML перед сохранением.');
     saving.current = true;
     try {
       const xml = await editor.checkedXml();
-      const saved = await bridge.saveFile({ token: active.token, name: active.name, content: xml, saveAs });
+      const saved = await bridge.saveFile({ token: target.token, name: target.name, content: xml, saveAs });
       if (!saved) return;
-      setDocuments(previous => previous.map(document => document.id === active.id ? { ...document, ...saved, token: saved.token || undefined, savedXml: xml } : document));
+      setDocuments(previous => previous.map(document => document.id === target.id ? { ...document, ...saved, token: saved.token || undefined, savedXml: xml } : document));
       report({ severity: 'success', message: `Сохранено: ${saved.name}` });
     } finally { saving.current = false; }
   }, [active, report]);
 
-  const exportDiagram = useCallback(async (format: DiagramExport) => {
-    if (!active) return;
-    const editor = editors.current.get(active.id);
+  const exportDiagram = useCallback(async (format: DiagramExport, documentId?: string) => {
+    const target = documentId ? current.current.find(item => item.id === documentId) : active;
+    if (!target) return;
+    const editor = editors.current.get(target.id);
     if (!editor) return;
     const svg = await editor.svg();
-    const name = active.name.replace(/\.(bpmn20\.xml|bpmn|xml)$/i, '');
+    const name = target.name.replace(/\.(bpmn20\.xml|bpmn|xml)$/i, '');
     if (format === 'svg') await bridge.saveFile({ name: `${name}.svg`, content: svg, format: 'svg' });
     else await bridge.saveFile({ name: `${name}.png`, content: await pngFromSvg(svg, format === 'png-white'), format: 'png' });
   }, [active]);
@@ -119,5 +123,5 @@ export function useDocuments(report: ReportNotice) {
     try { Promise.resolve(operation()).catch(error => report(errorNotice(error, failure))); } catch (error) { report(errorNotice(error, failure)); }
   }, [report]);
 
-  return { documents, active, activeId, setActiveId, editors, add, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportDiagram, recovery, restore, discardRecovery, prepareClose, run };
+  return { documents, active, activeId, activationRevision, setActiveId, editors, add, create, open, openExample, openRecent, drop, sync, draft, importFailed, close, save, exportDiagram, recovery, restore, discardRecovery, prepareClose, run };
 }

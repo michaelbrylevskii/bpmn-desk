@@ -5,6 +5,7 @@ import { runtimeBridge } from '../platform/runtime';
 import { useI18n } from '../i18n/provider';
 import { Variables } from './variables';
 import { JobDetails } from './job-details';
+import { InstanceRelationships } from './relationships';
 
 export function InstanceDetails({ connection, snapshot, selected, focus, openInstance, jobSelection }: {
   connection: string; snapshot: InstanceSnapshot; selected: string; focus: (id: string) => void; openInstance: (id: string) => void;
@@ -25,7 +26,7 @@ export function InstanceDetails({ connection, snapshot, selected, focus, openIns
         <dt>Definition</dt><dd>{process.processDefinitionId}</dd><dt>Tenant</dt><dd>{process.tenantId || '—'}</dd>
         <dt>{t('Начат')}</dt><dd>{process.startTime ? new Date(process.startTime).toLocaleString() : '—'}</dd></dl>
       {!!snapshot.deadLetters.length && <p className="runtime-error">{t('Есть dead-letter jobs')}: {snapshot.deadLetters.length}</p>}
-      {process.superProcessInstanceId && <button className="runtime-link" onClick={() => openInstance(process.superProcessInstanceId)}>{t('Родительский экземпляр')}: {process.superProcessInstanceId}</button>}
+      <InstanceRelationships snapshot={snapshot} open={openInstance} />
       {selected && <p className="runtime-selection">{t('Выбранный элемент')}: <code>{selected}</code></p>}
     </div>
     <nav className="runtime-tabs">{([{ id: 'variables', label: 'Переменные процесса' }, { id: 'executions', label: 'Executions' }, { id: 'jobs', label: 'Dead-letter jobs' }, { id: 'tasks', label: 'Задачи' }] as const).map(item =>
