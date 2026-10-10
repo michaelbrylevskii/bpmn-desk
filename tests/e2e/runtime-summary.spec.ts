@@ -2,7 +2,8 @@ import { test, expect, type Page } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fixture, launch, openInstance, close } from './runtime-fixture';
+import { fixture, launch, openInstance, close, useRuntimeFixture } from './runtime-fixture';
+useRuntimeFixture();
 
 async function definition(page: Page, key: string, version?: number) {
   await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Processes', exact: true }).click();

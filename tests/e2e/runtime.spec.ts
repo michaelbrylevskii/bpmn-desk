@@ -2,7 +2,8 @@ import { test, expect, _electron as electron } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { selectOption } from './select';
-import { fixture, launch, openInstance, close } from './runtime-fixture';
+import { fixture, launch, openInstance, close, useRuntimeFixture } from './runtime-fixture';
+useRuntimeFixture();
 
 test('реальный Flowable: точная версия экземпляра, переменные и отдельная локальная копия', async () => {
   const { app, page, directory } = await launch();

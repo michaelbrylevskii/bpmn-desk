@@ -1,8 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fixture, launch, openInstance, close } from './runtime-fixture';
+import { fixture, launch, openInstance, close, useRuntimeFixture } from './runtime-fixture';
 import { selectOption } from './select';
+useRuntimeFixture();
 
 const surface = (page: Page) => page.locator('.workspace-surface:not([hidden])');
 async function newMonitor(page: Page) {
