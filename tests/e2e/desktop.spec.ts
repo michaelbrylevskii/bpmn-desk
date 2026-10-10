@@ -18,6 +18,10 @@ test('Electron запускает packaged renderer, preload и встроенн
   try {
     const page = await app.firstWindow();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const manage = page.locator('.toolbar').getByTitle('Управление подключениями', { exact: true });
+    await expect(manage).toHaveCount(1); await manage.click();
+    await expect(page.getByRole('dialog').getByLabel('Название подключения')).toHaveValue('');
+    await page.getByRole('dialog').getByTitle('Закрыть', { exact: true }).click();
     expect(await page.evaluate(() => !!window.desktop)).toBe(true);
     expect(await page.evaluate(() => 'require' in window)).toBe(false);
     expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isMenuBarVisible())).toBe(false);
@@ -25,6 +29,8 @@ test('Electron запускает packaged renderer, preload и встроенн
     await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await expect(page.locator('.import-error')).toHaveCount(0);
+    await manage.click(); await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('dialog').getByTitle('Закрыть', { exact: true }).click();
     await page.screenshot({ path: 'test-results/desktop-editor.png' });
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });

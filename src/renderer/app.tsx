@@ -86,6 +86,7 @@ export function App() {
     onDrop={event => { event.preventDefault(); setDragging(false); const files = Array.from(event.dataTransfer.files); openContent(() => docs.drop(files)); }}>
     <Toolbar hasDocument={!!active?.snapshot} canUndo={!!active?.snapshot?.canUndo} canRedo={!!active?.snapshot?.canRedo} theme={theme} onTheme={setTheme} onAction={onAction}
       onLanguage={value => docs.run(() => setLanguage(value))} onExport={exportDiagram} canExport={monitoring ? !!controls?.canExport : !!active?.snapshot}
+      onManageConnections={() => setManaging(monitoring ? activeTab.connectionId : profiles.data.items.find(item => item.id === profiles.preferredId)?.id ?? profiles.data.items[0]?.id ?? '')}
       runtimeTools={monitoring ? <RuntimeToolbar connectionId={activeTab.connectionId} connections={profiles.data.items} controls={controls} choose={id => { tabs.changeConnection(activeTab.id, id); profiles.remember(id); }} manage={setManaging} /> : undefined} />
     <Tabs tabs={tabs.tabs} activeId={tabs.activeId} documents={docs.documents} connections={profiles.data.items} controls={handles.controls} activate={tabs.activate}
       close={tab => tab.kind === 'document' ? docs.close(tab.id) : tabs.closeTab(tab.id)} create={requestNew} />
