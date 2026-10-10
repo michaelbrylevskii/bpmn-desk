@@ -89,3 +89,4 @@
 .runtime-summary-notice p { margin: 4px 0; }.runtime-summary-notice .runtime-warning, .runtime-summary-notice .runtime-error { padding: 6px 8px; }.runtime-summary-notice time { white-space: nowrap; }
 .catalog-filters label.runtime-check { display: flex; align-items: center; }
 .runtime-row-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }.runtime-instance-status { display: inline-block; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }.runtime-instance-status.suspended { background: transparent; border-radius: 0; border-left: 3px solid var(--muted); border-right: 3px solid var(--muted); width: 8px; height: 9px; }
+.runtime-summary-details .runtime-instance p { color: var(--muted); font-size: 11px; line-height: 1.5; }.runtime-summary-details .related-instance.failed { border-left: 3px solid var(--danger); }.runtime-summary-details .related-instance.failed strong { color: var(--danger); }

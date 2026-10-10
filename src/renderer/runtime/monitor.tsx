@@ -14,6 +14,7 @@ import { InstanceDetails } from './instance-details';
 import { JobDetails } from './job-details';
 import { useSnapshot } from './use-snapshot';
 import { useSummary } from './use-summary';
+import { SummaryDetails } from './summary-details';
 
 export function RuntimeMonitor({ id, connection, revision, active, copy, publish }: { id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
@@ -70,7 +71,8 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
         {snapshot.data && <div className="runtime-freshness"><time dateTime={snapshot.data.capturedAt}>{t('Время снимка')}: {new Date(snapshot.data.capturedAt).toLocaleTimeString()}</time><span>{t('Снимок собирается несколькими запросами и может измениться во время чтения.')}</span></div>}
       </div>
       {snapshot.data ? <InstanceDetails key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot.data} selected={selected} focus={focus} openInstance={openInstance} jobSelection={selectedJob} /> :
-        selectedJob && <aside className="runtime-details"><JobDetails key={selectedJob.id} connection={connection} job={selectedJob} focus={focus} /></aside>}
+        selectedJob ? <aside className="runtime-details"><JobDetails key={selectedJob.id} connection={connection} job={selectedJob} focus={focus} /></aside> :
+          !instanceId && selected && summary.data && <SummaryDetails key={`${diagramKey}:${selected}`} summary={summary.data} element={selected} open={(id, job) => job ? openJob(job) : openInstance(id)} />}
     </div>
   </div>;
 }

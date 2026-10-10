@@ -1,4 +1,6 @@
 export const runtimeMessages = {
+  'Экземпляры из загруженной выборки. Для подробностей выбери экземпляр.': 'Instances from the loaded sample. Select an instance for details.',
+  'В загруженной выборке нет экземпляров этого элемента.': 'The loaded sample has no instances at this element.',
   'Только последние версии': 'Latest versions only', 'Сводка версии': 'Version summary', 'Обновить сводку': 'Refresh summary', 'Скрыть сводку': 'Hide summary',
   'Не приостановлен; ожидание и выполнение по списку не определяются.': 'Not suspended; the list does not determine whether it is waiting or executing.',
   'Два запроса, до 100 записей каждого вида, не дольше 8 секунд.': 'Two requests, up to 100 records each, within 8 seconds.',

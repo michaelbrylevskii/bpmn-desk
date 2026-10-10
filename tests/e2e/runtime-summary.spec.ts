@@ -20,6 +20,13 @@ test('сводка точной версии: multi-instance считается 
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
     await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1');
     await expect(page.locator('.runtime-summary-notice')).not.toContainText('Partial summary');
+    await page.locator('.runtime-canvas .djs-element[data-element-id="ReviewMany"] .djs-hit').click();
+    await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(1);
+    await page.locator('.runtime-summary-details').getByRole('button', { name: `Open instance: ${fixture.parallelInstanceId}`, exact: true }).click();
+    await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('3');
+    await definition(page, 'deskParallel'); await page.getByRole('button', { name: 'Version summary', exact: true }).click();
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1');
     await page.getByTitle('Hide summary', { exact: true }).click(); await expect(page.locator('.runtime-badge')).toHaveCount(0);
     await definition(page, 'deskFailure');
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
@@ -28,6 +35,11 @@ test('сводка точной версии: multi-instance считается 
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, filePath);
     await page.getByTitle('Export SVG', { exact: true }).click();
     await expect(async () => { expect(await readFile(filePath, 'utf8')).toContain('>! 1</text>'); }).toPass();
+    await page.locator('.runtime-canvas .djs-element[data-element-id="Delivery"] .djs-hit').click();
+    await page.locator('.runtime-summary-details').getByRole('button', { name: `Open instance: ${fixture.failedInstanceId}`, exact: true }).click();
+    await expect(page.locator('.runtime-details .runtime-job summary')).toBeVisible();
+    await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.failedInstanceId);
+    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Processes', exact: true }).click();
     const filters = page.locator('.catalog-filters'); await filters.locator('summary').click();
     await filters.getByLabel('Latest versions only', { exact: true }).check();
     await filters.getByLabel('Process key', { exact: true }).fill('deskReview');
@@ -54,7 +66,7 @@ test('ограниченная сводка и медленный сервер �
       response.setHeader('content-type', 'application/json');
       if (mode === 'slow') { response.write('{'); return; }
       if (url.pathname.endsWith('/deadletter-jobs')) { response.statusCode = 403; response.end('{}'); return; }
-      response.end(JSON.stringify({ start: 0, total: 1000000, data: Array.from({ length: 100 }, (_, index) => ({ id: `e${index}`, activityId: 'Review', processInstanceId: `p${index % 10}` })) })); return;
+      response.end(JSON.stringify({ start: 0, total: 1000000, data: Array.from({ length: 100 }, (_, index) => ({ id: `e${index}`, activityId: 'Review', processInstanceId: `p${index % 25}` })) })); return;
     }
     void fetch(url, { headers: { Authorization: request.headers.authorization ?? '' } }).then(async upstream => {
       response.statusCode = upstream.status; response.setHeader('content-type', upstream.headers.get('content-type') ?? 'application/json'); response.end(Buffer.from(await upstream.arrayBuffer()));
@@ -67,7 +79,7 @@ test('ограниченная сводка и медленный сервер �
   try {
     await definition(page, 'deskReview', 1); expect(summaryRequests()).toHaveLength(0);
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
-    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('≥10');
+    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('≥25');
     await expect(page.locator('.runtime-summary-notice')).toContainText('100/1000000');
     await expect(page.locator('.runtime-summary-notice')).toContainText('Partial summary');
     await expect(page.locator('.runtime-summary-notice')).toContainText('403'); expect(summaryRequests()).toHaveLength(2);
@@ -80,6 +92,13 @@ test('ограниченная сводка и медленный сервер �
       }).toBe(true);
       await page.screenshot({ path: `test-results/runtime-summary-${theme.startsWith('Light') ? 'light' : 'dark'}.png` });
     }
+    await page.locator('.runtime-canvas .djs-element[data-element-id="Review"] .djs-hit').click();
+    await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(10);
+    await page.locator('.runtime-summary-details').getByTitle('Next page', { exact: true }).click();
+    await expect(page.locator('.runtime-summary-details').getByRole('button', { name: 'Open instance: p10', exact: true })).toBeVisible();
+    await page.locator('.runtime-summary-details').getByTitle('Next page', { exact: true }).click();
+    await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(5);
+    expect(summaryRequests()).toHaveLength(2);
     mode = 'slow'; await page.getByRole('button', { name: 'Refresh summary', exact: true }).click();
     await expect.poll(() => summaryRequests().length).toBe(4);
     await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toBeDisabled();
