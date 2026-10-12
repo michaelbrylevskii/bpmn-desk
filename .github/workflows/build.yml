@@ -120,8 +120,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           RELEASE_VERSION=$(node -p "require('./package.json').version")
-          cp "docs/releases/$RELEASE_VERSION.md" "$RUNNER_TEMP/bpmn-desk-release-notes.md"
-          printf '\n\nСборка GitHub Actions: %s/%s/actions/runs/%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$RUNNER_TEMP/bpmn-desk-release-notes.md"
+          node scripts/release-notes.mjs > "$RUNNER_TEMP/bpmn-desk-release-notes.md"
+          printf '\n\nBuild and checks: %s/%s/actions/runs/%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$RUNNER_TEMP/bpmn-desk-release-notes.md"
           gh release create "$GITHUB_REF_NAME" --verify-tag --draft \
             --title "BPMN Desk $RELEASE_VERSION" --notes-file "$RUNNER_TEMP/bpmn-desk-release-notes.md"
           gh release upload "$GITHUB_REF_NAME" release/*.AppImage release/*-Setup.exe release/*-Portable.exe release/SHA256SUMS

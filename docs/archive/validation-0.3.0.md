@@ -33,7 +33,7 @@
 
 Обе платформы выполнили strict TypeScript, ESLint, проверки UI и Electron, Flowable converter и Camunda Model API. Windows содержит 48 Chromium-сценариев, 9 Electron и один запуск собранного приложения. Дистрибутивы сохранены в artifacts. При публикации тег запускает такую же матрицу заново; ссылка на релизный прогон добавляется в описание GitHub Release.
 
-Повторный [прогон 37989030193](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37989030193) выявил нестабильность firstWindow для packaged executable: на каждой ОС 57 UI/Electron-сценариев прошли, проверка готового приложения не обнаружила окно. Диагностика подтвердила загруженный DOM и существующий CDP target. Тестовый адаптер переведён на публичное подключение CDP после навигации; 20 последовательных локальных запусков AppImage прошли. Подробности: [ADR 0019](adr/0019-packaged-test-connection.md).
+Повторный [прогон 37989030193](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37989030193) выявил нестабильность firstWindow для packaged executable: на каждой ОС 57 UI/Electron-сценариев прошли, проверка готового приложения не обнаружила окно. Диагностика подтвердила загруженный DOM и существующий CDP target. Тестовый адаптер переведён на публичное подключение CDP после навигации; 20 последовательных локальных запусков AppImage прошли. Подробности: [ADR 0019](../adr/0019-packaged-test-connection.md).
 
 После исправления [прогон основной ветки 37991882513](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37991882513) и [релизный прогон 37992511168](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/37992511168) успешно выполнили полную матрицу обеих ОС, включая AppImage и готовый Windows EXE. Проверенный коммит: `41d144a`; тег: `v0.3.0`.
 
@@ -43,7 +43,7 @@
 
 Локальный прогон выполнен на Linux; Windows-сценарий пропущен по платформе. Новая версия отдельно проверена нативно на Windows Server 2022 в CI. Эти тесты не запускают installer/portable launcher и не подтверждают ручную установку или ассоциации. Пользовательское подтверждение Windows-инсталлятора относится к 0.2.0. macOS не проверялась. В локальной среде нет FUSE: тест запускает извлечённое содержимое AppImage.
 
-Model API подтверждает XML/модель и сохранность данных, но не выполняет deployment, delegates, scripts, connectors или процесс. Примеры используют условные прикладные ресурсы. Camunda 8, DMN/CMMN и внешние дизайнеры форм не включены. Подробности: [camunda7.md](camunda7.md), [ADR 0014](adr/0014-engine-profiles.md).
+Model API подтверждает XML/модель и сохранность данных, но не выполняет deployment, delegates, scripts, connectors или процесс. Примеры используют условные прикладные ресурсы. Camunda 8, DMN/CMMN и внешние дизайнеры форм не включены. Подробности: [camunda7.md](../camunda7.md), [ADR 0014](../adr/0014-engine-profiles.md).
 
 ## Воспроизведение
 
@@ -58,4 +58,4 @@ npm run validate:flowable
 npm run validate:camunda
 ```
 
-Для независимых Java-проверок нужны JDK 17+ и Maven. Внешние наборы подключаются отдельно, по [инструкции](local-schema-packs.md).
+Для независимых Java-проверок нужны JDK 17+ и Maven. Внешние наборы подключаются отдельно, по [инструкции](../local-schema-packs.md).

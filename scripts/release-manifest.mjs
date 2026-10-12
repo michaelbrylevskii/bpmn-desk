@@ -11,6 +11,7 @@ const files = [`BPMN-Desk-${version}-x86_64.AppImage`, `BPMN-Desk-${version}-x64
 const found = readdirSync('release').filter(file => /\.(AppImage|exe)$/.test(file)).sort();
 if (JSON.stringify(found) !== JSON.stringify([...files].sort())) throw new Error('Ожидаются ровно три дистрибутива текущей версии.');
 readFileSync(`docs/releases/${version}.md`, 'utf8');
+readFileSync(`.github/release-notes/${version}.md`, 'utf8');
 const sums = files.map(file => {
   const path = `release/${file}`;
   if (!statSync(path).isFile() || statSync(path).size === 0) throw new Error(`Пустой дистрибутив: ${file}`);

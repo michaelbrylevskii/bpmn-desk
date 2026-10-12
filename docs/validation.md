@@ -1,83 +1,34 @@
-# Проверка версии 0.4.0
+# Проверка релиза 0.4.0
 
-Дата: 2026-10-10. Локальная платформа — Linux x86_64. Отчёт охватывает редактор BPMN/Flowable/Camunda 7, монитор Flowable, общие вкладки и настройки подключений. Предыдущие релизы: [0.3.0](validation-0.3.0.md), [0.2.0](validation-0.2.0.md). Подробные прогоны этапа разработки: [validation-runtime.md](validation-runtime.md).
+Проверенный коммит: `9a59f14524fc16b958954836d1430317099e3ad5`, тег `v0.4.0`.
 
-## Локальная проверка
+[Релиз](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.4.0) · [Нативная матрица](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38060956883)
 
-| Проверка | Результат |
-| --- | --- |
-| `npm run check` | strict TypeScript, ESLint; 84 unit-теста в 23 файлах |
-| `npm run test:e2e` | 65 успешных проверок: 53 Chromium, 11 Electron, 1 AppImage; 14 пропусков — Windows и runtime без стенда |
-| `npm run test:runtime` | 13/13 на независимом Flowable 7.2/H2 через Electron |
-| `npm run package:linux` | AppImage 0.4.0 собрана штатной командой и запущена с sandbox |
-| `npm run validate:flowable` | официальный converter 7.2: встроенные экспорты и boundary layout |
-| `npm run validate:camunda` | Model API 7.24: встроенные и изменённые модели, copy/paste и отрицательный контроль |
-
-## Что проверяется
-
-- Двойной XML roundtrip всех встроенных схем, неизвестные расширения, альтернативные namespace-префиксы, формы обоих движков, создание/моделирование/copy/paste, undo/redo и dirty state.
-- XML-поиск, переход к элементу, отступы расширений, отказ применения некорректного XML без потери модели, EN/RU, три режима темы и уведомления с паузой/debounce.
-- Открытие файлов/CLI/drop/recent, native save, внешний конфликт, независимые документы, восстановление, стартовые вкладки и отмена открытия файла. Ctrl+N завершает ввод поля, а возврат сохраняет undo.
-- Независимые мониторы, точная версия схемы, JSON и local execution variables, настоящие dead-letter async executor, stacktrace, родитель/дети, фильтры и ошибки авторизации.
-- Сводка версии: два ограниченных запроса, multi-instance без двойного учёта, миллионный `total`, общий таймаут, поздний ответ, отсутствие N+1, недоступность данных вместо ложного нуля.
-- Runtime-выделение, центрирование бейджей, перенос длинных идентификаторов, обе темы, сохранение viewport при refresh, SVG/PNG с метками и без изменения BPMN.
-- Управление подключениями из всех видов вкладок, проверка несохранённой формы, сохранение/смена профиля, отмена удаления и общий ряд действий. Секрет сессии отсутствует в JSON профиля, системное хранилище используется только по выбору.
-
-## Состав и публичные материалы
-
-ASAR содержит main/preload/renderer текущего `out`; стенд, Java, тесты, документация, кеши, локальные пакеты и настройки подключений не включаются. Семь встроенных примеров, provenance и лицензии проверяются относительно исходников. Пользовательские входы не изменяются и не публикуются.
-
-Скриншоты редактора пересозданы на встроенной оригинальной схеме. Скриншот монитора получен на независимом Flowable/H2 с оригинальной MIT-схемой [failure.bpmn20.xml](../tools/runtime-fixture/src/main/resources/processes/failure.bpmn20.xml) и условными данными. Источник и контрольная сумма — в [provenance стенда](../tools/runtime-fixture/src/main/resources/processes/provenance.json). Его можно повторить через `npm run test:runtime`, затем скопировать `test-results/runtime-dead-letter.png` в `docs/images/monitor.png`.
-
-## Аудит зависимостей
-
-`npm audit --omit=dev` — 0 предупреждений. Полный аудит — 8 moderate, 0 high/critical: одна [уязвимость sprintf-js](https://github.com/advisories/GHSA-hp3w-g68c-fv3c), распространённая по цепочке dev-зависимостей electron-builder → @electron/get → global-agent → roarr. Условие — управляемая извне строка формата. Эти пакеты не входят в ASAR; пользовательские BPMN и ответы движка не передаются сборочному логгеру. В advisory нет исправленной версии sprintf-js; предложенный npm откат electron-builder не применялся.
-
-## Нативный CI и публикация
-
-[Workflow](../.github/workflows/build.yml) выполняет нативные сборки на Ubuntu 24.04 и Windows Server 2022, Node.js 24 и JDK 17. Обе платформы проверяют UI/Electron, готовое приложение, независимый Flowable runtime и официальные библиотеки моделей. Ссылка на конкретный релизный прогон и проверенные дистрибутивы находятся в [релизе 0.4.0](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.4.0). Успешная матрица обеих ОС обязательна для автоматической публикации.
-
-Первый [прогон основной ветки](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38059740381) прошёл на Linux, но выявил на Windows дублирование вкладки при повторном открытии сохранённого файла (64/65 E2E). `FileStore.save` и список недавних приведены к каноническому пути, как `open`; добавлена регрессия через symlink/junction с проверкой capability и внешнего конфликта.
-
-## Опубликованный релиз
-
-[Матрица основной ветки](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38060371965) и [релизная матрица](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/38060956883) прошли на коммите `9a59f14524fc16b958954836d1430317099e3ad5`. Аннотированный тег `v0.4.0` указывает на этот коммит.
-
-| Среда | Unit | Общий E2E | Flowable runtime |
+| Среда | Unit | E2E | Flowable runtime |
 | --- | --- | --- | --- |
 | Ubuntu 24.04 | 84 passed | 65 passed, включая AppImage | 13 passed |
 | Windows Server 2022 | 82 passed, 2 symlink skip | 65 passed, включая готовый EXE | 13 passed |
 
-Обе ОС выполнили strict TypeScript, ESLint, нативную упаковку и официальные валидаторы Flowable/Camunda. Регрессия сохранения через symlink/junction проходит на обеих платформах.
+Обе ОС прошли strict TypeScript, ESLint, нативную сборку и официальные Flowable converter 7.2 / Camunda Model API 7.24. Java-проверки включают экспорты, изменения модели, copy/paste и отрицательный контроль.
 
-[Релиз 0.4.0](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.4.0) опубликован 2026-10-10 и отмечен latest. Все артефакты собраны в GitHub Actions. Скачаны и проверены ровно три дистрибутива и `SHA256SUMS`; размеры соответствуют API, суммы файлов и самого manifest совпадают с asset.digest. Локальные сборки не загружались.
+## Покрытие
 
-```text
-379e974c45702f7269b93f85d934a7e1d790d8033e0033683e146a09c104477f  BPMN-Desk-0.4.0-x86_64.AppImage
-ed1d9ead4d7335eb4413742999b26ac2a5cf9167ea63d6d83e0c04a41b051137  BPMN-Desk-0.4.0-x64-Setup.exe
-42c266f8a857e2184b8ab2a539769c513defb625d37f0bb6255651f56779fd3d  BPMN-Desk-0.4.0-x64-Portable.exe
-```
+- Roundtrip, неизвестные расширения, namespace-префиксы, формы обоих движков, моделирование, undo/redo и dirty state.
+- XML, ошибки импорта, локализация, темы, уведомления, native файлы/CLI/recent, recovery и независимые вкладки.
+- Точная версия runtime-схемы, переменные, настоящие dead-letter, stacktrace, связи экземпляров, фильтры и авторизация.
+- Ограниченная сводка: таймаут, частичный/недоступный результат, поздний ответ и отсутствие N+1.
+- Экспорт и viewport, длинные идентификаторы, настройки подключений и сохранение через symlink/junction.
 
-## Границы
+## Артефакты
 
-Локальный Windows-прогон не выполнялся; нативную проверку предоставляет GitHub Actions. Запуск `win-unpacked` не подтверждает ручную установку, удаление или ассоциации Windows 10/11. Ручное подтверждение инсталлятора предыдущей версии не переносится на 0.4.0. macOS не проверялась и не поставляется. В локальной среде AppImage проверяется с распаковкой без FUSE.
+AppImage, installer, portable и `SHA256SUMS` собраны GitHub Actions, скачаны и проверены по manifest и asset.digest. ASAR соответствует `out`; примеры, provenance и лицензии совпадают с исходниками. Java, тесты, кеши и пользовательские данные исключены из поставки.
 
-Настоящее чтение API проверяется на независимом стенде, без пользовательских серверов. Корпоративные сертификаты и авторизация конкретного пользователя не подтверждены. Системное хранилище секретов проверяется через контракт и запрет постоянного хранения при недоступном backend; разблокировка keyring конкретной ОС не подтверждена.
+`npm audit --omit=dev`: 0 предупреждений. Полный аудит на дату выпуска: 8 moderate по одной [уязвимости sprintf-js](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) в dev-цепочке electron-builder. Эти пакеты отсутствуют в ASAR; исправленной версии sprintf-js в advisory нет.
 
-Монитор не предоставляет административных действий, history и runtime Camunda 7. Снимок собирается несколькими запросами, сводка ограничена, бинарные/Java-serialized переменные не десериализуются. Официальные библиотеки подтверждают модель XML, но не deployment и исполнение delegates/scripts. Подробнее: [runtime-monitor.md](runtime-monitor.md), [camunda7.md](camunda7.md), [windows.md](windows.md).
+## Границы подтверждения
 
-## Воспроизведение
+Windows проверена автоматическим запуском приложения, без ручной приёмки installer/portable launcher и ассоциаций. macOS не проверялась. Локальная AppImage проверяется с распаковкой без FUSE.
 
-```bash
-npm ci
-npm run setup:electron
-npm run setup:e2e
-npm run check
-npm run package:linux
-npm run test:e2e
-npm run test:runtime
-npm run validate:flowable
-npm run validate:camunda
-```
+Flowable/H2 — независимый стенд с условными данными. Пользовательские серверы, корпоративная авторизация и разблокировка keyring конкретной ОС не подтверждены. Model API не выполняет deployment, delegates или scripts.
 
-JDK 17+ и Maven нужны только для тестового стенда и проверок моделей. Внешние наборы выполняются отдельно, по [инструкции](local-schema-packs.md).
+[Воспроизведение](development.md) · [Исторические протоколы](archive/README.md)
