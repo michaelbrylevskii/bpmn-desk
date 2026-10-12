@@ -26,7 +26,7 @@ Linux and Windows · local files · open source
 - **Visual editor.** BPMN elements and connections, nested subprocesses, Flowable/Camunda 7 properties, custom attributes and extensions.
 - **XML.** Syntax highlighting, search and replace, navigation to the selected element, extension editing and data preservation checks.
 - **Workspace.** Independent tabs and undo/redo, recent files, drag-and-drop, CLI, draft recovery and external file change detection.
-- **Flowable monitor.** Saved connections, deployed versions, instances, executions, tasks and variables. Dead-letter jobs, stack traces, diagram markers and bounded summaries.
+- **Flowable monitor.** Saved connections with configurable timeouts, deployed versions, instances, executions, tasks and variables. Dead-letter jobs, stack traces, diagram markers and bounded summaries.
 - **Export.** SVG and PNG with white or transparent backgrounds; monitor exports include state markers.
 - **Interface.** English and Russian, system/light/dark themes, interface and diagram zoom.
 
@@ -48,7 +48,7 @@ The [latest release](https://github.com/michaelbrylevskii/bpmn-desk/releases/lat
 
 ```bash
 chmod +x BPMN-Desk-*.AppImage
-./BPMN-Desk-0.4.0-x86_64.AppImage
+./BPMN-Desk-0.4.1-x86_64.AppImage
 ```
 
 Without FUSE, use `--appimage-extract-and-run` as the first argument. Windows executables are unsigned; macOS is not available yet.
