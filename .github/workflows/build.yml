@@ -1,4 +1,4 @@
-name: Проверки, сборки и релиз
+name: Checks, builds and release
 
 on:
   push:
@@ -47,34 +47,34 @@ jobs:
       - run: npm ci
       - run: npm run setup:electron
       - run: npm run check
-      - name: Chromium и системные библиотеки Linux
+      - name: Install Chromium and Linux system dependencies
         if: runner.os == 'Linux'
         run: node scripts/playwright.mjs install --with-deps chromium
-      - name: Chromium Windows
+      - name: Install Chromium on Windows
         if: runner.os == 'Windows'
         run: npm run setup:e2e
       - run: npm run package:${{ matrix.target }}
-      - name: Разрешить sandbox Electron на временном Linux runner
+      - name: Enable Electron sandbox on the ephemeral Linux runner
         if: runner.os == 'Linux'
         run: |
           if [[ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]]; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
-      - name: UI, Electron и AppImage на Linux
+      - name: Test UI, Electron and AppImage on Linux
         if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:e2e
-      - name: UI, Electron и готовый EXE на Windows
+      - name: Test UI, Electron and packaged EXE on Windows
         if: runner.os == 'Windows'
         run: npm run test:e2e -- --project=chromium --project=electron --project=windows
-      - name: Независимый Flowable runtime на Linux
+      - name: Test against an independent Flowable runtime on Linux
         if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:runtime
-      - name: Независимый Flowable runtime на Windows
+      - name: Test against an independent Flowable runtime on Windows
         if: runner.os == 'Windows'
         run: npm run test:runtime
       - run: npm run validate:flowable
       - run: npm run validate:camunda
-      - name: Сохранить проверенные дистрибутивы
+      - name: Upload verified distributions
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: bpmn-desk-${{ matrix.target }}-x64
@@ -85,7 +85,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
-      - name: Сохранить сведения о неуспешных тестах
+      - name: Upload failed test diagnostics
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -94,7 +94,7 @@ jobs:
           retention-days: 7
 
   release:
-    name: Опубликовать релиз
+    name: Publish release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-24.04
@@ -113,9 +113,9 @@ jobs:
           pattern: bpmn-desk-*-x64
           merge-multiple: true
           path: release
-      - name: Проверить состав, версию и создать SHA256SUMS
+      - name: Verify release assets and version and generate SHA256SUMS
         run: node scripts/release-manifest.mjs
-      - name: Создать черновик, загрузить файлы и опубликовать
+      - name: Create draft, upload assets and publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
