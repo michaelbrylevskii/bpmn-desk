@@ -1,64 +1,28 @@
-# Camunda 7
+# Расширения Camunda 7
 
-Поддержка Camunda 7 доступна начиная с версии 0.3.0. Редактор сохраняет расширения и предоставляет формы их настройки; процессы выполняет отдельно установленный движок Camunda 7.
-
-## Профили схем
-
-При создании новой схемы открывается диалог выбора: Flowable, Camunda 7 или обычный BPMN 2.0. Он действует для кнопок создания, новой вкладки, Ctrl+N и native меню. Escape отменяет создание. На уже открытые документы выбор не влияет. Цвет точки в заголовке свойств обозначает движок: зелёный — Flowable, оранжевый — Camunda 7; это не статус проверки.
-
-Открытая схема определяется по URI, поэтому `camunda:`, `c7:` и другие префиксы эквивалентны при правильном объявлении. Использованные пространства имён важнее оставшихся неиспользуемых объявлений. Для пустой схемы профиль хранится объявлением namespace в XML и восстанавливается при повторном открытии. Обычный BPMN не получает формы или предупреждения Flowable/Camunda.
-
-Если реально используются оба движка, доступны обе группы свойств и предупреждение о смешанной схеме. Это позволяет редактировать существующий XML, но не превращает процесс в исполняемый на двух движках. Автоматической конвертации Flowable ↔ Camunda нет.
+Целевая спецификация — Camunda 7.24. Редактор настраивает и сохраняет расширения; движок не выполняется внутри приложения.
 
 ## Формы
 
-- Реализация service/send/business rule tasks: Java class, expression, delegateExpression, external task type/topic/priority; результат выражения, asyncBefore/asyncAfter, exclusive и jobPriority.
-- User tasks: assignee, candidate users/groups, due/follow-up date, priority; formKey, formRef/binding/version и formHandlerClass.
-- Process: historyTimeToLive, versionTag, candidate starters и доступность запуска в Tasklist. Start event: initiator и ссылки на форму.
-- Call activity: binding, version/versionTag/tenant, variable mapping delegates; расширения `in`/`out` с businessKey, variables и local.
-- Business rule task: ссылки и версии DMN, tenant, способ извлечения результата. Сам DMN-файл не редактируется.
-- Script task: стандартные BPMN script/scriptFormat, Camunda resource/resultVariable. Scripts остаются текстом.
-- Event definitions: реализация message throw/end, переменные ошибок и эскалаций, переменные conditional event. Multi-instance: collection, elementVariable, async/exclusive и retry. Значения применяются к вложенному target.
-- Definitions ошибок: `camunda:errorMessage`, с поддержкой альтернативного префикса.
+| Область | Поддержка |
+| --- | --- |
+| Service/send/business rule task | class/expression/delegate, external topic/priority, asyncBefore/After, exclusive, jobPriority |
+| User task и формы | assignee/candidates, due/follow-up, priority, formKey/ref/binding/version/handler |
+| Process и start event | historyTimeToLive, versionTag, candidate starters, Tasklist, initiator |
+| Call activity | binding/version/tenant, variable mapping delegates, in/out и businessKey |
+| DMN и script task | Ссылки на решение и параметры результата; script/resource/resultVariable |
+| Events и multi-instance | Message implementation, error/escalation/conditional variables, collection, elementVariable, async/retry |
 
-Атрибуты показывают явное наличие значения. Boolean допускает удаление атрибута; для Camunda показаны документированные умолчания async/exclusive/startable. Удаление значения не записывает умолчание в XML.
+Вложенные расширения: listeners с field/script, input/output с text/map/list/script, formData с enum/properties/validation, connector, properties и errorEventDefinition.
 
-## Вложенные расширения
+## Сохранность модели
 
-В секциях свойств доступны добавление, удаление и изменение узлов:
+Профиль определяется по URI, а не XML-префиксу. Смешанная схема показывает обе группы свойств; конвертации между движками нет.
 
-- executionListener/taskListener и вложенные field/script;
-- inputOutput, inputParameter/outputParameter, text/expression, map/entry, list/value и script;
-- formData/formField, enum values, properties/property, validation/constraint; устаревший formProperty;
-- connector, connectorId и вложенные параметры;
-- properties и errorEventDefinition внешней задачи.
+Изменения вложенных параметров проходят через одну отменяемую команду. Конфликтующие представления field и script заменяются явно; неизвестные атрибуты и дочерние узлы сохраняются. Copy/paste и смена типа задачи сохраняют расширения; глобальные ID при вставке получают новые значения. Значение по умолчанию не записывается вместо удалённого атрибута.
 
-Контейнеры inputOutput/formData/properties/connector и одиночные вложенные контейнеры не дублируются кнопкой добавления. Новые formField получают свободный ID среди соседних полей. Пустые обязательные поля и прикладная конфигурация остаются ответственностью автора схемы; редактор допускает промежуточное состояние.
+Редкие расширения доступны через XML. Неподдерживаемые конструкции, которые moddle не может сохранить, блокируют импорт/сохранение. Проверка Model API подтверждает XML и семантику, но не прикладную корректность delegates, connectors, forms или tenant.
 
-Переключение параметра между текстом, script, list и map заменяет прежний тип значения одной командой. Undo возвращает прежние данные. Изменение field из атрибута stringValue/expression переводит его в дочерний string/expression без сохранения конфликтующих представлений. Назначение внешнего resource скрипта очищает встроенное тело, также с undo.
+Camunda 8/Zeebe, runtime Camunda 7, редактирование DMN/CMMN и внешних `.form` файлов не включены. Ссылки на ресурсы сохраняются.
 
-Неизвестные дочерние элементы сохраняются. Их можно изменить в XML расширений или исходнике всей схемы. Редактирование известных полей не пересобирает остальные атрибуты и детей. Смена типа задачи и copy/paste сохраняют generic данные; при вставке глобальный ID расширения ошибки получает новое значение.
-
-## Примеры и проверки
-
-`camunda7-showcase` демонстрирует формы, external task, listeners, параметры, DMN binding, call activity и скрипт. `camunda7-integration` использует префикс `c7`, connector, multi-instance, boundary error и message end event. Оба примера созданы авторами BPMN Desk по MIT; SHA-256 и происхождение находятся в `examples/provenance.json`. Java delegates, endpoint, вызванный процесс и решение DMN в примерах условные и не поставляются.
-
-```bash
-npm run check
-npm run package:linux
-npm run test:e2e
-npm run validate:flowable
-npm run validate:camunda
-```
-
-Camunda-проверка требует JDK 17+ и Maven. Она читает экспорты UI из `.cache/camunda-exports/`, сравнивает модель исходных и сохранённых примеров через официальную BPMN Model API 7.24.0, проверяет изменённый integration против отдельно построенного ожидаемого XML и валидирует результат copy/paste. В сравнении исключён DI; текстовые значения не обрезаются. Координаты и отображение проверяются UI-тестами. Java не включается в дистрибутив.
-
-Пользовательские наборы по-прежнему можно дополнительно прогнать через `npm run test:extra`: auto detection, roundtrip и UI общие. `validate:flowable:extra` относится к Flowable; независимого Camunda-конвертера внешних наборов пока нет. Основной набор самодостаточен.
-
-## Границы
-
-Целевая спецификация — Camunda 7.24. Camunda 8/Zeebe, CMMN/DMN редакторы, deployment, выполнение Java/scripts и дизайнер внешних `.form` файлов не включены. Ссылки на эти ресурсы сохраняются.
-
-Model API и диагностика не заменяют deployment-проверку движком с реальными delegates, forms, connectors и tenant. Редкие и проектные расширения, например timer task listeners, доступны через XML. XML-конструкции, которые невозможно сохранить через moddle, блокируют импорт/сохранение.
-
-Архитектурное решение: [ADR 0014](adr/0014-engine-profiles.md). Результаты прогона: [validation.md](validation.md).
+[Примеры и лицензии](../examples/provenance.json) · [ADR 0014](adr/0014-engine-profiles.md) · [Проверки моделей](development.md)

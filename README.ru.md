@@ -1,0 +1,67 @@
+<div align="center">
+
+# BPMN Desk
+
+**Редактор BPMN и монитор процессов для рабочего стола**
+
+BPMN 2.0 · Flowable · Camunda 7<br>
+Linux и Windows · локальные файлы · открытый исходный код
+
+[**Скачать**](https://github.com/michaelbrylevskii/bpmn-desk/releases/latest) · [English](README.md) · [Документация](docs/README.md)
+
+</div>
+
+![Редактор BPMN Desk: светлая и тёмная темы](docs/images/hero.png)
+
+<table>
+<tr>
+<td width="33%"><a href="docs/images/start.png"><img src="docs/images/start.png" alt="Стартовая страница" width="100%"></a><br><sub>Стартовая страница</sub></td>
+<td width="33%"><a href="docs/images/camunda.png"><img src="docs/images/camunda.png" alt="Свойства Camunda 7" width="100%"></a><br><sub>Camunda 7</sub></td>
+<td width="33%"><a href="docs/images/monitor.png"><img src="docs/images/monitor.png" alt="Монитор Flowable и dead-letter" width="100%"></a><br><sub>Монитор Flowable</sub></td>
+</tr>
+</table>
+
+## Возможности
+
+- **Визуальный редактор.** Элементы и связи BPMN, вложенные подпроцессы, свойства Flowable/Camunda 7, пользовательские атрибуты и расширения.
+- **XML.** Подсветка синтаксиса, поиск и замена, переход к выбранному элементу, отдельное редактирование расширений и проверка сохранности данных.
+- **Рабочее пространство.** Независимые вкладки и undo/redo, недавние файлы, drag-and-drop, CLI, восстановление черновиков и защита от внешних изменений файла.
+- **Монитор Flowable.** Сохранённые подключения, версии процессов, экземпляры, executions, задачи и переменные. Dead-letter, stacktrace, подсветка и ограниченная сводка на схеме.
+- **Экспорт.** SVG и PNG с белым/прозрачным фоном; монитор экспортирует метки состояния.
+- **Интерфейс.** Английский и русский языки, системная/светлая/тёмная тема, масштабирование интерфейса и схемы.
+
+Локальный редактор не требует аккаунта, сервера или загрузки файлов в облако. Монитор подключается к выбранному REST API и предоставляет только чтение.
+
+## Поддержка движков
+
+| | Редактирование | Мониторинг |
+| --- | --- | --- |
+| BPMN 2.0 | Стандартные элементы и свойства | — |
+| Flowable | Реализации задач, исполнители, async/retry, listeners, forms, in/out | REST 7.2: состояние, переменные, dead-letter |
+| Camunda 7 | External tasks, listeners, input/output, forms, connectors, DMN/call bindings, multi-instance | — |
+
+Неизвестные расширения доступны через атрибуты и XML. Профиль определяется по namespace URI; автоматической конвертации между движками нет.
+
+## Скачать
+
+[Последний релиз](https://github.com/michaelbrylevskii/bpmn-desk/releases/latest) содержит **AppImage для Linux x86_64**, **установщик и portable для Windows x64**, а также `SHA256SUMS`. Node.js и Java для запуска не нужны.
+
+```bash
+chmod +x BPMN-Desk-*.AppImage
+./BPMN-Desk-0.4.0-x86_64.AppImage
+```
+
+Без FUSE: `--appimage-extract-and-run` первым аргументом. Windows EXE не подписаны; macOS пока не поставляется.
+
+## Границы
+
+- Для визуального редактирования нужен BPMN DI; автоматической раскладки нет. XML при сохранении может менять форматирование.
+- Редактор не исполняет процессы и не предоставляет deployment/retry. DMN/CMMN, Camunda 8/Zeebe и внешние дизайнеры форм не поддержаны.
+- Монитор не включает history, завершённые экземпляры и runtime Camunda 7. Снимок не транзакционен; сводка ограничена. [Подробности API](docs/runtime-monitor.md).
+- Локальные файлы — до 20 МБ. PNG — до 16 384 px на сторону и 32 млн пикселей; для крупных схем доступен SVG.
+
+## Разработка и лицензия
+
+Electron · React · TypeScript · bpmn-js · CodeMirror. [Разработка и проверки](docs/development.md) · [Архитектура](docs/architecture.md) · [Результаты релиза](docs/validation.md).
+
+Код — [MIT](LICENSE). Семь встроенных примеров имеют [provenance и лицензии](examples/provenance.json); пользовательские схемы подключаются [локальными пакетами](docs/local-schema-packs.md) вне Git и дистрибутива. [Сторонние компоненты](THIRD_PARTY_NOTICES.md).
