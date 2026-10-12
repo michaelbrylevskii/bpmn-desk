@@ -12,8 +12,10 @@ beforeEach(() => {
   directory = mkdtempSync(join(tmpdir(), 'bpmn-desk-release-'));
   mkdirSync(join(directory, 'release'));
   mkdirSync(join(directory, 'docs/releases'), { recursive: true });
+  mkdirSync(join(directory, '.github/release-notes'), { recursive: true });
   writeFileSync(join(directory, 'package.json'), JSON.stringify({ version: '0.2.0' }));
   writeFileSync(join(directory, 'docs/releases/0.2.0.md'), 'Проверочная поставка');
+  writeFileSync(join(directory, '.github/release-notes/0.2.0.md'), 'Test release');
   for (const file of files) writeFileSync(join(directory, 'release', file), `contents: ${file}`);
 });
 afterEach(() => rmSync(directory, { recursive: true, force: true }));
@@ -41,5 +43,8 @@ it('блокирует релиз с другим тегом и чужим ил�
 });
 it('требует release notes до подготовки manifest', () => {
   rmSync(join(directory, 'docs/releases/0.2.0.md'));
+  expect(run().status).not.toBe(0);
+  writeFileSync(join(directory, 'docs/releases/0.2.0.md'), 'Проверочная поставка');
+  rmSync(join(directory, '.github/release-notes/0.2.0.md'));
   expect(run().status).not.toBe(0);
 });
