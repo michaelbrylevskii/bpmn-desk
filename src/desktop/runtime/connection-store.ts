@@ -24,7 +24,7 @@ export class ConnectionStore {
       const id = identifier(raw.id);
       if (item.encrypted !== undefined && (typeof item.encrypted !== 'string' || item.encrypted.length > 50000)) throw new Error('Не удалось прочитать секрет подключения.');
       return { profile: { id, name: input.name, engine: input.engine, baseUrl: input.baseUrl, authentication: input.authentication,
-        username: input.username, hasSecret: false, secretStored: !!item.encrypted }, encrypted: item.encrypted as string | undefined };
+        username: input.username, requestTimeoutSeconds: input.requestTimeoutSeconds, hasSecret: false, secretStored: !!item.encrypted }, encrypted: item.encrypted as string | undefined };
     });
     if (new Set(this.items.map(item => item.profile.id)).size !== this.items.length) throw new Error('Повторяющиеся идентификаторы подключений.');
   }
@@ -50,7 +50,7 @@ export class ConnectionStore {
     const secret = input.secret ?? (sameAuth ? this.credentials(existing!.id).secret : '');
     if (input.authentication !== 'none' && !secret) throw new Error('Введи пароль или токен подключения.');
     return { connection: { id: input.id ?? '', name: input.name, engine: input.engine, baseUrl: input.baseUrl, authentication: input.authentication,
-      username: input.username, hasSecret: !!secret, secretStored: false }, secret };
+      username: input.username, requestTimeoutSeconds: input.requestTimeoutSeconds, hasSecret: !!secret, secretStored: false }, secret };
   }
   save(value: ConnectionInput): Promise<Connection> {
     return this.mutate(async () => {
@@ -74,7 +74,7 @@ export class ConnectionStore {
         encrypted = undefined;
       }
       const profile: Connection = { id, name: input.name, engine: input.engine, baseUrl: input.baseUrl, authentication: input.authentication,
-        username: input.username, hasSecret: false, secretStored: !!encrypted };
+        username: input.username, requestTimeoutSeconds: input.requestTimeoutSeconds, hasSecret: false, secretStored: !!encrypted };
       const items = this.items.filter(item => item.profile.id !== id).concat({ profile, encrypted });
       await this.persist(items); this.items = items;
       this.sessionSecrets.delete(id); if (secret) this.sessionSecrets.set(id, secret);

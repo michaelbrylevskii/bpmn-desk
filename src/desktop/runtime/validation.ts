@@ -1,4 +1,5 @@
 import type { ConnectionInput, PageQuery } from '../../shared/runtime';
+import { requestTimeoutSeconds } from '../../shared/runtime';
 const controls = (value: string) => [...value].some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127);
 
 export function object(value: unknown): Record<string, unknown> {
@@ -22,9 +23,11 @@ export function connectionInput(value: unknown): ConnectionInput {
   if (!['none', 'basic', 'bearer'].includes(String(data.authentication)) || typeof data.rememberSecret !== 'boolean') throw new Error('Недопустимая авторизация подключения.');
   if (data.authentication === 'basic' && (!username || username.includes(':'))) throw new Error('Укажи имя пользователя Basic Auth без двоеточия.');
   if (data.secret !== undefined && (typeof data.secret !== 'string' || data.secret.length > 8000 || controls(data.secret))) throw new Error('Недопустимый пароль или токен.');
+  const timeout = data.requestTimeoutSeconds === undefined ? requestTimeoutSeconds.default : data.requestTimeoutSeconds;
+  if (typeof timeout !== 'number' || !Number.isInteger(timeout) || timeout < requestTimeoutSeconds.min || timeout > requestTimeoutSeconds.max) throw new Error('Таймаут запроса должен быть целым числом от 5 до 120 секунд.');
   return { id: data.id === undefined ? undefined : identifier(data.id), name, baseUrl: url.href.replace(/\/+$/, '') + '/',
     engine: 'flowable', authentication: data.authentication as ConnectionInput['authentication'], username,
-    secret: data.secret as string | undefined, rememberSecret: data.rememberSecret };
+    secret: data.secret as string | undefined, rememberSecret: data.rememberSecret, requestTimeoutSeconds: timeout };
 }
 export function pageQuery(value: unknown): PageQuery {
   const data = object(value);

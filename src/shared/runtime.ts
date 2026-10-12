@@ -1,13 +1,16 @@
 /** Контракты чтения состояния движка. Секреты возвращаются только внутри main. */
 export type RuntimeEngine = 'flowable' | 'camunda7';
 export type Authentication = 'none' | 'basic' | 'bearer';
+export const requestTimeoutSeconds = { default: 15, min: 5, max: 120 } as const;
 export interface Connection {
   id: string; name: string; engine: RuntimeEngine; baseUrl: string; authentication: Authentication;
   username: string; hasSecret: boolean; secretStored: boolean;
+  requestTimeoutSeconds?: number;
 }
 export interface ConnectionInput {
   id?: string; name: string; engine: RuntimeEngine; baseUrl: string; authentication: Authentication;
   username: string; secret?: string; rememberSecret: boolean;
+  requestTimeoutSeconds?: number;
 }
 export interface Connections { items: Connection[]; secureStorage: boolean }
 export interface PageQuery {

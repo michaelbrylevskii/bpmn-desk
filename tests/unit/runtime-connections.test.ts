@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConnectionStore, type SecretStorage } from '../../src/desktop/runtime/connection-store';
@@ -8,6 +8,31 @@ const input = { name: 'Local engine', engine: 'flowable' as const, baseUrl: 'htt
 const secrets: SecretStorage = { available: () => true, encrypt: value => Buffer.from(value).toString('base64'), decrypt: value => Buffer.from(value, 'base64').toString() };
 
 describe('подключения', () => {
+  it('нормализует старый профиль и сохраняет таймаут без потери авторизации', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'desk-timeout-'));
+    try {
+      const store = new ConnectionStore(dir, secrets); const saved = await store.save({ ...input, rememberSecret: true });
+      const file = join(dir, 'connections.json');
+      const legacy = JSON.parse(await readFile(file, 'utf8')) as { items: { profile: { requestTimeoutSeconds?: number } }[] };
+      delete legacy.items[0]!.profile.requestTimeoutSeconds; await writeFile(file, JSON.stringify(legacy));
+      const reopened = new ConnectionStore(dir, secrets); await reopened.load();
+      expect(reopened.list().items[0]?.requestTimeoutSeconds).toBe(15);
+      const edit = { ...input, id: saved.id, secret: undefined, rememberSecret: true, requestTimeoutSeconds: 60 };
+      expect(reopened.preview(edit).connection.requestTimeoutSeconds).toBe(60);
+      expect(reopened.list().items[0]?.requestTimeoutSeconds).toBe(15);
+      await reopened.save(edit);
+      const reloaded = new ConnectionStore(dir, secrets); await reloaded.load();
+      expect(reloaded.credentials(saved.id).connection.requestTimeoutSeconds).toBe(60);
+      expect(reloaded.credentials(saved.id).secret).toBe(input.secret);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
+  it('проверяет границы таймаута на входе IPC', () => {
+    for (const requestTimeoutSeconds of [null, '30', NaN, Infinity, 0, 4, 121, 15.5]) {
+      expect(() => connectionInput({ ...input, requestTimeoutSeconds })).toThrow('Таймаут');
+    }
+    for (const requestTimeoutSeconds of [5, 30, 120]) expect(connectionInput({ ...input, requestTimeoutSeconds }).requestTimeoutSeconds).toBe(requestTimeoutSeconds);
+    expect(connectionInput(input).requestTimeoutSeconds).toBe(15);
+  });
   it('секрет сессии не попадает в профиль и не переживает перезапуск', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'desk-connections-'));
     try {

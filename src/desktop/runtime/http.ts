@@ -1,4 +1,5 @@
 import type { Connection } from '../../shared/runtime';
+import { requestTimeoutSeconds } from '../../shared/runtime';
 
 /** Только GET к заранее выбранному REST root. Редиректы и URL из ответов не используются. */
 export class RuntimeHttp {
@@ -11,7 +12,8 @@ export class RuntimeHttp {
     const headers: Record<string, string> = { Accept: json ? 'application/json' : 'application/xml, text/plain' };
     if (this.connection.authentication === 'basic') headers.Authorization = `Basic ${Buffer.from(`${this.connection.username}:${this.secret}`).toString('base64')}`;
     if (this.connection.authentication === 'bearer') headers.Authorization = `Bearer ${this.secret}`;
-    const signal = deadline ? AbortSignal.any([deadline, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000);
+    const timeout = AbortSignal.timeout((this.connection.requestTimeoutSeconds ?? requestTimeoutSeconds.default) * 1000);
+    const signal = deadline ? AbortSignal.any([deadline, timeout]) : timeout;
     let response: Response;
     try { response = await fetch(url, { method: 'GET', headers, redirect: 'error', signal }); }
     catch { throw new Error(signal.aborted ? 'Превышено время ожидания API.' : 'Не удалось подключиться к API: проверь адрес, сеть, TLS и отсутствие редиректа.'); }
