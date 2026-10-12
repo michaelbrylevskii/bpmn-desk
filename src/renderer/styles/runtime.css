@@ -87,4 +87,6 @@
 .runtime-summary-notice { flex-shrink: 0; max-height: 150px; overflow-y: auto; padding: 6px 12px; border-bottom: 1px solid var(--border); color: var(--muted); background: var(--surface); font-size: 11px; line-height: 1.5; }
 .runtime-summary-notice p { margin: 4px 0; }.runtime-summary-notice .runtime-warning, .runtime-summary-notice .runtime-error { padding: 6px 8px; }.runtime-summary-notice time { white-space: nowrap; }
 .catalog-filters label.runtime-check { display: flex; align-items: center; }
+.runtime-list .runtime-error p { margin: 0; }.runtime-list .runtime-error p + p { margin-top: 8px; font-size: 11px; line-height: 1.5; }
+.runtime-list .runtime-stale { padding: 8px 12px; margin: 0; font-size: 11px; background: var(--accent-soft); }
 .runtime-summary-details .runtime-instance p { color: var(--muted); font-size: 11px; line-height: 1.5; }.runtime-summary-details .related-instance.failed { border-left: 3px solid var(--danger); }.runtime-summary-details .related-instance.failed strong { color: var(--danger); }

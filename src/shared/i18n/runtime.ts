@@ -1,6 +1,8 @@
 export const runtimeMessages = {
   'Таймаут запроса, секунды': 'Request timeout, seconds',
   'Таймаут запроса должен быть целым числом от 5 до 120 секунд.': 'Request timeout must be a whole number from 5 to 120 seconds.',
+  'Сервер считает общее количество вместе со страницей. Сузь фильтры или увеличь таймаут в настройках подключения.': 'The server counts the total while loading the page. Narrow the filters or increase the timeout in connection settings.',
+  'Показаны ранее загруженные данные.': 'Showing previously loaded data.',
   'Стартовая страница': 'Start page',
   'Создать схему': 'Create diagram', 'Тип новой схемы': 'New diagram type', 'РЕДАКТОР И МОНИТОР BPMN': 'BPMN EDITOR AND MONITOR',
   'Экземпляры из загруженной выборки. Для подробностей выбери экземпляр.': 'Instances from the loaded sample. Select an instance for details.',

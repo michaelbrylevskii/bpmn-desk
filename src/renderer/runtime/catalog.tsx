@@ -11,18 +11,21 @@ export function RuntimeCatalog({ connection, revision: profileRevision, selected
   const { t, text } = useI18n(); const [kind, setKind] = useState<CatalogPage['kind']>('definitions');
   const [filter, setFilter] = useState<Definition>(); const [query, setQuery] = useState<PageQuery>({ search: '', start: 0, size: 25 });
   const [search, setSearch] = useState(''); const [instanceInput, setInstanceInput] = useState(''); const [revision, setRevision] = useState(0);
-  const [result, setResult] = useState<CatalogPage>(); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
+  const requestKey = JSON.stringify({ connection, query, kind, definitionId: filter?.id, profileRevision });
+  const [response, setResponse] = useState<{ key: string; result: CatalogPage }>(); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
+  const result = response?.key === requestKey ? response.result : undefined;
+  const message = text(error); const timedOut = message.includes(t('Превышено время ожидания API.'));
   useEffect(() => {
-    let disposed = false; setResult(undefined); setError(''); setLoading(true);
+    let disposed = false; setError(''); setLoading(true);
     const read = async (): Promise<CatalogPage> => {
       const api = runtimeBridge(); const params = { ...query, tenantId: query.tenantId || undefined, definitionId: filter?.id };
       if (kind === 'definitions') return { kind, page: await api.definitions(connection, params) };
       if (kind === 'instances') return { kind, page: await api.instances(connection, params) };
       return { kind, page: await api.deadLetters(connection, params) };
     };
-    void read().then(value => { if (!disposed) setResult(value); }).catch(error => { if (!disposed) setError(errorMessage(error)); }).finally(() => { if (!disposed) setLoading(false); });
+    void read().then(value => { if (!disposed) setResponse({ key: requestKey, result: value }); }).catch(error => { if (!disposed) setError(errorMessage(error)); }).finally(() => { if (!disposed) setLoading(false); });
     return () => { disposed = true; };
-  }, [connection, query, kind, filter, revision, profileRevision]);
+  }, [connection, query, kind, filter, revision, profileRevision, requestKey]);
   const switchKind = (value: CatalogPage['kind']) => { if (value === kind) return; setKind(value); setSearch(''); setQuery(previous => ({ search: '', start: 0, size: previous.size, tenantId: previous.tenantId })); };
   const label = kind === 'definitions' ? t('Имя процесса') : kind === 'instances' ? t('Business key (точное совпадение)') : t('ID экземпляра (точное совпадение)');
   return <aside className="runtime-catalog">
@@ -38,7 +41,9 @@ export function RuntimeCatalog({ connection, revision: profileRevision, selected
       <button className="icon-button" title={t('Открыть экземпляр')} disabled={!instanceInput.trim()}><Search size={15} /></button></form>}
     <CatalogFilters key={kind} kind={kind} query={query} apply={setQuery} />
     <div className="runtime-list" aria-busy={loading}>
-      {loading && <p className="runtime-empty">{t('Загрузка состояния…')}</p>}{error && <p className="runtime-error" role="alert">{text(error)}</p>}
+      {loading && <p className="runtime-empty" role="status">{t('Загрузка состояния…')}</p>}
+      {error && <div className="runtime-error" role="alert"><p>{message}</p>{timedOut && <p>{t('Сервер считает общее количество вместе со страницей. Сузь фильтры или увеличь таймаут в настройках подключения.')}</p>}</div>}
+      {result && (loading || error) && <p className="runtime-empty runtime-stale" role="status">{t('Показаны ранее загруженные данные.')}</p>}
       {result?.kind === 'definitions' && result.page.data.map(item => <div className="runtime-row" key={item.id} aria-current={selectedDefinition === item.id || undefined}>
         <button onClick={() => definition(item)}><strong>{item.name || item.key}</strong><small>{item.key} · v{item.version}{item.tenantId && ` · ${item.tenantId}`}</small><code>{item.id}</code></button>
         <button className="runtime-row-action" onClick={() => { setFilter(item); switchKind('instances'); }}>{t('Экземпляры')}</button></div>)}
