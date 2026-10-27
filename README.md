@@ -32,7 +32,7 @@ Linux and Windows · local files · open source
 
 Local editing requires no account, server or file upload. Monitoring connects to a REST API of your choice and provides read-only access.
 
-Copy elements between diagrams in the same window: select elements, press `Ctrl+C`, switch to another diagram, move the pointer over its canvas, press `Ctrl+V`, and click to place. Undo belongs to the destination tab. The diagram clipboard does not transfer to other windows or external editors; external processes, forms, and resources are not copied automatically.
+Copy elements between diagrams in the same window: select elements on the canvas, press `Ctrl+C`, switch to another diagram, click an empty area of its canvas to focus it, press `Ctrl+V`, and click to place. Undo belongs to the destination tab. The diagram clipboard does not transfer to other windows or external editors; external processes, forms, and resources are not copied automatically.
 
 Drag diagram, monitor, and start-page tabs to reorder them. With a tab focused, use `Ctrl+Shift+←/→` to move it using the keyboard. Tab order lasts until the window closes.
 
