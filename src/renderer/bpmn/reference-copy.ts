@@ -15,6 +15,7 @@ interface Factory { create(type: string): ModdleElement }
  * или сообщение. Снимок и копия определения принадлежат принимающей модели. */
 export function configureReferenceCopy(events: ReferenceEvents, moddle: Moddle, copy: ModdleCopy, factory: Factory, definitions: () => ModdleElement): void {
   const originals = new WeakMap<ModdleElement, ModdleElement>();
+  const imported = new WeakMap<ModdleElement, ModdleElement>();
   const pasted = new WeakMap<object, Map<string, ModdleElement>>();
   events.on('copyPaste.copyElement', 500, ({ descriptor }) => {
     const original = descriptor.referencedRootElement;
@@ -28,7 +29,7 @@ export function configureReferenceCopy(events: ReferenceEvents, moddle: Moddle, 
     const snapshot = descriptor.referencedRootElement; const bo = descriptor.businessObject;
     if (!snapshot || !bo) return;
     const root = definitions(); const roots = root.get<ModdleElement[]>('rootElements');
-    const original = originals.get(snapshot);
+    const original = originals.get(snapshot) ?? imported.get(snapshot);
     let reference = original && roots.includes(original) ? original : undefined;
     if (!reference) {
       let references = pasted.get(cache);
@@ -46,6 +47,7 @@ export function configureReferenceCopy(events: ReferenceEvents, moddle: Moddle, 
     const property = properties[reference.$type];
     const target = property && targets.find(target => target.$descriptor.properties.some(item => item.name === property));
     if (target) {
+      imported.set(snapshot, reference);
       target.set(property, reference);
       // Добавление/удаление определения остаётся в штатных shape.create undo/redo.
       delete descriptor.referencedRootElement;

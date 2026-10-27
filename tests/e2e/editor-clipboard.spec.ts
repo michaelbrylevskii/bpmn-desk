@@ -118,4 +118,15 @@ for (const definition of [
   expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS(uri, definition.type)).toHaveLength(1);
   await page.getByTitle('Повторить (Ctrl+Shift+Z)', { exact: true }).click();
   expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS(uri, definition.type)).toHaveLength(2);
+  await canvas.focus();
+  const next = (await canvas.boundingBox())!;
+  await page.mouse.move(next.x + next.width * 0.5, next.y + next.height * 0.9);
+  await page.keyboard.press('Control+v'); await page.mouse.click(next.x + next.width * 0.5, next.y + next.height * 0.9);
+  await expect(page.locator('.document-workspace:visible .outline-item[title^="bpmn:BoundaryEvent"]')).toHaveCount(6);
+  const repeated = requireBpmn(await saveXml(page));
+  expect(repeated.getElementsByTagNameNS(uri, definition.type)).toHaveLength(2);
+  const repeatedRefs = Array.from(repeated.getElementsByTagNameNS(uri, `${definition.type}EventDefinition`)).map(event => event.getAttribute(`${definition.type}Ref`));
+  expect(new Set(repeatedRefs).size).toBe(2);
+  await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
+  expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS(uri, definition.type)).toHaveLength(2);
 });
