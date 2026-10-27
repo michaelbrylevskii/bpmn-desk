@@ -1,4 +1,5 @@
 import { selectOption } from './select';
+import { createDiagram } from './create-diagram';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -32,6 +33,31 @@ test('извлечённая AppImage открывает демонстраци�
     await page.keyboard.press('Control+f');
     await expect(page.locator('.xml-panel').getByRole('textbox', { name: 'Find', exact: true })).toBeVisible();
     await page.screenshot({ path: 'test-results/appimage-editor.png' });
+    // Новые действия проверяются также в собранном приложении с native меню.
+    await page.getByLabel('Find element').fill('prepareDocument'); await page.locator('.outline-item').first().click();
+    await page.locator('.bpmn-container .djs-container > svg').focus(); await page.keyboard.press('Control+c');
+    await page.locator('.new-tab').click(); await createDiagram(page, 'BPMN 2.0');
+    const canvas = page.locator('.document-workspace:visible .bpmn-container .djs-container > svg');
+    await canvas.focus(); const bounds = (await canvas.boundingBox())!;
+    await page.mouse.move(bounds.x + bounds.width * 0.6, bounds.y + bounds.height * 0.7);
+    await page.keyboard.press('Control+v'); await page.mouse.click(bounds.x + bounds.width * 0.6, bounds.y + bounds.height * 0.7);
+    await expect(page.locator('.document-workspace:visible .outline-item[title^="bpmn:ServiceTask"]')).toHaveCount(1);
+    const sourceTab = page.locator('.document-tab').first().getByRole('tab'); const sourceId = await sourceTab.getAttribute('data-tab-id');
+    const destination = page.locator('.document-tab').last().getByRole('tab'); const destinationId = await destination.getAttribute('data-tab-id');
+    const tabBounds = (await destination.boundingBox())!;
+    await sourceTab.dragTo(destination, { targetPosition: { x: tabBounds.width - 5, y: tabBounds.height / 2 } });
+    expect(await page.getByRole('tab').evaluateAll(elements => elements.map(element => element.getAttribute('data-tab-id')))).toEqual([destinationId, sourceId]);
+    await expect(page.locator(`[data-tab-id="${destinationId}"]`)).toHaveAttribute('aria-selected', 'true');
+    await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
+    await expect(page.locator('.document-workspace:visible .outline-item[title^="bpmn:ServiceTask"]')).toHaveCount(0);
+    await page.getByTitle('Close New diagram.bpmn', { exact: true }).click();
+    await expect(page.locator('.djs-element[data-element-id="prepareDocument"]')).toBeVisible();
+    await expect(page.getByTitle('Undo (Ctrl+Z)', { exact: true })).toBeDisabled();
+    await page.getByLabel('Find element').fill('preparedFlow'); await page.locator('.outline-item').first().click();
+    await selectOption(page.getByLabel('Default flow', { exact: true }), 'true');
+    await expect(page.getByLabel('Diagram XML')).toContainText('default="preparedFlow"');
+    await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
+    await expect(page.getByLabel('Diagram XML')).not.toContainText('default="preparedFlow"');
     await page.getByTitle('Close flowable-showcase.bpmn20.xml', { exact: true }).click();
     await page.getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
