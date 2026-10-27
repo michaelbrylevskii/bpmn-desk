@@ -11,6 +11,8 @@
 .document-tab.active { background: var(--surface); color: var(--text); }.document-tab.active::before { position: absolute; content: ""; height: 2px; background: var(--accent); top: 0; left: 0; right: 0; }
 .document-tab button:first-child { display: flex; gap: 9px; align-items: center; min-width: 0; padding: 0 12px; flex: 1; font-size: 11px; }
 .document-tab button:first-child span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.document-tab.drop-before { box-shadow: inset 3px 0 var(--accent); }
+.document-tab.drop-after { box-shadow: inset -3px 0 var(--accent); }
 .document-tab button:last-child { padding: 0 10px; opacity: .6; }.document-tab button:hover { color: var(--accent); }
 .new-tab { font-size: 20px; padding: 0 15px; color: var(--muted); }
 .workspaces { flex: 1; min-height: 0; position: relative; }

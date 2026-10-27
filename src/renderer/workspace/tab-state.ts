@@ -1,5 +1,13 @@
 export type WorkspaceTab = { kind: 'document'; id: string } | { kind: 'monitor'; id: string; connectionId: string } | { kind: 'home'; id: string };
 export interface TabState { tabs: WorkspaceTab[]; activeId: string }
+export function moveWorkspace(state: TabState, id: string, targetId: string, after: boolean): TabState {
+  if (id === targetId) return state;
+  const tab = state.tabs.find(item => item.id === id);
+  if (!tab || !state.tabs.some(item => item.id === targetId)) return state;
+  const tabs = state.tabs.filter(item => item.id !== id);
+  tabs.splice(tabs.findIndex(item => item.id === targetId) + Number(after), 0, tab);
+  return { ...state, tabs };
+}
 export function reconcileDocuments(state: TabState, documentIds: string[]): TabState {
   const retained = state.tabs.filter(tab => tab.kind !== 'document' || documentIds.includes(tab.id));
   const added = documentIds.filter(id => !retained.some(tab => tab.id === id)).map(id => ({ kind: 'document' as const, id }));
