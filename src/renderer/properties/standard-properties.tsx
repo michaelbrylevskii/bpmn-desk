@@ -6,10 +6,16 @@ import { Field, BooleanField, type Presence } from '../ui/field';
 export function StandardProperties({ element, editor, run }: { element: DiagramElement; editor: BpmnEditor; run: (operation: () => void | Promise<void>) => void }) {
   const { t } = useI18n();
   const bo = element.businessObject;
+  const defaultSource = editor.defaultFlowSource(element);
   const targets = [bo, ...(bo.get<ModdleElement[]>('eventDefinitions') ?? []), ...(bo.get<ModdleElement>('loopCharacteristics') ? [bo.get<ModdleElement>('loopCharacteristics')] : [])];
   return <>
     <Field label="ID" value={bo.id ?? ''} onCommit={value => run(() => editor.update(element, 'id', value))} />
     <Field label={t("Название")} value={bo.name ?? ''} multiline onCommit={value => run(() => editor.update(element, 'name', value || undefined))} />
+    {defaultSource && <label className="field" data-presence={defaultSource.businessObject.get('default') === bo ? 'explicit' : 'unset'}>
+      <span>{t('Поток по умолчанию')}</span><Select label={t('Поток по умолчанию')} value={String(defaultSource.businessObject.get('default') === bo)}
+        options={[{ value: 'false', label: t('Нет') }, { value: 'true', label: t('Да') }]}
+        onChange={value => run(() => editor.setDefaultFlow(element, value === 'true'))} /><small>{t('default у исходного элемента')} · {defaultSource.id}</small>
+    </label>}
     {targets.map((target, index) => <section key={`${target.$type}-${index}`}>
       {index > 0 && <h4>{target.$type.replace('bpmn:', '')}</h4>}
       {target.$descriptor.properties.filter(p => !['id', 'name'].includes(p.name) && !p.isVirtual && !p.isMany &&
@@ -25,7 +31,7 @@ export function StandardProperties({ element, editor, run }: { element: DiagramE
           })} />;
       })}
       {target.$descriptor.properties.filter(p => p.isReference && !p.isMany && !['sourceRef', 'targetRef', 'attachedToRef', 'incoming', 'outgoing'].includes(p.name)).map(property => {
-        const options = property.name === 'default' ? target.get<ModdleElement[]>('outgoing') ?? [] : editor.allModelElements().filter(item => item.id && item.$instanceOf(property.type));
+        const options = property.name === 'default' ? editor.allModelElements().filter(item => item.$instanceOf('bpmn:SequenceFlow') && item.get('sourceRef') === target) : editor.allModelElements().filter(item => item.id && item.$instanceOf(property.type));
         const selected = target.get<ModdleElement | undefined>(property.name)?.id ?? '';
         return <label key={property.name} className="field" data-presence={selected ? 'explicit' : 'unset'}><span>{property.name}</span><Select label={property.name} value={selected} onChange={value => run(() => editor.update(element, property.name, options.find(item => item.id === value), target))}
           options={[{ value: '', label: t('Не задано') }, ...options.map(item => ({ value: item.id!, label: item.name || item.id! }))]} /></label>;

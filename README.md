@@ -46,6 +46,8 @@ Drag diagram, monitor, and start-page tabs to reorder them. With a tab focused, 
 
 Unknown extensions are accessible through attributes and XML. Engine detection uses namespace URIs; there is no automatic conversion between engines.
 
+To set a default sequence flow, select an arrow → **General · BPMN** → **Default flow**, or select its source task/gateway and set `default`. Both controls update the standard `default="flowId"` on the source node, supported by Flowable and Camunda 7. The editor does not create or interpret `flowable:is-default-flow` as a replacement for `default`.
+
 ## Download
 
 The [latest release](https://github.com/michaelbrylevskii/bpmn-desk/releases/latest) includes a **Linux x86_64 AppImage**, a **Windows x64 installer and portable app**, and `SHA256SUMS`. Node.js and Java are not required to run the app.

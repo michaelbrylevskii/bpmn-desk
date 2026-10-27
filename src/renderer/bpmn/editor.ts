@@ -171,6 +171,20 @@ export class BpmnEditor {
     else modeling.updateModdleProperties(element, target, { [key]: value });
   }
 
+  defaultFlowSource(element: DiagramElement): DiagramElement | undefined {
+    if (element.type !== 'bpmn:SequenceFlow') return undefined;
+    const source = element.businessObject.get<ModdleElement | undefined>('sourceRef');
+    if (!source?.id || !source.$descriptor.properties.some(property => property.name === 'default')) return undefined;
+    return this.modeler.get<Registry>('elementRegistry').get(source.id);
+  }
+
+  setDefaultFlow(element: DiagramElement, enabled: boolean): void {
+    const source = this.defaultFlowSource(element);
+    if (!source) return;
+    if (!enabled && source.businessObject.get('default') !== element.businessObject) return;
+    this.update(source, 'default', enabled ? element.businessObject : undefined);
+  }
+
   setAttribute(element: DiagramElement, key: string, value: string, uri?: string, target = element.businessObject): void {
     if (!/^[A-Za-z_][\w.-]*:[A-Za-z_][\w.-]*$/.test(key) || key.startsWith('xmlns:')) throw new Error('Атрибут: prefix:name. Объявления xmlns задаются полем URI.');
     const prefix = key.split(':')[0] ?? '';

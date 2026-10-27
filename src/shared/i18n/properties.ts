@@ -5,6 +5,8 @@ export const propertyMessages = {
   'Основные · BPMN': 'General · BPMN',
   'Название': 'Name',
   'Документация': 'Documentation',
+  'Поток по умолчанию': 'Default flow',
+  'default у исходного элемента': 'default on the source element',
   'Граничные события перекрывают маркер или друг друга.': 'Boundary events overlap the marker or each other.',
   'Не задано': 'Not set',
   'По умолчанию: {value}': 'Default: {value}',
