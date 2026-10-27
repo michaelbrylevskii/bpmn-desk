@@ -15,10 +15,12 @@ it('адаптер копирования сохраняет attrs и незав
     else pasteElement = listener as typeof pasteElement;
   } }, moddle, [{ uri: 'urn:custom', name: 'error' }]);
   const source = moddle.create('bpmn:ServiceTask');
+  source.$parent = moddle.create('bpmn:Process');
+  source.$parent.$attrs['xmlns:custom'] = 'urn:custom';
   source.$attrs['custom:mode'] = 'strict';
   const target = moddle.create('bpmn:SendTask');
   copyProperties!({ sourceElement: source, targetElement: target });
-  expect(target.$attrs).toEqual({ 'custom:mode': 'strict' });
+  expect(target.$attrs).toEqual({ 'custom:mode': 'strict', 'xmlns:custom': 'urn:custom' });
   target.$attrs['custom:mode'] = 'edited';
   expect(source.$attrs['custom:mode']).toBe('strict');
   const child = moddle.createAny('custom:child', 'urn:custom', { $body: 'text', 'custom:flag': 'yes' });

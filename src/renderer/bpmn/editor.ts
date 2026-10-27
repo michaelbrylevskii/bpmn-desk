@@ -15,6 +15,7 @@ import { normalizeDiagram } from './diagram-normalization';
 import { configureDiagramTheme, rendererColors, standaloneSvg } from './diagram-theme';
 import { configureModdle } from './generic-xml';
 import { configureModelCopy } from './model-copy';
+import { DiagramClipboard } from './clipboard';
 import { PreservationGuard } from './preservation-guard';
 import { configurePropertyPresence } from './property-presence';
 import { configureLabelPresence } from './label-presence';
@@ -44,8 +45,8 @@ export class BpmnEditor {
   private destroyed = false;
   private fitPending = false;
 
-  constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage) {
-    this.modeler = new Modeler({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
+  constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage, clipboard = new DiagramClipboard()) {
+    this.modeler = new Modeler({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language), { clipboard: ['value', clipboard] }] });
     this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values, target) => this.replaceExtensionValues(element, values, target));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
     configurePropertyPresence(this.modeler.get('eventBus'));

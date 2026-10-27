@@ -28,3 +28,4 @@
 - [0024 — Общие настройки подключений](0024-global-connection-settings.md)
 - [0025 — Продуктовая документация и языки публикации](0025-product-documentation.md)
 - [0026 — Таймаут подключения и медленные списки](0026-runtime-request-timeouts.md)
+- [0027 — Буфер элементов между схемами](0027-cross-diagram-clipboard.md)

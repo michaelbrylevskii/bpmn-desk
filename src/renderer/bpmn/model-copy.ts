@@ -1,6 +1,16 @@
 import { cloneExtension, extensionChildren } from './extensions';
 import type { Moddle, ModdleElement } from './types';
 import { modelElements } from './diagnostics';
+import { namespaceUri } from './namespaces';
+
+function copyNamespaces(source: ModdleElement, attributes: Record<string, string>): void {
+  for (const key of Object.keys(attributes)) {
+    if (!key.includes(':') || key.startsWith('xmlns:')) continue;
+    const prefix = key.split(':')[0]!;
+    const uri = namespaceUri(source, prefix);
+    if (uri) attributes[`xmlns:${prefix}`] = uri;
+  }
+}
 
 interface CopyProperties { sourceElement: ModdleElement; targetElement: ModdleElement }
 interface CopyProperty { property: unknown; parent: ModdleElement }
@@ -17,9 +27,13 @@ interface CopyEvents {
 export function configureModelCopy(events: CopyEvents, moddle: Moddle, identifiedExtensions: readonly ExtensionId[] = []): void {
   events.on('moddleCopy.canCopyProperties', 1500, ({ sourceElement, targetElement }) => {
     Object.assign(targetElement.$attrs, sourceElement.$attrs);
+    copyNamespaces(sourceElement, targetElement.$attrs);
   });
   const clone = (source: ModdleElement, parent: ModdleElement): ModdleElement => {
     const result = cloneExtension(moddle, source, {});
+    const attributes = Object.fromEntries(Object.entries(source).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
+    copyNamespaces(source, attributes);
+    Object.assign(result, Object.fromEntries(Object.entries(attributes).filter(([key]) => key.startsWith('xmlns:'))));
     result.$parent = parent;
     if (extensionChildren(source).length) result.$children = extensionChildren(source).map(child => clone(child, result));
     return result;

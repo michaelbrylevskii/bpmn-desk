@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { errorMessage } from '../../shared/errors';
 import type { ReportNotice, RunOperation } from '../notifications/types';
 import { BpmnEditor, type EditorSnapshot } from '../bpmn/editor';
+import type { DiagramClipboard } from '../bpmn/clipboard';
 import type { DocumentRecord, EditorRegistry } from '../documents/types';
 import { engineProfiles } from '../engines/profiles';
 import { useI18n } from '../i18n/provider';
@@ -11,8 +12,9 @@ import { PropertiesPanel } from '../properties/properties-panel';
 import { CodeEditor } from '../ui/code-editor';
 import { DiagnosticsPanel } from './diagnostics-panel';
 import { Outline } from './outline';
-export function DocumentWorkspace({ record, active, editors, dark, sync, draft, importFailed, report, run }: {
+export function DocumentWorkspace({ record, active, editors, clipboard, dark, sync, draft, importFailed, report, run }: {
   record: DocumentRecord; active: boolean; editors: EditorRegistry; dark: boolean;
+  clipboard: DiagramClipboard;
   sync: (id: string, snapshot: EditorSnapshot) => void; draft: (id: string, value: string | undefined) => void;
   importFailed: (id: string) => void;
   report: ReportNotice; run: RunOperation;
@@ -30,13 +32,13 @@ export function DocumentWorkspace({ record, active, editors, dark, sync, draft, 
 
   useEffect(() => {
     if (!container.current) return;
-    const instance = new BpmnEditor(container.current, value => { setSnapshot(value); syncRef.current(record.id, value); }, () => languageRef.current);
+    const instance = new BpmnEditor(container.current, value => { setSnapshot(value); syncRef.current(record.id, value); }, () => languageRef.current, clipboard);
     const resizeObserver = new ResizeObserver(() => instance.resize());
     resizeObserver.observe(container.current);
     editors.set(record.id, instance); setEditor(instance);
     instance.import(source.current).catch(problem => { setError(errorMessage(problem)); importFailed(record.id); });
     return () => { resizeObserver.disconnect(); editors.delete(record.id); instance.destroy(); };
-  }, [record.id, editors, importFailed]);
+  }, [record.id, editors, importFailed, clipboard]);
 
   useEffect(() => {
     if (active && editor) { editor.resize(); }

@@ -10,6 +10,7 @@ import { NotificationToast } from './ui/notification-toast';
 import { engineProfiles } from './engines/profiles';
 import { isDirty } from './documents/types';
 import { useDocuments } from './documents/use-documents';
+import { DiagramClipboard } from './bpmn/clipboard';
 import { useI18n } from './i18n/provider';
 import { bridge } from './platform/bridge';
 import { Toolbar } from './ui/toolbar';
@@ -24,6 +25,7 @@ import { ConnectionsDialog } from './runtime/connections-dialog';
 import { useConnections } from './runtime/use-connections';
 import { useMonitorControls } from './runtime/controls';
 export function App() {
+  const clipboard = useMemo(() => new DiagramClipboard(), []);
   const { t, setLanguage } = useI18n(); const [notice, setNotice] = useState<Notice & { id: string }>();
   const report = useCallback((value: Notice) => setNotice({ ...value, id: crypto.randomUUID() }), []);
   const [managing, setManaging] = useState<string>(); const docs = useDocuments(report);
@@ -92,7 +94,7 @@ export function App() {
       close={tab => tab.kind === 'document' ? docs.close(tab.id) : tabs.closeTab(tab.id)} create={requestNew} />
     {docs.documents.length > 0 && docs.recovery.length > 0 && <div className="pending-recovery"><span>{t('Остались несохранённые документы предыдущей сессии: {count}', { count: docs.recovery.length })}</span><button className="button small" onClick={docs.restore}>{t('Восстановить')}</button><button className="button small ghost" onClick={docs.discardRecovery}>{t('Отбросить')}</button></div>}
     <div className="workspaces">{docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={record.id === tabs.activeId}
-      editors={docs.editors.current} dark={dark} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
+      editors={docs.editors.current} clipboard={clipboard} dark={dark} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
       {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}
       {home && <Welcome key={sourceHome ?? 'initial'} create={profile => docs.run(() => { tabs.documentOpened(docs.create(profile), sourceHome); })} open={() => openContent(docs.open)}
         examples={examples} recent={recent} openExample={name => openContent(() => docs.openExample(name))} openRecent={path => openContent(() => docs.openRecent(path))}
