@@ -16,6 +16,7 @@ import { configureDiagramTheme, rendererColors, standaloneSvg } from './diagram-
 import { configureModdle } from './generic-xml';
 import { configureModelCopy } from './model-copy';
 import { DiagramClipboard } from './clipboard';
+import { configureReferenceCopy } from './reference-copy';
 import { PreservationGuard } from './preservation-guard';
 import { configurePropertyPresence } from './property-presence';
 import { configureLabelPresence } from './label-presence';
@@ -52,6 +53,7 @@ export class BpmnEditor {
     configurePropertyPresence(this.modeler.get('eventBus'));
     configureLabelPresence(this.modeler.get('eventBus'));
     configureModelCopy(this.modeler.get('eventBus'), this.modeler.get<Moddle>('moddle'), engineExtensionIds);
+    configureReferenceCopy(this.modeler.get('eventBus'), this.modeler.get('moddle'), this.modeler.get('moddleCopy'), this.modeler.get('bpmnFactory'), () => this.root());
     configureModdle(this.modeler.get<Moddle>('moddle'));
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.attributes', AttributeCommand);
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.boundaryLayout', BoundaryLayoutCommand);

@@ -52,10 +52,12 @@ for (const scenario of [
   expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS('http://www.omg.org/spec/BPMN/20100524/MODEL', 'serviceTask')).toHaveLength(2);
 });
 
-test('копирование группы между схемами сохраняет связи, подпроцессы и граничные события', async ({ page }) => {
+for (const sample of ['flowable-boundary-events', 'flowable-showcase']) test(`${sample}: перенос группы сохраняет связи, вложения и отдельную историю команд`, async ({ page }) => {
   const uri = 'http://www.omg.org/spec/BPMN/20100524/MODEL';
-  const source = requireBpmn(readFileSync('examples/flowable-boundary-events.bpmn20.xml', 'utf8'));
-  await page.goto('/'); await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
+  const source = requireBpmn(readFileSync(`examples/${sample}.bpmn20.xml`, 'utf8'));
+  await page.goto('/'); await page.getByRole('button', { name: sample, exact: true }).click();
+  await page.locator('.outline-item[title^="bpmn:Process"]').click();
+  await page.getByLabel('Название', { exact: true }).fill('Изменённый источник'); await page.getByLabel('Название', { exact: true }).blur();
   await page.locator('.bpmn-container .djs-container > svg').focus();
   await page.keyboard.press('Control+a'); await page.keyboard.press('Control+c');
   await page.locator('.new-tab').click(); await createDiagram(page, 'BPMN 2.0');
@@ -76,4 +78,44 @@ test('копирование группы между схемами сохран
   expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS(uri, 'boundaryEvent')).toHaveLength(0);
   await page.locator('.document-tab').first().getByRole('tab').click();
   await expect(page.locator('.document-workspace:visible .outline-item[title^="bpmn:BoundaryEvent"]')).toHaveCount(source.getElementsByTagNameNS(uri, 'boundaryEvent').length);
+  await page.locator('.document-workspace:visible .outline-item[title^="bpmn:Process"]').click();
+  await expect(page.getByLabel('Название', { exact: true }).filter({ visible: true })).toHaveValue('Изменённый источник');
+  await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
+  await expect(page.getByLabel('Название', { exact: true }).filter({ visible: true })).toHaveValue(source.getElementsByTagNameNS(uri, 'process')[0]!.getAttribute('name')!);
+  await page.locator('.document-tab').last().getByRole('tab').click();
+  await expect(page.locator('.document-workspace:visible .outline-item')).toHaveCount(2);
+});
+
+for (const definition of [
+  { type: 'error', property: 'errorCode' }, { type: 'escalation', property: 'escalationCode' },
+  { type: 'message', property: 'name' }, { type: 'signal', property: 'name' },
+]) test(`${definition.type}: определения разных схем с одинаковым ID не подменяют друг друга`, async ({ page }) => {
+  const uri = 'http://www.omg.org/spec/BPMN/20100524/MODEL';
+  const source = readFileSync('examples/flowable-boundary-events.bpmn20.xml', 'utf8')
+    .replace('<error id="ReviewFailure" name="Review failed" errorCode="REVIEW_FAILED" />', `<${definition.type} id="ReviewFailure" ${definition.property}="SOURCE_VALUE" />`)
+    .replaceAll('errorEventDefinition', `${definition.type}EventDefinition`).replaceAll('errorRef=', `${definition.type}Ref=`);
+  const open = async (xml: string, name: string) => {
+    const data = await page.evaluateHandle(({ xml, name }) => { const transfer = new DataTransfer(); transfer.items.add(new File([xml], name, { type: 'application/xml' })); return transfer; }, { xml, name });
+    await page.locator('.welcome').dispatchEvent('drop', { dataTransfer: data }); await data.dispose();
+  };
+  await page.goto('/'); await open(source, 'source.bpmn');
+  await page.locator('.bpmn-container .djs-container > svg').focus();
+  await page.keyboard.press('Control+a'); await page.keyboard.press('Control+c');
+  await page.locator('.new-tab').click();
+  await open(source.replace('SOURCE_VALUE', 'TARGET_VALUE'), 'target.bpmn');
+  const canvas = page.locator('.document-workspace:visible .bpmn-container .djs-container > svg');
+  await canvas.focus(); const bounds = (await canvas.boundingBox())!;
+  await page.mouse.move(bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.8);
+  await page.keyboard.press('Control+v'); await page.mouse.click(bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.8);
+  await expect(page.locator('.document-workspace:visible .outline-item[title^="bpmn:BoundaryEvent"]')).toHaveCount(4);
+  const xml = await saveXml(page); const document = requireBpmn(xml);
+  const definitions = Array.from(document.getElementsByTagNameNS(uri, definition.type));
+  expect(definitions.map(item => item.getAttribute(definition.property)).sort()).toEqual(['SOURCE_VALUE', 'TARGET_VALUE']);
+  const refs = Array.from(document.getElementsByTagNameNS(uri, `${definition.type}EventDefinition`)).map(event => event.getAttribute(`${definition.type}Ref`));
+  expect(new Set(refs).size).toBe(2);
+  expect((await checkImport(xml)).warnings).toEqual([]);
+  await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
+  expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS(uri, definition.type)).toHaveLength(1);
+  await page.getByTitle('Повторить (Ctrl+Shift+Z)', { exact: true }).click();
+  expect(requireBpmn(await saveXml(page)).getElementsByTagNameNS(uri, definition.type)).toHaveLength(2);
 });
