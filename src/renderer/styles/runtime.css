@@ -99,7 +99,7 @@
 .runtime-job-alert { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0; text-align: left; }.runtime-job-alert span { flex: 1; }.runtime-job-alert svg { flex-shrink: 0; }.runtime-job-alert:hover { border-color: var(--danger); }
 .runtime-summary-status { position: relative; }
 .summary-status-badge { display: flex; position: absolute; right: -1px; bottom: 0; background: var(--surface); border-radius: 50%; color: var(--green); }
-.summary-status-badge.error, .summary-error { color: var(--danger); }.summary-status-badge.partial, .summary-partial { color: var(--history-unfinished, #ba7b22); }.summary-status-badge.loading { color: var(--accent); }
+.summary-status-badge.error, .summary-error { color: var(--danger); }.summary-status-badge.partial, .summary-partial { color: var(--history-unfinished, #ba7b22); }.summary-status-badge.loading, .summary-status-badge.waiting { color: var(--accent); }
 .summary-tooltip dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 20px; margin: 9px 0; }.summary-tooltip dd { margin: 0; font-variant-numeric: tabular-nums; }
 .summary-tooltip time, .summary-tooltip small { color: var(--muted); font-size: 10px; }
 .catalog-filters label.runtime-check { display: flex; align-items: center; }

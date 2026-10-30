@@ -8,8 +8,8 @@ export function SummaryStatus({ summary, enabled, toggle, timeout }: { summary: 
   const unmapped = data?.deadLetters.data.filter(job => !job.processInstanceId || !(job.elementId || data.executions.data.some(item => item.id === job.executionId && item.activityId))).length ?? 0;
   const failed = !!(summary.error || data?.executions.error || data?.deadLetters.error || data?.activities.error);
   const partial = !!data && (!data.executions.complete || !data.deadLetters.complete || !data.activities.complete || !!unmapped || data.executions.data.some(item => !item.processInstanceId) || data.activities.data.some(item => !item.processInstanceId));
-  const status = !enabled ? 'off' : summary.busy ? 'loading' : failed ? 'error' : partial ? 'partial' : data ? 'ready' : 'idle';
-  const statusLabel = t(!enabled ? 'Сводка выключена' : summary.busy ? 'Загрузка сводки…' : failed ? 'Ошибка сводки' : partial ? 'Частичная сводка' : data ? 'Сводка загружена' : 'Сводка не загружена');
+  const status = !enabled ? 'off' : summary.waiting ? 'waiting' : summary.busy ? 'loading' : failed ? 'error' : partial ? 'partial' : data ? 'ready' : 'idle';
+  const statusLabel = t(!enabled ? 'Сводка выключена' : summary.waiting ? 'Сводка загрузится после отображения схемы.' : summary.busy ? 'Загрузка сводки…' : failed ? 'Ошибка сводки' : partial ? 'Частичная сводка' : data ? 'Сводка загружена' : 'Сводка не загружена');
   const content = <div className="summary-tooltip"><strong>{t('Сводка версии')} · {statusLabel}</strong>
     {enabled && <>
       {data && <><dl>{([{ label: 'Executions', sample: data.executions }, { label: 'Dead-letter jobs', sample: data.deadLetters }, { label: 'Записи истории', sample: data.activities }] as const).map(({ label, sample }) =>
@@ -28,6 +28,6 @@ export function SummaryStatus({ summary, enabled, toggle, timeout }: { summary: 
   </div>;
   return <Tooltip content={content}><button className="icon-button runtime-summary-status" aria-label={t('Сводка версии')} aria-pressed={enabled} data-summary-state={status} onClick={toggle}>
     <Activity size={18} />{enabled && <span className={`summary-status-badge ${status}`} aria-label={statusLabel}>
-      {summary.busy ? <LoaderCircle size={11} className="spinning" /> : failed ? <CircleAlert size={11} /> : partial ? <TriangleAlert size={11} /> : data ? <Check size={11} /> : null}
+      {summary.busy || summary.waiting ? <LoaderCircle size={11} className="spinning" /> : failed ? <CircleAlert size={11} /> : partial ? <TriangleAlert size={11} /> : data ? <Check size={11} /> : null}
     </span>}</button></Tooltip>;
 }

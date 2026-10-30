@@ -4,14 +4,14 @@ import { errorMessage } from '../../shared/errors';
 import { runtimeBridge } from '../platform/runtime';
 
 /** Очередь принадлежит монитору: смена версии не запускает ещё одну сводку до завершения прежней. */
-export function useSummary(connection: string, definition: string, revision: number, enabled: boolean, auto: boolean) {
+export function useSummary(connection: string, definition: string, revision: number, enabled: boolean, auto: boolean, displayed: boolean) {
   const key = `${connection}\n${definition}\n${revision}`;
   const queue = useRef<Promise<void>>(Promise.resolve());
   const [request, setRequest] = useState({ key: '', revision: 0 });
   const [state, setState] = useState<{ key: string; data?: DefinitionSummary; error?: string; busy: boolean }>({ key, busy: false });
   const read = useCallback(() => setRequest(previous => ({ key, revision: previous.revision + 1 })), [key]);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !displayed) return;
     let disposed = false; let timer: ReturnType<typeof setTimeout> | undefined;
     const poll = () => {
       if (disposed) return;
@@ -35,14 +35,14 @@ export function useSummary(connection: string, definition: string, revision: num
     };
     poll();
     return () => { disposed = true; clearTimeout(timer); };
-  }, [connection, definition, key, enabled, request]);
+  }, [connection, definition, key, enabled, displayed, request]);
   useEffect(() => {
-    if (!enabled || !auto || state.key !== key || state.busy) return;
+    if (!enabled || !displayed || !auto || state.key !== key || state.busy) return;
     let timer: ReturnType<typeof setTimeout>;
     const poll = () => { if (document.hidden) timer = setTimeout(poll, 5000); else read(); };
     timer = setTimeout(poll, 5000);
     return () => clearTimeout(timer);
-  }, [enabled, auto, key, state, read]);
-  return { data: state.key === key ? state.data : undefined, busy: enabled && state.key === key && state.busy,
+  }, [enabled, displayed, auto, key, state, read]);
+  return { data: state.key === key ? state.data : undefined, waiting: enabled && !displayed, busy: enabled && displayed && state.key === key && state.busy,
     error: state.key === key ? state.error : undefined, read };
 }

@@ -10,19 +10,25 @@ import { RuntimeLegend } from './legend';
 import { SummaryStatus } from './summary-status';
 import type { HistorySnapshot } from '../../shared/history';
 
-export function RuntimeDiagram({ instances, definition, dark, selected, diagram, snapshot, history, summary, definitionView, summaryEnabled, setSummaryEnabled, requestTimeout, select, viewer, onReady }: { instances: () => void; definition?: () => void; dark: boolean; selected: string; diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
+export function RuntimeDiagram({ instances, definition, dark, selected, diagram, snapshot, history, summary, definitionView, summaryEnabled, setSummaryEnabled, requestTimeout, select, viewer, onReady, onDisplayed }: { instances: () => void; definition?: () => void; dark: boolean; selected: string; diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
   summary: ReturnType<typeof useSummary>; definitionView: boolean; summaryEnabled: boolean; setSummaryEnabled: (value: boolean) => void; requestTimeout: number;
-  select: (id: string) => void; viewer: React.RefObject<RuntimeViewer | undefined>; onReady: (value: boolean) => void }) {
+  select: (id: string) => void; viewer: React.RefObject<RuntimeViewer | undefined>; onReady: (value: boolean) => void; onDisplayed: (diagram: DeployedDiagram) => void }) {
   const { t, language, text } = useI18n(); const container = useRef<HTMLDivElement>(null); const currentLanguage = useRef(language); currentLanguage.current = language;
-  const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [missing, setMissing] = useState<string[]>([]); const [xml, setXml] = useState(false);
+  const [ready, setReady] = useState(false); const [settledXml, setSettledXml] = useState(''); const [error, setError] = useState(''); const [missing, setMissing] = useState<string[]>([]); const [xml, setXml] = useState(false);
   useEffect(() => {
     if (!container.current) return;
-    let disposed = false; setReady(false); onReady(false); setError(''); setMissing([]);
+    let disposed = false; setReady(false); onReady(false); setError(''); setMissing([]); setSettledXml('');
     const instance = new RuntimeViewer(container.current, () => currentLanguage.current, select); viewer.current = instance;
     const observer = new ResizeObserver(() => instance.resize()); observer.observe(container.current);
-    void instance.import(diagram.xml).then(() => { if (!disposed) { setReady(true); onReady(true); } }).catch(error => { if (!disposed) setError(errorMessage(error)); });
+    void instance.import(diagram.xml).then(() => { if (!disposed) { setReady(true); onReady(true); } }).catch(error => { if (!disposed) setError(errorMessage(error)); }).finally(() => { if (!disposed) setSettledXml(diagram.xml); });
     return () => { disposed = true; onReady(false); observer.disconnect(); instance.destroy(); if (viewer.current === instance) viewer.current = undefined; };
   }, [diagram.xml, select, viewer, onReady]);
+  useEffect(() => {
+    if (settledXml !== diagram.xml && diagram.definition.graphicalNotationDefined) return;
+    // Первая рамка даёт браузеру нарисовать SVG (или XML fallback), вторая разрешает сводку.
+    let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => onDisplayed(diagram)); });
+    return () => cancelAnimationFrame(frame);
+  }, [settledXml, diagram, onDisplayed]);
   useEffect(() => { if (ready) setMissing(viewer.current?.state(snapshot, definitionView && summaryEnabled ? summary.data : undefined, history) ?? []); }, [snapshot, history, ready, viewer, definitionView, summaryEnabled, summary.data]);
   return <section className="runtime-diagram"><div className="runtime-diagram-heading"><strong>{diagram.definition.name || diagram.definition.key}</strong><span>v{diagram.definition.version}</span>
     <button className="runtime-link diagram-context-link" onClick={definition ?? instances}>{t(definition ? 'Определение' : 'Экземпляры')}</button>

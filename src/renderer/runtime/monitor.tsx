@@ -37,14 +37,16 @@ export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeo
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
   const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
   const desiredDefinition = instanceDefinition ?? definitionId;
-  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && summaryEnabled && !!desiredDefinition, auto);
+  const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
+  const diagramKey = `${connection}\n${desiredDefinition}\n${revision}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
+  const diagramError = loaded?.key === diagramKey ? loaded.error : undefined;
+  const [displayedDiagram, setDisplayedDiagram] = useState<DeployedDiagram>();
+  const diagramDisplayed = !!diagram && displayedDiagram === diagram;
+  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && summaryEnabled && !!desiredDefinition, auto, diagramDisplayed);
   const busy = snapshot.busy || history.busy || summary.busy;
   const readSummary = summary.read;
   const refreshState = useCallback(() => { if (instanceId) { refreshSnapshot(); refreshHistory(); } else if (summaryEnabled) readSummary(); }, [instanceId, refreshSnapshot, refreshHistory, readSummary, summaryEnabled]);
   const [instancesOf, setInstancesOf] = useState<{ definition: Definition }>();
-  const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
-  const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
-  const diagramError = loaded?.key === diagramKey ? loaded.error : undefined;
   const select = useCallback((id: string) => { setSelected(id); setHistoryFilter(id); }, []);
   const focus = useCallback((id: string) => { setSelected(id); if (id) viewer.current?.focus(id); else viewer.current?.clearSelection(); }, []);
   const process = currentData?.instance ?? historyData?.instance;
@@ -80,13 +82,13 @@ export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeo
     else await bridge.saveFile({ name: `${name}.png`, format: 'png', content: await pngFromSvg(svg, format === 'png-white') });
   }, [diagram, ready]);
   const controls = useMemo<MonitorControls>(() => {
-    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId || !!desiredDefinition && summaryEnabled,
+    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId || !!desiredDefinition && summaryEnabled && diagramDisplayed,
       canCopy: !!diagram, canExport: !!diagram && ready, refresh: refreshState,
       // Поле тулбара получает новое checked в том же событии, без ожидания passive effect.
       setAuto: auto => { setAuto(auto); publish(id, { ...value, auto }); },
       copy: () => { if (diagram) copy(diagram); }, fit: () => viewer.current?.fit(), exportDiagram };
     return value;
-  }, [id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move, summaryEnabled]);
+  }, [id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move, summaryEnabled, diagramDisplayed]);
   useEffect(() => { publish(id, controls); }, [id, publish, controls]);
   useEffect(() => () => publish(id, undefined), [id, publish]);
   return <div className="runtime-monitor">
@@ -98,7 +100,7 @@ export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeo
 
         {currentData?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
-        {diagram ? <RuntimeDiagram instances={() => { if (diagram) { setInstancesOf({ definition: diagram.definition }); setCatalogHidden(false); } }} definition={instanceId ? () => openDefinition(diagram.definition) : undefined} dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} definitionView={!instanceId} summaryEnabled={summaryEnabled} setSummaryEnabled={setSummaryEnabled} requestTimeout={requestTimeout} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери определение или экземпляр.')}</p>}
+        {diagram ? <RuntimeDiagram instances={() => { if (diagram) { setInstancesOf({ definition: diagram.definition }); setCatalogHidden(false); } }} definition={instanceId ? () => openDefinition(diagram.definition) : undefined} dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} definitionView={!instanceId} summaryEnabled={summaryEnabled} setSummaryEnabled={setSummaryEnabled} requestTimeout={requestTimeout} select={select} viewer={viewer} onReady={setReady} onDisplayed={setDisplayedDiagram} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери определение или экземпляр.')}</p>}
         <RuntimeFreshness runtime={currentData?.capturedAt} history={historyData?.capturedAt} />
 
       </div>

@@ -23,6 +23,7 @@ export function SummaryDetails({ summary, enabled, element, open }: { summary: R
       <nav className="runtime-tabs summary-source-tabs">{(['runtime', 'history'] as const).map(value => <button key={value} aria-pressed={source === value} onClick={() => setSource(value)}>{t(value === 'runtime' ? 'Текущее состояние' : 'История')}</button>)}</nav>
       <div className="runtime-detail-body">
         {!enabled ? <p className="runtime-empty">{t('Включи сводку для просмотра экземпляров элемента.')}</p> : <>
+          {summary.waiting && <p className="runtime-warning" role="status">{t('Сводка загрузится после отображения схемы.')}</p>}
           {summary.busy && <p className="runtime-warning" role="status">{t('Загрузка сводки…')}</p>}
           {summary.error && <p className="runtime-error" role="alert">{text(summary.error)}{data && ` ${t('Последний снимок устарел.')}`}</p>}
           {errors.map((error, i) => <p key={i} className="runtime-error" role="alert">{text(error!)}</p>)}

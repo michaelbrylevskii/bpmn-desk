@@ -1,4 +1,5 @@
 export const runtimeMessages = {
+  'Сводка загрузится после отображения схемы.': 'The summary will load after the diagram is displayed.',
   'Сводка выключена': 'Summary is off', 'Записи истории': 'History records',
   'Обновление и повтор после ошибки — в верхней панели.': 'Refresh and retry from the top toolbar.',
   'До 100 executions, 100 dead-letter jobs и 1000 шагов истории; три запроса, до {seconds} с.': 'Up to 100 executions, 100 dead-letter jobs and 1000 history activities; three requests, within {seconds} s.',

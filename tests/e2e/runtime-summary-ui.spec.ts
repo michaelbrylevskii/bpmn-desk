@@ -91,3 +91,41 @@ test('медленная сводка не задерживает отображ
     await expect(status).toHaveAttribute('data-summary-state', 'ready');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
+
+
+test('сначала загружается и отображается выбранная схема, затем начинается сводка', async () => {
+  const api = await historyServer(); api.state.holdDiagram = true; api.state.alternateDefinition = true;
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  const summaryRequests = () => api.state.requests.filter(url => url.searchParams.has('processDefinitionId') && (url.pathname.endsWith('/executions') || url.pathname.endsWith('/deadletter-jobs') || url.pathname.endsWith('/historic-activity-instances')));
+  try {
+    await page.locator('.runtime-row').filter({ hasText: 'deskHistory · v1' }).click();
+    await expect.poll(() => api.state.requests.filter(url => url.pathname.endsWith('/resourcedata')).length).toBe(1);
+    expect(summaryRequests()).toHaveLength(0); await expect(page.locator('.runtime-canvas')).toHaveCount(0);
+    api.releaseDiagram();
+    await expect(page.locator('.runtime-canvas [data-element-id="HistoryReview"]').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'ready');
+    expect(summaryRequests()).toHaveLength(3);
+    // Старое ready первой схемы не разрешает запросы для новой до получения её XML.
+    api.state.holdDiagram = true;
+    await page.locator('.runtime-row').filter({ hasText: 'deskHistory2' }).click();
+    await expect.poll(() => api.state.requests.filter(url => url.pathname.endsWith('/resourcedata')).length).toBe(2);
+    expect(summaryRequests()).toHaveLength(3);
+    api.releaseDiagram(); await expect(page.locator('.runtime-diagram-heading')).toContainText('v2');
+    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'ready');
+    expect(summaryRequests()).toHaveLength(6);
+    expect(summaryRequests().slice(3).every(url => url.searchParams.get('processDefinitionId') === 'd2')).toBe(true);
+    api.state.diagramStatus = 503; await page.locator('.runtime-row').filter({ hasText: 'deskHistory · v1' }).click();
+    await expect(page.locator('.runtime-center > [role=alert]')).toContainText('503'); expect(summaryRequests()).toHaveLength(6);
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});
+
+
+test('без BPMN DI сводка запускается после показа XML вместо бесконечного ожидания холста', async () => {
+  const api = await historyServer(); api.state.withoutDi = true;
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  try {
+    await page.locator('.runtime-row').click();
+    await expect(page.locator('.runtime-xml .cm-content')).toContainText('HistoryReview');
+    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'ready');
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});
