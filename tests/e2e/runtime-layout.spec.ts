@@ -29,3 +29,24 @@ test('легенда, время и карточки компактны; поя�
     for (const theme of ['Light theme', 'Dark theme']) { await page.getByTitle(theme, { exact: true }).click(); await page.screenshot({ path: `test-results/runtime-compact-${theme.startsWith('Light') ? 'light' : 'dark'}.png` }); }
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
+
+test('при небольшой высоте карточка и журнал прокручиваются одной правой панелью', async () => {
+  const api = await historyServer(); api.state.runtimeStatus = 200; api.state.related = true; api.state.activityCount = 30; api.state.total = 30;
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  try {
+    await page.setViewportSize({ width: 1050, height: 600 });
+    await openInstance(page, 'p1');
+    await page.locator('.instance-mode-tabs').getByRole('button', { name: 'History', exact: true }).click();
+    const panel = page.locator('.runtime-instance-panel'); const body = panel.locator('.runtime-detail-body');
+    await expect(page.locator('.history-activity')).toHaveCount(30);
+    await expect(body).toHaveCSS('overflow-y', 'visible');
+    await expect(panel.locator('.runtime-details')).toHaveCSS('overflow-y', 'visible');
+    await panel.evaluate(element => { element.scrollTop = element.scrollHeight; });
+    expect(await panel.evaluate(element => element.scrollTop)).toBeGreaterThan(200);
+    await expect(page.locator('.history-activity').last()).toBeInViewport();
+    await expect(panel.locator('.runtime-instance > strong')).not.toBeInViewport();
+    await page.screenshot({ path: 'test-results/runtime-panel-single-scroll.png' });
+    await panel.evaluate(element => { element.scrollTop = 0; });
+    await expect(panel.locator('.runtime-instance > strong')).toBeInViewport();
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});

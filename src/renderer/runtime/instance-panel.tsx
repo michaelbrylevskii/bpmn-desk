@@ -16,7 +16,7 @@ export function InstancePanel({ connection, snapshot, history, historyMode, setH
   return <section className="runtime-instance-panel" aria-label={t('Подробности экземпляра')}>
     <nav className="runtime-tabs instance-mode-tabs" aria-label={t('Подробности экземпляра')}>
       <button aria-pressed={!historyMode} onClick={() => setHistoryMode(false)}>{t('Текущее состояние')}</button>
-      <button aria-pressed={historyMode} onClick={() => setHistoryMode(true)}>{t('История выполнения')}</button>
+      <button aria-pressed={historyMode} onClick={() => setHistoryMode(true)}>{t('История')}</button>
     </nav>
     {historyMode ? history.data && <HistoryDetails connection={connection} snapshot={history.data} xml={xml} filter={historyFilter} clearFilter={clearHistoryFilter} focus={focus} openInstance={openInstance} /> :
       snapshot.data && <InstanceDetails connection={connection} snapshot={snapshot.data} selected={selected} focus={focus} openInstance={openInstance} jobSelection={jobSelection} />}

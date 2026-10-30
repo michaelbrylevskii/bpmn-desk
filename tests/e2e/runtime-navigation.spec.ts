@@ -22,7 +22,7 @@ for (const native of [false, true]) test(`назад/вперёд ${native ? 'ч
     await expect(back).toBeDisabled(); await expect(forward).toBeEnabled();
     await forward.focus(); await expect(page.getByRole('tooltip')).toContainText('Review decisions'); await expect(page.getByRole('tooltip')).toContainText('Other instance');
     await page.keyboard.press('Escape'); await move('forward'); await expect(page.locator('.runtime-instance > code')).toHaveText('p2');
-    await page.locator('.instance-mode-tabs').getByRole('button', { name: 'Execution history', exact: true }).click();
+    await page.locator('.instance-mode-tabs').getByRole('button', { name: 'History', exact: true }).click();
     await page.getByTitle('Refresh state', { exact: true }).click(); await expect(page.locator('.history-details .runtime-instance > code')).toHaveText('p2');
     await move('back'); await expect(page.locator('.runtime-instance > code')).toHaveText('p1'); await move('forward');
     await expect(page.locator('.history-details .runtime-instance > code')).toHaveText('p2');

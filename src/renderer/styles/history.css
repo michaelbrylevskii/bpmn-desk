@@ -1,6 +1,5 @@
 .runtime-catalog-host { display: flex; flex-shrink: 0; min-height: 0; }
 .runtime-catalog-host[hidden] { display: none; }
-.history-catalog-mode { padding: 9px 12px 0; }.history-catalog-mode > .select-control { width: 100%; }
 .history-error-hint { display: block; margin-top: 5px; font-size: 11px; }
 .history-details .runtime-instance { padding: 12px 16px; }
 .history-details .runtime-instance dl { margin: 12px 0; }
@@ -34,10 +33,10 @@
 .runtime-canvas .djs-connection.runtime-unfinished .djs-visual > path { stroke: #b67b22 !important; stroke-width: 3px !important; }
 .runtime-badge.visited { background: #527bac; }.runtime-badge.unfinished { background: #b67b22; }
 @media (max-width: 1200px) { .history-activity-details { padding-left: 12px; } }
-.runtime-instance-panel { width: clamp(330px, 30vw, 430px); display: flex; flex-direction: column; min-height: 0; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); }
-.runtime-instance-panel > .runtime-details { width: 100%; flex: 1; border-left: 0; }
+.runtime-instance-panel { width: clamp(330px, 30vw, 430px); display: flex; flex-direction: column; min-height: 0; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); overflow-y: auto; overflow-x: hidden; }
+.runtime-instance-panel > .runtime-details { width: 100%; flex: 0 0 auto; border-left: 0; overflow: visible; }
 .instance-mode-tabs { display: grid; grid-template-columns: 1fr 1fr; }
-.runtime-source-status { overflow: auto; }
+.runtime-source-status { flex-shrink: 0; }
 @media (max-width: 1200px) { .runtime-instance-panel { width: 330px; } }
 
 .runtime-panel { position: relative; display: flex; min-height: 0; flex-shrink: 0; }

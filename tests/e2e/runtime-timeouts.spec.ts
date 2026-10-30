@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { launch, close } from './runtime-fixture';
+import { launch, close, openCatalogFilters } from './runtime-fixture';
 import { catalogServer } from './runtime-catalog-server';
 
 test('медленный список: таймаут черновика и сохранённого подключения, восстановление без автоматических повторов', async () => {
@@ -21,7 +21,7 @@ test('медленный список: таймаут черновика и со
     await page.getByRole('button', { name: 'Save connection', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     const tabs = page.locator('.runtime-catalog > .runtime-tabs');
-    await tabs.getByRole('button', { name: 'Instances', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Runtime', exact: true }).click();
     await expect(page.locator('.runtime-list [role=alert]')).toContainText('API request timed out.', { timeout: 8000 });
     expect(api.state.requests).toHaveLength(1);
     await page.getByTitle('Manage connections', { exact: true }).click();
@@ -46,7 +46,7 @@ test('ошибка обновления сохраняет страницу, н�
     await page.getByRole('button', { name: 'Save connection', exact: true }).click();
     const catalog = page.locator('.runtime-catalog');
     const tabs = catalog.locator('.runtime-tabs');
-    await tabs.getByRole('button', { name: 'Instances', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Runtime', exact: true }).click();
     const row = catalog.locator('.runtime-row').filter({ hasText: 'Example order' });
     await expect(row).toBeVisible(); api.state.delay = 6000;
     await catalog.getByTitle('Refresh', { exact: true }).click();
@@ -61,13 +61,14 @@ test('ошибка обновления сохраняет страницу, н�
       await page.screenshot({ path: `test-results/runtime-timeout-${theme.startsWith('Light') ? 'light' : 'dark'}.png` });
     }
     api.state.delay = 500;
+    await openCatalogFilters(page);
     await catalog.getByLabel('Business key (exact match)', { exact: true }).fill('missing');
-    await catalog.locator('.runtime-query').getByTitle('Search', { exact: true }).click();
+    await catalog.getByRole('button', { name: 'Apply filters', exact: true }).click();
     await expect(row).toHaveCount(0); await expect(catalog.locator('.runtime-stale')).toHaveCount(0);
     await expect(catalog.getByText('No results', { exact: true })).toBeVisible();
     api.state.delay = 6000;
     await catalog.getByLabel('Business key (exact match)', { exact: true }).fill('slow-filter');
-    await catalog.locator('.runtime-query').getByTitle('Search', { exact: true }).click();
+    await catalog.getByRole('button', { name: 'Apply filters', exact: true }).click();
     await expect.poll(() => api.state.requests.length).toBe(4);
     await tabs.getByRole('button', { name: 'Definitions', exact: true }).click();
     await expect(catalog.locator('.runtime-row')).toContainText('Example process');

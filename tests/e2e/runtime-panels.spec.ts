@@ -34,7 +34,7 @@ test('язычки сворачивают обе панели, выбор под
     await expect(page.locator('.runtime-instance-panel')).toBeHidden(); await expect(page.locator('.runtime-catalog')).toBeHidden();
     await toggle.focus(); await page.keyboard.press('Enter');
     await expect(page.locator('.runtime-instance-panel')).toBeVisible(); await expect(page.locator('.runtime-selection')).toContainText('HistoryStart');
-    await page.keyboard.press('Tab'); await expect(page.locator('.instance-mode-tabs').getByRole('button', { name: 'Current state', exact: true })).toBeFocused();
+    await page.keyboard.press('Tab'); await expect(page.locator('.instance-mode-tabs').getByRole('button', { name: 'Runtime', exact: true })).toBeFocused();
     await expect(page.getByTitle('Hide details', { exact: true })).not.toHaveAttribute('data-updated');
     await page.getByTitle('Show catalog', { exact: true }).click(); await expect(page.locator('.runtime-catalog')).toBeVisible();
     await expect.poll(async () => (await canvas.boundingBox())!.width).toBe(initialWidth);

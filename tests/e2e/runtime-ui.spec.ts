@@ -118,7 +118,8 @@ test('фильтры каталога, metadata, переход к ребёнк�
   try {
     await openInstance(page, fixture.reviewInstanceId);
     await expect(surface(page).locator('.runtime-row').filter({ hasText: fixture.reviewInstanceId })).toContainText('deskReview');
-    const filters = surface(page).locator('.catalog-filters'); await filters.locator('summary').click();
+    const filters = surface(page).locator('.catalog-filters'); if (await filters.getAttribute('open') === null) await filters.locator('summary').click();
+    await filters.getByLabel('Instance ID', { exact: true }).fill('');
     await filters.getByLabel('Definition key', { exact: true }).fill('deskParallel');
     await selectOption(filters.getByRole('combobox', { name: 'Page size', exact: true }), '10');
     await selectOption(filters.getByRole('combobox', { name: 'Order', exact: true }), 'desc');

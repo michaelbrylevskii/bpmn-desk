@@ -12,6 +12,7 @@ export const runtimeMessages = {
   'Все определения': 'All definitions', 'Все версии': 'All versions', 'Выбери определение или экземпляр.': 'Select a definition or instance.',
   'Искать по': 'Search by', 'Business key (содержит)': 'Business key (contains)', 'Имя экземпляра': 'Instance name',
   'Открыть по ID без изменения списка': 'Open by ID without changing the list', 'По части строки · % и _ — шаблоны': 'Contains · % and _ are wildcards', 'Точное совпадение': 'Exact match',
+  'Убрать фильтр: {filter}': 'Remove filter: {filter}',
   'Условия поиска': 'Search conditions', 'Фильтры ({count})': 'Filters ({count})',
 
   'Таймаут запроса, секунды': 'Request timeout, seconds',

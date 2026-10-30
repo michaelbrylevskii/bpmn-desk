@@ -1,4 +1,3 @@
-import { selectOption } from './select';
 import { test, expect, type Page } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -47,9 +46,8 @@ test('сводка точной версии: multi-instance считается 
     const filters = page.locator('.catalog-filters'); if (!await filters.getByLabel('Latest versions only').isVisible()) await filters.locator('summary').click();
     await filters.getByLabel('Latest versions only', { exact: true }).check();
     await filters.getByRole('button', { name: 'Apply filters', exact: true }).click();
-    await selectOption(page.getByRole('combobox', { name: 'Search by', exact: true }), 'key');
     await page.getByLabel('Definition key', { exact: true }).fill('deskReview');
-    await page.locator('.runtime-query').getByTitle('Search', { exact: true }).click();
+    await page.locator('.catalog-filters').getByRole('button', { name: 'Apply filters', exact: true }).click();
     await expect(page.locator('.runtime-catalog .runtime-row')).toHaveCount(1);
     await expect(page.locator('.runtime-catalog .runtime-row')).toContainText('· v2');
     await openInstance(page, fixture.reviewInstanceId); await expect(page.locator('.runtime-diagram-heading')).toContainText('v1');

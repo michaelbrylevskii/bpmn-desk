@@ -28,9 +28,17 @@ export async function launch(baseUrl?: string): Promise<{ app: ElectronApplicati
     return { app, page, directory };
   } catch (error) { await app?.close().catch(() => undefined); await rm(directory, { recursive: true, force: true }); throw error; }
 }
-export async function openInstance(page: Page, id: string) {
-  await page.locator('.workspace-surface:not([hidden]) .runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
-  await selectOption(page.locator('.workspace-surface:not([hidden])').getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await page.locator('.workspace-surface:not([hidden])').getByLabel('Instance ID', { exact: true }).fill(id); await page.locator('.workspace-surface:not([hidden])').getByRole('button', { name: 'Open instance', exact: true }).click();
+export async function openCatalogFilters(page: Page, tab?: 'Definitions' | 'Runtime' | 'History' | 'Dead-letter jobs') {
+  const catalog = page.locator('.workspace-surface:not([hidden]) .runtime-catalog');
+  if (tab) await catalog.locator('> .runtime-tabs').getByRole('button', { name: tab, exact: true }).click();
+  const filters = catalog.locator('.catalog-filters');
+  if (await filters.getAttribute('open') === null) await filters.locator('summary').click();
+  return filters;
+}
+export async function openInstance(page: Page, id: string, history = false) {
+  const filters = await openCatalogFilters(page, history ? 'History' : 'Runtime');
+  await filters.getByLabel('Instance ID', { exact: true }).fill(id);
+  await filters.getByRole('button', { name: 'Open instance', exact: true }).click();
   await expect(page.locator('.workspace-surface:not([hidden]) .runtime-instance > code')).toHaveText(id);
 }
 export async function close(app: ElectronApplication, directory: string) { await app.close(); await rm(directory, { recursive: true, force: true }); }
