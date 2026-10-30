@@ -56,7 +56,7 @@ Linux и Windows · локальные файлы · открытый исход
 
 ```bash
 chmod +x BPMN-Desk-*.AppImage
-./BPMN-Desk-0.6.0-x86_64.AppImage
+./BPMN-Desk-0.6.1-x86_64.AppImage
 ```
 
 Без FUSE: `--appimage-extract-and-run` первым аргументом. Windows EXE не подписаны; macOS пока не поставляется.

@@ -56,7 +56,7 @@ The [latest release](https://github.com/michaelbrylevskii/bpmn-desk/releases/lat
 
 ```bash
 chmod +x BPMN-Desk-*.AppImage
-./BPMN-Desk-0.6.0-x86_64.AppImage
+./BPMN-Desk-0.6.1-x86_64.AppImage
 ```
 
 Without FUSE, use `--appimage-extract-and-run` as the first argument. Windows executables are unsigned; macOS is not available yet.
