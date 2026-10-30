@@ -7,8 +7,8 @@ import { Variables } from './variables';
 import { HistoryList } from './history-list';
 import { historyDuration, historyTime } from './history-format';
 
-export function HistoryDetails({ connection, snapshot, xml, selected, focus, openInstance }: {
-  connection: string; snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void;
+export function HistoryDetails({ connection, snapshot, xml, filter, clearFilter, focus, openInstance }: {
+  connection: string; snapshot: HistorySnapshot; xml?: string; filter: string; clearFilter: () => void; focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void;
 }) {
   const { t, text, language } = useI18n(); const [tab, setTab] = useState<'history' | 'variables'>('history');
   const process = snapshot.instance;
@@ -25,7 +25,7 @@ export function HistoryDetails({ connection, snapshot, xml, selected, focus, ope
       <InstanceRelationships connection={connection} parent={process.superProcessInstanceId} children={snapshot.children.data} incomplete={!snapshot.children.complete} open={openInstance} />
     </div>
     <nav className="runtime-tabs"><button aria-pressed={tab === 'history'} onClick={() => setTab('history')}>{t('История выполнения')}</button><button aria-pressed={tab === 'variables'} onClick={() => setTab('variables')}>{t('Сохранённые переменные')}</button></nav>
-    <div className="runtime-detail-body">{tab === 'history' ? <HistoryList snapshot={snapshot} xml={xml} selected={selected} focus={focus} openInstance={openInstance} /> : <>
+    <div className="runtime-detail-body">{tab === 'history' ? <HistoryList snapshot={snapshot} xml={xml} filter={filter} clearFilter={clearFilter} focus={focus} openInstance={openInstance} /> : <>
       <p className="history-note">{t('Последние сохранённые значения. Это не значения на момент выбранного шага; история изменений переменных здесь не загружается.')}</p>
       {!snapshot.variables.complete && <p className="runtime-warning">{snapshot.variables.error ? text(snapshot.variables.error) : t('Список переменных неполный.')}</p>}
       <Variables variables={snapshot.variables.data} unavailable={!!snapshot.variables.error && !snapshot.variables.data.length} />

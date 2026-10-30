@@ -13,8 +13,8 @@ import { XmlSearchPanel } from './xml-search-panel';
 import { selectXmlElement, xmlSelection } from './xml-selection';
 const externalUpdate = Annotation.define<boolean>();
 
-export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML схемы' }: {
-  value: string; onChange: (value: string) => void; dark: boolean; selectedId?: string; label?: string;
+export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML схемы', readOnly = false }: {
+  value: string; onChange?: (value: string) => void; readOnly?: boolean; dark: boolean; selectedId?: string; label?: string;
 }) {
   const { t, text, language } = useI18n();
   const locale = useRef(new Compartment());
@@ -24,6 +24,8 @@ export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML с�
   const callback = useRef(onChange); callback.current = onChange;
   const initial = useRef(value);
   const theme = useRef(new Compartment());
+  const access = useRef(new Compartment());
+  const initialReadOnly = useRef(readOnly);
   const initialDark = useRef(dark);
   const [selected, setSelected] = useState<{ id?: string; line?: number }>({});
   const [searchOpen, setSearchOpen] = useState(false);
@@ -32,13 +34,14 @@ export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML с�
   useEffect(() => {
     if (!container.current) return;
     const view = new EditorView({ parent: container.current, state: EditorState.create({ doc: initial.current, extensions: [
+      access.current.of([EditorState.readOnly.of(initialReadOnly.current), EditorView.contentAttributes.of({ 'aria-readonly': String(initialReadOnly.current) })]),
       lineNumbers(), history(), drawSelection(), highlightActiveLine(), bracketMatching(), xml(), syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       keymap.of([indentWithTab, ...searchKeymap, ...defaultKeymap, ...historyKeymap]),
       search({ top: true, createPanel: view => new XmlSearchPanel(view) }), xmlSelection, theme.current.of(initialDark.current ? oneDark : []),
       locale.current.of([EditorState.phrases.of(searchPhrases(initialLocale.current.language)), EditorView.contentAttributes.of({ 'aria-label': initialLocale.current.label })]),
       EditorView.updateListener.of(update => {
         setSearchOpen(searchPanelOpen(update.state));
-        if (update.docChanged && !update.transactions.some(transaction => transaction.annotation(externalUpdate))) callback.current(update.state.doc.toString());
+        if (update.docChanged && !update.transactions.some(transaction => transaction.annotation(externalUpdate))) callback.current?.(update.state.doc.toString());
         const selection = update.state.field(xmlSelection);
         setSelected({ id: selection.id, line: selection.range ? update.state.doc.lineAt(selection.range.from).number : undefined });
       }),
@@ -48,6 +51,8 @@ export function CodeEditor({ value, onChange, dark, selectedId, label = 'XML с�
   }, []);
 
   useEffect(() => { editor.current?.dispatch({ effects: locale.current.reconfigure([EditorState.phrases.of(searchPhrases(language)), EditorView.contentAttributes.of({ 'aria-label': text(label) })]) }); }, [language, label, text]);
+
+  useEffect(() => { editor.current?.dispatch({ effects: access.current.reconfigure([EditorState.readOnly.of(readOnly), EditorView.contentAttributes.of({ 'aria-readonly': String(readOnly) })]) }); }, [readOnly]);
 
   useEffect(() => { editor.current?.dispatch({ effects: theme.current.reconfigure(dark ? oneDark : []) }); }, [dark]);
 

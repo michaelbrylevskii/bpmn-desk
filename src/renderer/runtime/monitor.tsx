@@ -21,11 +21,13 @@ import type { MonitorDestination, MonitorVisit } from './navigation-model';
 import { RuntimeFreshness } from './freshness';
 import { MonitorPanel } from './monitor-panel';
 
-export function RuntimeMonitor({ id, connection, revision, active, copy, publish }: { id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
+export function RuntimeMonitor({ dark, id, connection, revision, active, copy, publish }: { dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
   const { current: location, past, future, dispatch, setHistoryMode } = useMonitorNavigation();
   const definitionId = location?.definitionId ?? ''; const instanceId = location?.instanceId ?? '';
   const historyMode = location?.history ?? false; const selectedJob = location?.job;
+  const [historyFilter, setHistoryFilter] = useState('');
+  const clearHistoryFilter = useCallback(() => setHistoryFilter(''), []);
   const [auto, setAuto] = useState(false); const [selected, setSelected] = useState(''); const [catalogHidden, setCatalogHidden] = useState(false); const [detailsHidden, setDetailsHidden] = useState(false);
   const viewer = useRef<RuntimeViewer | undefined>(undefined); const [ready, setReady] = useState(false);
   const snapshot = useSnapshot(connection, instanceId, auto, active);
@@ -41,20 +43,20 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
   const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
   const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
   const diagramError = loaded?.key === diagramKey ? loaded.error : undefined;
-  const select = useCallback((id: string) => setSelected(id), []);
+  const select = useCallback((id: string) => { setSelected(id); setHistoryFilter(id); }, []);
   const focus = useCallback((id: string) => { setSelected(id); if (id) viewer.current?.focus(id); else viewer.current?.clearSelection(); }, []);
   const process = currentData?.instance ?? historyData?.instance;
   const destination = useMemo<MonitorDestination | undefined>(() => location && ({ ...location.destination,
     name: process?.processDefinitionName || diagram?.definition.name || diagram?.definition.key || location.destination.name,
     businessKey: process ? process.businessKey || process.name || undefined : location.destination.businessKey,
   }), [location, process, diagram]);
-  const visit = useCallback((next: MonitorVisit) => { dispatch({ type: 'open', visit: next, leaving: destination }); setSelected(''); viewer.current?.clearSelection(); }, [dispatch, destination]);
+  const visit = useCallback((next: MonitorVisit) => { dispatch({ type: 'open', visit: next, leaving: destination }); setSelected(''); setHistoryFilter(''); viewer.current?.clearSelection(); }, [dispatch, destination]);
   const openInstance = useCallback((id: string, history = false, preview?: Instance) => visit({ instanceId: id, definitionId: '', history,
     destination: { kind: 'instance', id, name: preview?.processDefinitionName || preview?.processDefinitionId.split(':')[0] || '', businessKey: preview?.businessKey || preview?.name } }), [visit]);
   const followInstance = (id: string, preview?: Instance) => openInstance(id, historyMode, preview);
   const openDefinition = (item: Definition) => visit({ instanceId: '', definitionId: item.id, history: false,
     destination: { kind: 'definition', id: item.id, name: item.name || item.key, version: item.version } });
-  const move = useCallback((direction: 'back' | 'forward') => { if (!(direction === 'back' ? past.length : future.length)) return; dispatch({ type: 'move', direction, leaving: destination }); setSelected(''); viewer.current?.clearSelection(); }, [dispatch, destination, past.length, future.length]);
+  const move = useCallback((direction: 'back' | 'forward') => { if (!(direction === 'back' ? past.length : future.length)) return; dispatch({ type: 'move', direction, leaving: destination }); setSelected(''); setHistoryFilter(''); viewer.current?.clearSelection(); }, [dispatch, destination, past.length, future.length]);
   useEffect(() => {
     if (!connection || !desiredDefinition) return;
     let disposed = false;
@@ -93,13 +95,13 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
 
         {currentData?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
-        {diagram ? <RuntimeDiagram diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
+        {diagram ? <RuntimeDiagram dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
         <RuntimeFreshness runtime={currentData?.capturedAt} history={historyData?.capturedAt} />
 
       </div>
       {(!!instanceId || !!selectedJob || !!selected && !!summary.data) && <MonitorPanel side="right" hidden={detailsHidden} toggle={() => setDetailsHidden(value => !value)} changed={`${instanceId}:${selected}`}>
         {instanceId ? <InstancePanel key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot} history={history} historyMode={historyMode} setHistoryMode={setHistoryMode}
-        xml={diagram?.xml} selected={selected} focus={focus} openInstance={followInstance} jobSelection={selectedJob} /> :
+        xml={diagram?.xml} selected={selected} historyFilter={historyFilter} clearHistoryFilter={clearHistoryFilter} focus={focus} openInstance={followInstance} jobSelection={selectedJob} /> :
         selectedJob ? <aside className="runtime-details"><JobDetails key={selectedJob.id} connection={connection} job={selectedJob} focus={focus} /></aside> :
           !instanceId && selected && summary.data && <SummaryDetails key={`${diagramKey}:${selected}`} summary={summary.data} element={selected} open={(id, job) => job ? openJob(job) : openInstance(id)} />}
       </MonitorPanel>}

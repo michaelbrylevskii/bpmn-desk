@@ -6,9 +6,9 @@ import { HistoryDetails } from './history-details';
 import type { useSnapshot } from './use-snapshot';
 import type { useHistory } from './use-history';
 
-export function InstancePanel({ connection, snapshot, history, historyMode, setHistoryMode, xml, selected, focus, openInstance, jobSelection }: {
+export function InstancePanel({ connection, snapshot, history, historyMode, setHistoryMode, xml, selected, historyFilter, clearHistoryFilter, focus, openInstance, jobSelection }: {
   connection: string; snapshot: ReturnType<typeof useSnapshot>; history: ReturnType<typeof useHistory>;
-  historyMode: boolean; setHistoryMode: (value: boolean) => void; xml?: string; selected: string;
+  historyMode: boolean; setHistoryMode: (value: boolean) => void; xml?: string; selected: string; historyFilter: string; clearHistoryFilter: () => void;
   focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void; jobSelection?: DeadLetterJob;
 }) {
   const { t, text } = useI18n();
@@ -18,7 +18,7 @@ export function InstancePanel({ connection, snapshot, history, historyMode, setH
       <button aria-pressed={!historyMode} onClick={() => setHistoryMode(false)}>{t('Текущее состояние')}</button>
       <button aria-pressed={historyMode} onClick={() => setHistoryMode(true)}>{t('История выполнения')}</button>
     </nav>
-    {historyMode ? history.data && <HistoryDetails connection={connection} snapshot={history.data} xml={xml} selected={selected} focus={focus} openInstance={openInstance} /> :
+    {historyMode ? history.data && <HistoryDetails connection={connection} snapshot={history.data} xml={xml} filter={historyFilter} clearFilter={clearHistoryFilter} focus={focus} openInstance={openInstance} /> :
       snapshot.data && <InstanceDetails connection={connection} snapshot={snapshot.data} selected={selected} focus={focus} openInstance={openInstance} jobSelection={jobSelection} />}
     {!source.data && <div className="runtime-source-status">
       {source.error ? <p className="runtime-error" role="alert">{text(source.error)}</p> : source.busy ? <p className="runtime-empty">{t('Загрузка состояния…')}</p> :

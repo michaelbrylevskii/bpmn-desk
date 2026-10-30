@@ -33,7 +33,7 @@
 .runtime-canvas .djs-overlay-desk-runtime { pointer-events: none; }
 /* Оставляем место для язычка панели, сохраняя логотип полностью видимым. */
 .runtime-canvas .bjs-powered-by { right: 36px !important; }
-.runtime-xml { flex: 0 1 220px; min-height: 100px; resize: none; border-radius: 0; font: 11px/1.5 ui-monospace, monospace; white-space: pre; }
+.runtime-xml { flex: 0 1 260px; min-height: 120px; overflow: hidden; border-top: 1px solid var(--border); }
 .runtime-freshness { display: flex; align-items: center; padding: 5px 12px; min-height: 29px; flex-shrink: 0; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); }
 .runtime-details { width: clamp(330px, 30vw, 430px); flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0; min-width: 0; }
 .runtime-instance { padding: 16px; border-bottom: 1px solid var(--border); font-size: 12px; }.runtime-instance > strong { overflow-wrap: anywhere; display: block; font-size: 15px; margin-bottom: 8px; }.runtime-instance > code { display: block; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
@@ -64,7 +64,9 @@
 .runtime-toolbar-tools .runtime-check { padding: 0 7px; white-space: nowrap; }
 .runtime-canvas { --accent-color: var(--accent); }
 .runtime-canvas .djs-container > svg:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
-.runtime-canvas .djs-element.selected .djs-outline { stroke: var(--accent) !important; stroke-width: 2px !important; }
+.runtime-canvas .djs-element.selected > .djs-outline { visibility: visible; stroke: var(--accent) !important; stroke-width: 3px !important; stroke-dasharray: 6 3; vector-effect: non-scaling-stroke; }
+.runtime-canvas .djs-connection.selected > .djs-outline { display: block; }
+.runtime-canvas .djs-element.selected > .djs-visual { filter: drop-shadow(0 0 3px var(--accent)); }
 .runtime-row, .runtime-row > button:first-child { min-width: 0; }
 .runtime-row[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 3px 0 var(--accent); }
 .runtime-row-definition { font-weight: 550; }.runtime-row time { font-size: 10px; color: var(--muted); }

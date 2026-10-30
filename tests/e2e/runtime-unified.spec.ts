@@ -72,3 +72,40 @@ test('история остаётся доступной при запрете r
     await expect(element).toHaveClass(/runtime-unfinished/);
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
+
+
+test('журнал раскрывает несколько записей без фильтра, а XML подсвечен и защищён от ввода', async () => {
+  const api = await historyServer(); api.state.runtimeStatus = 200;
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  try {
+    await openInstance(page, 'p1');
+    await page.locator('.instance-mode-tabs').getByRole('button', { name: 'Execution history', exact: true }).click();
+    const rows = page.locator('.history-activity');
+    await expect(rows).toHaveCount(2);
+    await rows.first().getByRole('button').click();
+    await rows.last().getByRole('button').click();
+    await expect(page.locator('.history-activity-details')).toHaveCount(2);
+    await expect(page.locator('.history-element-filter')).toHaveCount(0);
+    const element = page.locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]');
+    await expect(element).toHaveClass(/selected/);
+    await expect(element.locator('.djs-outline')).toHaveCSS('stroke-dasharray', '6px, 3px');
+    // Прямой клик включает фильтр даже для уже выделенного из журнала узла.
+    await element.locator('.djs-hit').click();
+    await expect(page.locator('.history-element-filter')).toContainText('HistoryReview');
+    await rows.first().getByRole('button').click();
+    await expect(page.locator('.history-element-filter')).toContainText('HistoryReview');
+    await page.getByTitle('Show all steps', { exact: true }).click();
+    await expect(page.locator('.history-element-filter')).toHaveCount(0);
+    await page.getByTitle('Diagram XML', { exact: true }).click();
+    const xml = page.locator('.runtime-xml .cm-content');
+    await expect(xml).toHaveAttribute('aria-readonly', 'true');
+    await expect(xml.locator('span').first()).toBeVisible();
+    const source = await xml.textContent();
+    await xml.click(); await page.keyboard.type('MUST_NOT_BE_INSERTED');
+    expect(await xml.textContent()).toBe(source);
+    await page.getByTitle('Dark theme', { exact: true }).click();
+    expect(await xml.textContent()).toBe(source);
+    await expect(page.locator('.dirty-dot')).toHaveCount(0);
+    await expect(page.locator('.history-activity-details')).toHaveCount(1);
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});

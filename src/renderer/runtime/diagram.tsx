@@ -3,13 +3,14 @@ import { Maximize, FileText, Activity, X, LoaderCircle } from 'lucide-react';
 import type { DeployedDiagram, InstanceSnapshot } from '../../shared/runtime';
 import { errorMessage } from '../../shared/errors';
 import { useI18n } from '../i18n/provider';
+import { CodeEditor } from '../ui/code-editor';
 import { RuntimeViewer } from '../bpmn/runtime-viewer';
 import type { useSummary } from './use-summary';
 import { RuntimeLegend } from './legend';
 import { SummaryNotice } from './summary-notice';
 import type { HistorySnapshot } from '../../shared/history';
 
-export function RuntimeDiagram({ diagram, snapshot, history, summary, active, summaryEnabled, select, viewer, onReady }: { diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
+export function RuntimeDiagram({ dark, selected, diagram, snapshot, history, summary, active, summaryEnabled, select, viewer, onReady }: { dark: boolean; selected: string; diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
   summary: ReturnType<typeof useSummary>; active: boolean; summaryEnabled: boolean;
   select: (id: string) => void; viewer: React.RefObject<RuntimeViewer | undefined>; onReady: (value: boolean) => void }) {
   const { t, language, text } = useI18n(); const container = useRef<HTMLDivElement>(null); const currentLanguage = useRef(language); currentLanguage.current = language;
@@ -37,6 +38,6 @@ export function RuntimeDiagram({ diagram, snapshot, history, summary, active, su
     {!diagram.definition.graphicalNotationDefined && <p className="runtime-warning">{t('Схема не содержит координат BPMN DI.')}</p>}
     {!!missing.length && <p className="runtime-warning">{t('На схеме отсутствуют элементы: {ids}', { ids: missing.join(', ') })}</p>}
     <div ref={container} className="runtime-canvas" tabIndex={0} aria-label={t('Развёрнутая схема')} />
-    {(xml || error || !diagram.definition.graphicalNotationDefined) && <textarea className="runtime-xml" aria-label={t('XML схемы')} value={diagram.xml} readOnly spellCheck={false} />}
+    {(xml || error || !diagram.definition.graphicalNotationDefined) && <div className="runtime-xml"><CodeEditor value={diagram.xml} dark={dark} selectedId={selected} readOnly /></div>}
   </section>;
 }

@@ -52,7 +52,8 @@ test('журнал и схема связываются в обе стороны
     await reviews.last().getByRole('button').click();
     await expect(surface(page).locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]')).toHaveClass(/selected/);
     await expect(surface(page).locator('.history-activity-details')).toContainText('bob');
-    await surface(page).getByTitle('Show all steps', { exact: true }).click();
+    await expect(surface(page).locator('.history-element-filter')).toHaveCount(0);
+    await expect(surface(page).locator('.history-activity[data-element-id="HistoryChild"]')).toBeVisible();
     await surface(page).locator('.runtime-canvas .djs-element[data-element-id="HistoryChild"] .djs-hit').click();
     await expect(surface(page).locator('.history-activity')).toHaveCount(1); await expect(surface(page).locator('.history-activity')).toContainText('Final review');
     await surface(page).getByTitle('Show all steps', { exact: true }).click();

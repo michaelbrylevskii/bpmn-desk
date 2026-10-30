@@ -1,4 +1,5 @@
 import Viewer from 'bpmn-js/lib/NavigatedViewer';
+import OutlineModule from 'diagram-js/lib/features/outline';
 import { configureDiagramTheme, rendererColors } from './diagram-theme';
 import { normalizeDiagram } from './diagram-normalization';
 import { translationModule } from './translate';
@@ -19,10 +20,20 @@ export class RuntimeViewer {
   private marked: { id: string; marker: string }[] = [];
   private marks: RuntimeMark[] = [];
   private fitPending = false;
+  private programmaticSelection = false;
   constructor(private readonly container: HTMLElement, language: () => Language, selected: (id: string) => void) {
-    this.viewer = new Viewer({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
+    this.viewer = new Viewer({ container, bpmnRenderer: rendererColors, additionalModules: [OutlineModule, translationModule(language)] });
     configureDiagramTheme(this.viewer.get('bpmnRenderer'));
-    this.viewer.get<{ on(event: string, listener: (value: { newSelection: DiagramElement[] }) => void): void }>('eventBus').on('selection.changed', event => selected((event.newSelection[0]?.labelTarget ?? event.newSelection[0])?.id ?? ''));
+    // В мониторе повторный прямой клик оставляет выбор и задаёт фильтр журнала.
+    // Стандартный SelectionBehavior снимает выбор и путает это с фокусом из истории.
+    this.viewer.get<{ on(event: string, priority: number, listener: (event: { element: DiagramElement; originalEvent: MouseEvent }) => false | undefined): void }>('eventBus').on('element.click', 1500, event => {
+      if (event.originalEvent.button !== 0 || event.originalEvent.shiftKey || event.originalEvent.ctrlKey || event.originalEvent.metaKey) return;
+      const element = event.element.labelTarget ?? event.element;
+      const canvas = this.viewer.get<MarkedCanvas>('canvas');
+      this.viewer.get<{ select(elements: DiagramElement[]): void }>('selection').select(element === canvas.getRootElement() ? [] : [element]);
+      return false;
+    });
+    this.viewer.get<{ on(event: string, listener: (value: { newSelection: DiagramElement[] }) => void): void }>('eventBus').on('selection.changed', event => { if (!this.programmaticSelection) selected((event.newSelection[0]?.labelTarget ?? event.newSelection[0])?.id ?? ''); });
   }
   async import(xml: string): Promise<void> {
     this.marked = []; await this.viewer.importXML(normalizeDiagram(xml)); this.fit();
@@ -53,8 +64,13 @@ export class RuntimeViewer {
   focus(id: string): boolean {
     const element = this.viewer.get<Registry>('elementRegistry').get(id); if (!element) return false;
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); const root = canvas.findRoot(element);
-    if (root) canvas.setRootElement(root); canvas.scrollToElement(element);
-    this.viewer.get<{ select(element: DiagramElement): void }>('selection').select(element); return true;
+    this.programmaticSelection = true;
+    try {
+      if (root) canvas.setRootElement(root); canvas.scrollToElement(element);
+      this.viewer.get<{ select(element: DiagramElement): void }>('selection').select(element);
+    }
+    finally { this.programmaticSelection = false; }
+    return true;
   }
   state(snapshot: InstanceSnapshot | undefined, summary?: DefinitionSummary, history?: HistorySnapshot): string[] {
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); const registry = this.viewer.get<Registry>('elementRegistry');
@@ -79,6 +95,10 @@ export class RuntimeViewer {
     }
     return missing;
   }
-  clearSelection(): void { this.viewer.get<{ select(elements: DiagramElement[]): void }>('selection').select([]); }
+  clearSelection(): void {
+    this.programmaticSelection = true;
+    try { this.viewer.get<{ select(elements: DiagramElement[]): void }>('selection').select([]); }
+    finally { this.programmaticSelection = false; }
+  }
   destroy(): void { this.viewer.destroy(); }
 }
