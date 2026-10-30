@@ -14,7 +14,6 @@ export function SummaryStatus({ summary, visible, toggle, active }: { summary: R
     {data && <><dl><dt>{t('Executions')}</dt><dd>{data.executions.error ? '—' : `${data.executions.data.length}/${data.executions.total ?? '—'}`}</dd>
       <dt>{t('Dead-letter jobs')}</dt><dd>{data.deadLetters.error ? '—' : `${data.deadLetters.data.length}/${data.deadLetters.total ?? '—'}`}</dd></dl>
       <time dateTime={data.capturedAt}>{new Date(data.capturedAt).toLocaleString(language)}</time>
-      <p>{t('Зелёный — экземпляры; красный — экземпляры с dead-letter.')}</p>
       {partial && <p className="summary-partial">{t('Частичная выборка: ≥ — не менее. Отсутствие метки не означает ноль.')}</p>}
       {summary.error && <p>{t('Последний снимок устарел.')}</p>}
       {!!unmapped && <p>{t('Не удалось разместить задания на схеме: {count}', { count: unmapped })}</p>}

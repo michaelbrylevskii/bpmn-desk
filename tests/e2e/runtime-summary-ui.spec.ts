@@ -20,13 +20,14 @@ test('автосводка компактна; обновления сохран
     await expect(status).toHaveAttribute('data-summary-state', 'ready');
     await expect(page.locator('.runtime-summary-notice')).toHaveCount(0);
     const badge = page.locator('.runtime-badge[data-activity-id="HistoryReview"]'); await expect(badge).toHaveText('20');
-    await status.focus(); await expect(page.getByRole('tooltip')).toContainText('20/20'); await page.keyboard.press('Escape');
+    await status.focus(); await expect(page.getByRole('tooltip')).toContainText('20/20');
+    await expect(page.getByRole('tooltip')).not.toContainText('Green'); await page.keyboard.press('Escape');
     const node = page.locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]'); await node.locator('.djs-hit').click();
     await page.locator('.runtime-summary-details').getByTitle('Next page', { exact: true }).click();
     await expect(page.locator('.runtime-summary-details')).toContainText('p10');
     const originalBadge = await badge.elementHandle(); const originalNode = await node.elementHandle();
     const viewport = page.locator('.runtime-canvas .viewport'); const transform = await viewport.getAttribute('transform');
-    const body = page.locator('.runtime-summary-details .runtime-detail-body'); await body.evaluate(element => { element.scrollTop = 50; }); const scroll = await body.evaluate(element => element.scrollTop);
+    const body = page.locator('.runtime-summary-details'); await body.evaluate(element => { element.scrollTop = 50; }); const scroll = await body.evaluate(element => element.scrollTop); expect(scroll).toBeGreaterThan(0);
     api.state.summaryDelay = 150;
     await page.getByTitle('Refresh state', { exact: true }).click();
     await expect(status).toHaveAttribute('data-summary-state', 'loading'); await expect(badge).toHaveText('20');
@@ -79,5 +80,21 @@ test('смена определения не перекрывает сводки
     await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('3');
     await expect(status).toHaveAttribute('data-summary-state', 'ready'); expect(api.state.summaryMaxActive).toBe(2);
     await expect(page.locator('.runtime-diagram-heading')).toContainText('v2');
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});
+
+test('медленная сводка не задерживает отображение схемы и её XML', async () => {
+  const api = await historyServer(); api.state.summaryDelay = 3000;
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  try {
+    await page.locator('.runtime-catalog .runtime-row').click();
+    await expect.poll(() => api.state.summaryActive).toBe(2);
+    await expect(page.locator('.runtime-canvas [data-element-id="HistoryReview"]').first()).toBeVisible();
+    const status = page.getByRole('button', { name: 'Version summary', exact: true });
+    await expect(status).toHaveAttribute('data-summary-state', 'loading');
+    await page.locator('.runtime-diagram-heading').getByTitle('Diagram XML', { exact: true }).click();
+    await expect(page.locator('.runtime-xml .cm-content')).toContainText('HistoryReview');
+    await expect(status).toHaveAttribute('data-summary-state', 'loading');
+    await expect(status).toHaveAttribute('data-summary-state', 'ready');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
