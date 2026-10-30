@@ -4,12 +4,16 @@ import { RuntimeHttp } from './http';
 import * as decode from './flowable-decode';
 import { identifier } from './validation';
 import { readDefinitionSummary } from './definition-summary';
+import { HistoryReader } from './history-reader';
+import type { HistoryQuery } from '../../shared/history';
 
 const key = (value: string) => encodeURIComponent(identifier(value));
 export class FlowableReader {
   constructor(private readonly http: RuntimeHttp) {}
   async test(): Promise<void> { await this.definitions({}); }
   summary(id: string) { return readDefinitionSummary(this.http, id); }
+  historicInstances(query: HistoryQuery) { return new HistoryReader(this.http).instances(query); }
+  history(id: string) { return new HistoryReader(this.http).snapshot(id); }
   definitions(query: PageQuery) {
     return this.paged('repository/process-definitions', decode.definition, { ...this.pagination(query, ['key', 'name', 'version', 'id', 'deploymentId', 'category'], 'key'), nameLike: query.search ? `%${query.search}%` : undefined, tenantId: query.tenantId, key: query.definitionKey, latest: query.latest ? 'true' : undefined });
   }

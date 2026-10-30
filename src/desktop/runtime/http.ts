@@ -4,6 +4,7 @@ import { requestTimeoutSeconds } from '../../shared/runtime';
 /** Только GET к заранее выбранному REST root. Редиректы и URL из ответов не используются. */
 export class RuntimeHttp {
   constructor(private readonly connection: Connection, private readonly secret: string) {}
+  deadline(): AbortSignal { return AbortSignal.timeout((this.connection.requestTimeoutSeconds ?? requestTimeoutSeconds.default) * 1000); }
   async get(path: string, query: Record<string, string | number | undefined> = {}, json = true, deadline?: AbortSignal): Promise<unknown> {
     const url = new URL(path, this.connection.baseUrl);
     const base = new URL(this.connection.baseUrl);
@@ -12,7 +13,7 @@ export class RuntimeHttp {
     const headers: Record<string, string> = { Accept: json ? 'application/json' : 'application/xml, text/plain' };
     if (this.connection.authentication === 'basic') headers.Authorization = `Basic ${Buffer.from(`${this.connection.username}:${this.secret}`).toString('base64')}`;
     if (this.connection.authentication === 'bearer') headers.Authorization = `Bearer ${this.secret}`;
-    const timeout = AbortSignal.timeout((this.connection.requestTimeoutSeconds ?? requestTimeoutSeconds.default) * 1000);
+    const timeout = this.deadline();
     const signal = deadline ? AbortSignal.any([deadline, timeout]) : timeout;
     let response: Response;
     try { response = await fetch(url, { method: 'GET', headers, redirect: 'error', signal }); }

@@ -1,3 +1,4 @@
+import type { HistoricInstance, HistoryQuery, HistorySnapshot } from './history';
 /** Контракты чтения состояния движка. Секреты возвращаются только внутри main. */
 export type RuntimeEngine = 'flowable' | 'camunda7';
 export type Authentication = 'none' | 'basic' | 'bearer';
@@ -53,6 +54,8 @@ export interface RuntimeBridge {
   testConnectionDraft(input: ConnectionInput): Promise<void>;
   definitions(id: string, query: PageQuery): Promise<RuntimePage<Definition>>;
   instances(id: string, query: PageQuery): Promise<RuntimePage<Instance>>;
+  historicInstances(id: string, query: HistoryQuery): Promise<RuntimePage<HistoricInstance>>;
+  history(id: string, instanceId: string): Promise<HistorySnapshot>;
   deadLetters(id: string, query: PageQuery): Promise<RuntimePage<DeadLetterJob>>;
   diagram(id: string, definitionId: string): Promise<DeployedDiagram>;
   snapshot(id: string, instanceId: string): Promise<InstanceSnapshot>;
@@ -63,5 +66,6 @@ export interface RuntimeBridge {
 export const runtimeChannels = {
   connections: 'runtime:connections', save: 'runtime:save-connection', delete: 'runtime:delete-connection', test: 'runtime:test', testDraft: 'runtime:test-draft',
   definitions: 'runtime:definitions', instances: 'runtime:instances', deadLetters: 'runtime:dead-letters',
+  historicInstances: 'runtime:historic-instances', history: 'runtime:history',
   diagram: 'runtime:diagram', snapshot: 'runtime:snapshot', summary: 'runtime:summary', executionVariables: 'runtime:execution-variables', stacktrace: 'runtime:stacktrace',
 } as const;
