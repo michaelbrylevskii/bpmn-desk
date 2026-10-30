@@ -11,8 +11,8 @@ it('группирует по BPMN ID, сохраняет повторные в�
     activities: { data: [activity('a'), activity('b'), activity('c', 'Review', ''), { ...activity('f', 'Flow_1'), activityType: 'sequenceFlow' }], complete: false },
     children: { data: [], complete: true }, variables: { data: [], complete: true }, capturedAt: '' };
   expect(historyMarks(snapshot)).toEqual([
-    { id: 'Review', marker: 'runtime-unfinished', label: '… ≥3', flow: false },
-    { id: 'Flow_1', marker: 'runtime-visited', label: '✓ ≥1', flow: true },
+    { id: 'Review', marker: 'runtime-unfinished', label: '… 3+', flow: false },
+    { id: 'Flow_1', marker: 'runtime-visited', label: '✓ 1+', flow: true },
   ]);
   expect(orderedActivities([activity('b'), activity('a')]).map(item => item.id)).toEqual(['a', 'b']);
   expect(snapshot.activities.data).toHaveLength(4);

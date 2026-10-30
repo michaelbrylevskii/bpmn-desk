@@ -38,7 +38,7 @@ test('автосводка компактна; обновления сохран
     await expect(status).toHaveAttribute('data-summary-state', 'error'); await expect(badge).toHaveText('20');
     await status.focus(); await expect(page.getByRole('tooltip')).toContainText('503'); await expect(page.getByRole('tooltip')).toContainText('stale'); await page.keyboard.press('Escape'); await status.blur();
     api.state.summaryStatus = 200; api.state.summaryTotal = 1000000;
-    await page.getByTitle('Refresh state', { exact: true }).click(); await expect(status).toHaveAttribute('data-summary-state', 'partial'); await expect(badge).toHaveText('≥20');
+    await page.getByTitle('Refresh state', { exact: true }).click(); await expect(status).toHaveAttribute('data-summary-state', 'partial'); await expect(badge).toHaveText('20+');
     await status.focus(); await expect(page.getByRole('tooltip')).toContainText('20/1000000'); await expect(page.getByRole('tooltip')).toContainText('Partial sample');
     await page.screenshot({ path: 'test-results/runtime-summary-status.png' });
   } finally { try { await close(app, directory); } finally { await api.stop(); } }

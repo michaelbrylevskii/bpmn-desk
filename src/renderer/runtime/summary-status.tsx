@@ -15,7 +15,7 @@ export function SummaryStatus({ summary, enabled, toggle, timeout }: { summary: 
       {data && <><dl>{([{ label: 'Executions', sample: data.executions }, { label: 'Dead-letter jobs', sample: data.deadLetters }, { label: 'Записи истории', sample: data.activities }] as const).map(({ label, sample }) =>
         <div className="summary-source-count" key={label}><dt>{t(label)}</dt><dd>{sample.error ? '—' : `${sample.data.length}/${sample.total ?? '—'}`}</dd></div>)}</dl>
         <time dateTime={data.capturedAt}>{new Date(data.capturedAt).toLocaleString(language)}</time>
-        {partial && <p className="summary-partial">{t('Частичная выборка: ≥ — не менее. Отсутствие метки не означает ноль.')}</p>}
+        {partial && <p className="summary-partial">{t('Частичная выборка: N+ — не менее N. Отсутствие метки не означает ноль.')}</p>}
         {summary.error && <p>{t('Последний снимок устарел.')}</p>}
         {!!unmapped && <p>{t('Не удалось разместить задания на схеме: {count}', { count: unmapped })}</p>}
       </>}

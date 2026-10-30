@@ -92,7 +92,7 @@ test('ограниченная сводка и медленный сервер �
     await savedSummaryOff(page);
     await definition(page, 'deskReview', 1); expect(summaryRequests()).toHaveLength(0);
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
-    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('≥25');
+    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('25+');
     await page.getByRole('button', { name: 'Version summary', exact: true }).blur();
     await page.getByRole('button', { name: 'Version summary', exact: true }).focus();
     await expect(page.getByRole('tooltip')).toContainText('100/1000000');

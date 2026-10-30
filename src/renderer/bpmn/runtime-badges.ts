@@ -1,3 +1,4 @@
+import { sampleCount } from './sample-count';
 import type { DefinitionSummary, InstanceSnapshot } from '../../shared/runtime';
 
 export interface RuntimeBadge { id: string; failed: boolean; label: string }
@@ -30,7 +31,7 @@ export function summaryBadges(summary: DefinitionSummary): RuntimeBadge[] {
     add(failed, element, job.processInstanceId);
   }
   const incompleteExecutions = !summary.executions.complete || summary.executions.data.some(item => !item.processInstanceId);
-  const count = (value: number, incomplete: boolean) => `${incomplete ? '≥' : ''}${value}`;
+  const count = (value: number, incomplete: boolean) => sampleCount(value, !incomplete);
   return [...new Set([...active.keys(), ...failed.keys()])].map(id => ({ id, failed: failed.has(id),
     label: failed.has(id) ? `! ${count(failed.get(id)!.size, incompleteJobs)}` : count(active.get(id)!.size, incompleteExecutions) }));
 }

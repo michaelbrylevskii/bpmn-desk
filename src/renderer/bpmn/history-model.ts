@@ -1,3 +1,4 @@
+import { sampleCount } from './sample-count';
 import type { HistoricActivity, HistorySnapshot } from '../../shared/history';
 import { BPMN_URI as BPMN, elements, parseXml } from './xml';
 
@@ -34,7 +35,7 @@ export function historyMarks(snapshot: HistorySnapshot): HistoryMark[] {
   }
   return [...items].map(([id, visits]) => {
     const unfinished = visits.some(item => !item.endTime);
-    const count = `${snapshot.activities.complete ? '' : '≥'}${visits.length}`;
+    const count = sampleCount(visits.length, snapshot.activities.complete);
     return { id, marker: unfinished ? 'runtime-unfinished' : 'runtime-visited',
       label: unfinished ? `… ${count}` : `✓ ${count}`, flow: visits.every(item => item.activityType === 'sequenceFlow') };
   });

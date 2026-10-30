@@ -1,3 +1,4 @@
+import { sampleCount } from '../bpmn/sample-count';
 import { Check, Clock3 } from 'lucide-react';
 import type { Instance } from '../../shared/runtime';
 import { RelatedInstance } from './relationships';
@@ -16,7 +17,7 @@ export function HistoryActivity({ activity, child, index, count, complete, selec
         {activity.endTime ? <Check size={15} /> : <Clock3 size={15} />}
       </span><span><strong>{activity.activityName || activity.activityId || activity.id}</strong>
         <small><time dateTime={activity.startTime || undefined}>{historyTime(activity.startTime, language)}</time></small>
-        <small>{activity.activityType} · {historyDuration(activity.durationInMillis, language)}{count > 1 && ` · ${t('Проход {index} из {count}', { index, count: `${complete ? '' : '≥'}${count}` })}`}</small>
+        <small>{activity.activityType} · {historyDuration(activity.durationInMillis, language)}{count > 1 && ` · ${t('Проход {index} из {count}', { index, count: sampleCount(count, complete) })}`}</small>
       </span>
     </button>
     {selected && <div className="history-activity-details"><dl>

@@ -19,9 +19,9 @@ it('совмещает повторы и текущую позицию одни�
 it('даёт приоритет dead-letter и обозначает неполный исторический счётчик', () => {
   const failed = { ...snapshot, deadLetters: [{ id: 'j', processInstanceId: 'p', processDefinitionId: 'd', executionId: 'e', elementId: 'Review', elementName: '', exceptionMessage: '', retries: 0, createTime: '', tenantId: '' }] };
   const marks = monitorMarks(failed, undefined, { ...history, activities: { ...history.activities, complete: false } });
-  expect(marks).toEqual([{ id: 'Review', marker: 'runtime-failed', label: '✓ ≥2 · ! 1', flow: false }]);
+  expect(marks).toEqual([{ id: 'Review', marker: 'runtime-failed', label: '✓ 2+ · ! 1', flow: false }]);
   const svg = runtimeSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><g data-element-id="Review"><g class="djs-visual"><rect/></g></g></svg>', marks.map(mark => ({ ...mark, x: 100, y: 100 })));
-  expect(svg.match(/data-runtime-badge="Review"/g)).toHaveLength(1); expect(svg).toContain('stroke="#b4233a"'); expect(svg).toContain('✓ ≥2 · ! 1');
+  expect(svg.match(/data-runtime-badge="Review"/g)).toHaveLength(1); expect(svg).toContain('stroke="#b4233a"'); expect(svg).toContain('✓ 2+ · ! 1');
 });
 
 it('не красит незавершённую историю зелёным без runtime-позиции', () => {

@@ -69,8 +69,8 @@ const summary = (): DefinitionSummary => ({ executions: { data: [execution('e1',
 
 it('не завышает число экземпляров из-за multi-instance и обозначает нижнюю границу при усечении', () => {
   const state = summary(); expect(summaryBadges(state)).toEqual([{ id: 'Review', failed: false, label: '2' }]);
-  state.executions.complete = false; expect(summaryBadges(state)[0]?.label).toBe('≥2');
-  state.executions.data.push(execution('e4', '')); expect(summaryBadges(state)[0]?.label).toBe('≥2');
+  state.executions.complete = false; expect(summaryBadges(state)[0]?.label).toBe('2+');
+  state.executions.data.push(execution('e4', '')); expect(summaryBadges(state)[0]?.label).toBe('2+');
 });
 
 it('считает разные экземпляры с ошибкой, использует известный execution и не выдумывает позицию', () => {
@@ -79,7 +79,7 @@ it('считает разные экземпляры с ошибкой, испо
   state.deadLetters.data = [job, { ...job, id: 'j2' }]; state.deadLetters.total = 2;
   expect(summaryBadges(state)[0]).toEqual({ id: 'Review', failed: true, label: '! 1' });
   state.deadLetters.data.push({ ...job, id: 'j3', executionId: 'unknown' });
-  expect(summaryBadges(state)[0]?.label).toBe('! ≥1'); expect(summaryBadges(state)).toHaveLength(1);
+  expect(summaryBadges(state)[0]?.label).toBe('! 1+'); expect(summaryBadges(state)).toHaveLength(1);
 });
 
 for (const timeout of [5, 120]) it(`сводка использует таймаут подключения ${timeout} с вместо фиксированных 8 с`, async () => {

@@ -65,7 +65,7 @@ Without FUSE, use `--appimage-extract-and-run` as the first argument. Windows ex
 
 - Visual editing requires BPMN DI; automatic layout is not provided. Saving may change XML formatting.
 - The editor does not execute processes or provide deployment/retry actions. DMN/CMMN, Camunda 8/Zeebe and external form designers are not supported.
-- History requires retained Flowable history and API access. Each snapshot loads up to 1000 activity records, 100 children and 100 saved variables; incomplete results are marked. Saved variables are latest values, not values at a selected step. Snapshots are not transactional; route arrows require recorded sequence flows. Camunda 7 runtime is not supported. [API details](docs/runtime-monitor.md).
+- History requires retained Flowable history and API access. Each snapshot loads up to 1000 activity records, 100 children and 100 saved variables; incomplete counts use N+ to mean at least N. Saved variables are latest values, not values at a selected step. Snapshots are not transactional; route arrows require recorded sequence flows. Camunda 7 runtime is not supported. [API details](docs/runtime-monitor.md).
 - Back/forward navigation keeps up to 100 destinations per direction in each monitor, in memory only. Changing its connection resets navigation. Mouse side buttons use Electron system commands; macOS support is pending.
 - Local files are limited to 20 MB. PNG is limited to 16,384 px per side and 32 million pixels; SVG is available for larger diagrams.
 

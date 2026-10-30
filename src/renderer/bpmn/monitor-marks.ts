@@ -1,3 +1,4 @@
+import { sampleCount } from './sample-count';
 import type { DefinitionSummary, InstanceSnapshot } from '../../shared/runtime';
 import type { HistorySnapshot } from '../../shared/history';
 import { definitionMarks } from './summary-model';
@@ -16,7 +17,7 @@ export function monitorMarks(snapshot?: InstanceSnapshot, summary?: DefinitionSu
     let label = badge.label;
     if (snapshot && history) {
       const ended = completed.get(badge.id) ?? 0;
-      const past = ended ? `✓ ${history.activities.complete ? '' : '≥'}${ended} · ` : '';
+      const past = ended ? `✓ ${sampleCount(ended, history.activities.complete)} · ` : '';
       label = `${past}${badge.failed ? badge.label : `●${badge.label ? ` ${badge.label}` : ''}`}`;
     }
     marks.set(badge.id, { id: badge.id, marker: badge.failed ? 'runtime-failed' : 'runtime-active', label, flow: false });

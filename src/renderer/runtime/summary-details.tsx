@@ -26,7 +26,7 @@ export function SummaryDetails({ summary, enabled, element, open }: { summary: R
           {summary.busy && <p className="runtime-warning" role="status">{t('Загрузка сводки…')}</p>}
           {summary.error && <p className="runtime-error" role="alert">{text(summary.error)}{data && ` ${t('Последний снимок устарел.')}`}</p>}
           {errors.map((error, i) => <p key={i} className="runtime-error" role="alert">{text(error!)}</p>)}
-          {partial && <p className="runtime-warning">{t('Частичная выборка: ≥ — не менее. Отсутствие метки не означает ноль.')}</p>}
+          {partial && <p className="runtime-warning">{t('Частичная выборка: N+ — не менее N. Отсутствие метки не означает ноль.')}</p>}
           {data && !items.length && <p className="runtime-empty">{t(errors.length ? 'Состояние недоступно' : 'В загруженной выборке нет экземпляров этого элемента.')}</p>}
           {visible.map(item => <button className={`related-instance ${item.job ? 'failed' : ''}`} key={item.id} aria-label={`${t('Открыть экземпляр')}: ${item.id}`} onClick={() => open(item.id, source === 'history', item.job)}>
             <ArrowUpRight size={15} /><span><code>{item.id}</code><strong>{t(source === 'history' ? 'История' : item.job ? 'Dead-letter jobs' : 'Executions')}</strong></span></button>)}

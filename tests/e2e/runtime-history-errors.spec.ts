@@ -43,13 +43,13 @@ test('ограниченная история обозначает нижнюю 
   try {
     await openHistory(page);
     await expect(page.locator('.history-list-controls')).toContainText('Records loaded: 1000 of 2000');
-    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('✓ ≥1000');
+    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('✓ 1000+');
     await expect(page.locator('.history-journal')).toContainText('History is partially loaded');
     expect(api.state.requests.filter(url => url.pathname.endsWith('/historic-activity-instances'))).toHaveLength(10);
     api.state.metadataStatus = 500; await page.getByTitle('Refresh state', { exact: true }).click();
     await expect(page.locator('.runtime-center [role=alert]')).toContainText('The last snapshot is stale');
     await expect(page.locator('.history-details .runtime-instance > code')).toHaveText('p1');
-    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('✓ ≥1000');
+    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('✓ 1000+');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
 

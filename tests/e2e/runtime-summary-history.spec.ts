@@ -12,7 +12,7 @@ test('история сводки считает разные экземпляр
     await expect(panel).toContainText('Select an element to view details');
     const width = (await canvas.boundingBox())!.width;
     const element = canvas.locator('[data-element-id="HistoryReview"]');
-    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('1 · ◷ ≥2');
+    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('1 · ◷ 2+');
     const request = api.state.requests.find(url => url.pathname.endsWith('/historic-activity-instances') && url.searchParams.has('processDefinitionId'))!;
     expect(request.searchParams.get('processDefinitionId')).toBe('d1'); expect(request.searchParams.get('size')).toBe('1000');
     expect(request.searchParams.get('sort')).toBe('startTime'); expect(request.searchParams.get('order')).toBe('desc');

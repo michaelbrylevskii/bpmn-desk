@@ -1,3 +1,4 @@
+import { sampleCount } from './sample-count';
 import type { DeadLetterJob, DefinitionSummary } from '../../shared/runtime';
 import { summaryBadges } from './runtime-badges';
 import type { MonitorMark } from './monitor-marks';
@@ -20,7 +21,7 @@ export function definitionMarks(summary: DefinitionSummary): MonitorMark[] {
   const marks = new Map<string, MonitorMark>();
   const ids = new Set(summary.activities.data.filter(item => item.activityId && item.processInstanceId).map(item => item.activityId));
   const partial = !summary.activities.complete || summary.activities.data.some(item => !item.processInstanceId);
-  for (const id of ids) marks.set(id, { id, marker: 'runtime-visited', flow: summary.activities.data.some(item => item.activityId === id && item.activityType === 'sequenceFlow'), label: `◷ ${partial ? '≥' : ''}${summaryInstances(summary, id, 'history').length}` });
+  for (const id of ids) marks.set(id, { id, marker: 'runtime-visited', flow: summary.activities.data.some(item => item.activityId === id && item.activityType === 'sequenceFlow'), label: `◷ ${sampleCount(summaryInstances(summary, id, 'history').length, !partial)}` });
   for (const badge of summaryBadges(summary)) {
     const history = marks.get(badge.id);
     marks.set(badge.id, { id: badge.id, marker: badge.failed ? 'runtime-failed' : 'runtime-active', flow: false, label: `${badge.label}${history ? ` · ${history.label}` : ''}` });
