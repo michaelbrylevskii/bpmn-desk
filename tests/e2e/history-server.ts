@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 /** Контролируемый read-only стенд для недоступной и неполной истории, не подмена реальных engine-тестов. */
 export async function historyServer() {
   const xml = await readFile('tools/runtime-fixture/src/main/resources/processes/history.bpmn20.xml', 'utf8');
-  const state = { metadataStatus: 200, diagramStatus: 200, activityStatus: 200, activityCount: 2, total: 2, delayFirst: 0, deliveredFirst: 0, requests: [] as URL[] };
+  const state = { runtimeStatus: 404, finished: true, unfinishedActivities: false, related: false, metadataStatus: 200, diagramStatus: 200, activityStatus: 200, activityCount: 2, total: 2, delayFirst: 0, deliveredFirst: 0, requests: [] as URL[] };
   const timers = new Set<ReturnType<typeof setTimeout>>();
-  const process = (id: string) => ({ id, businessKey: id === 'p2' ? 'Other instance' : 'Historical order', processDefinitionId: 'd1', startTime: '2026-10-01T10:00:00Z', endTime: '2026-10-01T10:02:00Z', durationInMillis: 120000 });
+  const process = (id: string) => ({ id, name: '', processDefinitionName: id === 'p2' ? 'Review decisions' : 'Order fulfillment', superProcessInstanceId: state.related && id === 'p2' ? 'p1' : '', businessKey: id === 'p2' ? 'Other instance' : 'Historical order', processDefinitionId: 'd1', startTime: '2026-10-01T10:00:00Z', endTime: state.finished ? '2026-10-01T10:02:00Z' : '', durationInMillis: state.finished ? 120000 : null });
   const server = createServer((request, response) => {
     const url = new URL(request.url!, 'http://localhost'); state.requests.push(url);
     response.setHeader('content-type', 'application/json');
@@ -16,6 +16,12 @@ export async function historyServer() {
     const definition = { id: 'd1', key: 'deskHistory', version: 1, graphicalNotationDefined: true };
     if (url.pathname.endsWith('/process-definitions/d1')) return send(definition, state.diagramStatus);
     if (url.pathname.endsWith('/process-definitions')) return page([definition]);
+    if (/runtime\/process-instances\/p[12]$/.test(url.pathname)) return send(process(url.pathname.endsWith('/p2') ? 'p2' : 'p1'), state.runtimeStatus);
+    if (url.pathname.endsWith('/runtime/process-instances')) return page(url.searchParams.has('superProcessInstanceId') ? state.related && url.searchParams.get('superProcessInstanceId') === 'p1' ? [process('p2')] : [] : [process('p1')]);
+    if (url.pathname.endsWith('/runtime/executions')) return page([{ id: 'e1', processInstanceId: 'p1', activityId: 'HistoryReview' }]);
+    if (url.pathname.endsWith('/activities')) return send(['HistoryReview']);
+    if (url.pathname.endsWith('/runtime/tasks') || url.pathname.endsWith('/management/deadletter-jobs')) return page([]);
+    if (url.pathname.endsWith('/variables')) return send([]);
     if (/historic-process-instances\/p[12]$/.test(url.pathname)) {
       const id = url.pathname.endsWith('/p2') ? 'p2' : 'p1';
       const status = state.metadataStatus;
@@ -24,12 +30,12 @@ export async function historyServer() {
       }
       return send(process(id), status);
     }
-    if (url.pathname.endsWith('/historic-process-instances')) return page(url.searchParams.has('superProcessInstanceId') ? [] : [process('p1'), process('p2')]);
+    if (url.pathname.endsWith('/historic-process-instances')) return page(url.searchParams.has('superProcessInstanceId') ? state.related && url.searchParams.get('superProcessInstanceId') === 'p1' ? [process('p2')] : [] : [process('p1'), process('p2')]);
     if (url.pathname.endsWith('/historic-variable-instances')) return page([]);
     if (url.pathname.endsWith('/historic-activity-instances')) {
       if (state.activityStatus !== 200) return send({}, state.activityStatus);
       const start = Number(url.searchParams.get('start')); const size = Number(url.searchParams.get('size'));
-      return page(Array.from({ length: Math.min(size, Math.max(0, state.activityCount - start)) }, (_, i) => ({ id: `a${start + i}`, activityId: 'HistoryReview', activityName: 'Historical review', activityType: 'userTask', processInstanceId: url.searchParams.get('processInstanceId'), processDefinitionId: 'd1', executionId: `e${start + i}`, startTime: '2026-10-01T10:00:00Z', endTime: '2026-10-01T10:02:00Z', durationInMillis: 120000 })), state.total);
+      return page(Array.from({ length: Math.min(size, Math.max(0, state.activityCount - start)) }, (_, i) => ({ id: `a${start + i}`, activityId: 'HistoryReview', activityName: 'Historical review', activityType: 'userTask', processInstanceId: url.searchParams.get('processInstanceId'), processDefinitionId: 'd1', executionId: `e${start + i}`, startTime: '2026-10-01T10:00:00Z', endTime: state.unfinishedActivities && start + i === state.activityCount - 1 ? '' : '2026-10-01T10:02:00Z', durationInMillis: 120000 })), state.total);
     }
     send({}, 404);
   });

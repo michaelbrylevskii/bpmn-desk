@@ -96,7 +96,11 @@ test('тестирование нового и изменённого подкл
     await page.getByLabel('Password or token').fill(''); await page.getByRole('button', { name: 'Test connection', exact: true }).click();
     await expect(page.getByRole('status')).toContainText('Connection verified'); await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0); await openInstance(page, fixture.reviewInstanceId);
-    const transform = await surface(page).locator('.viewport').getAttribute('transform'); const canvas = await surface(page).locator('.djs-container').elementHandle();
+    const transformValues = () => surface(page).locator('.viewport').evaluate(element => {
+      const matrix = (element as SVGGElement).getCTM()!;
+      return [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f].map(value => Math.round(value * 100) / 100);
+    });
+    const transform = await transformValues(); const canvas = await surface(page).locator('.djs-container').elementHandle();
     await page.getByTitle('Manage connections', { exact: true }).click(); await page.getByLabel('Password or token').fill('wrong-password');
     await page.getByRole('button', { name: 'Save connection', exact: true }).click();
     await expect(surface(page).locator('.runtime-catalog [role="alert"]')).toContainText('401');
@@ -105,7 +109,7 @@ test('тестирование нового и изменённого подкл
     await page.getByRole('button', { name: 'Save connection', exact: true }).click();
     await expect(surface(page).locator('.runtime-catalog .runtime-row').first()).toBeVisible();
     await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.reviewInstanceId);
-    await expect(surface(page).locator('.viewport')).toHaveAttribute('transform', transform!);
+    await expect.poll(transformValues).toEqual(transform);
   } finally { await close(app, directory); }
 });
 
@@ -157,7 +161,7 @@ test('выделение и фокус холста, центрирование 
     const svgPath = resolve(directory, 'runtime.svg');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, svgPath);
     await page.getByTitle('Export SVG', { exact: true }).click();
-    await expect(async () => { const svg = await readFile(svgPath, 'utf8'); expect(svg).toContain('data-runtime-badge="ReviewMany"'); expect(svg).toContain('>3</text>'); expect(svg).toContain('stroke="#228d72"'); expect(svg).not.toMatch(/var\(|djs-outline/); }).toPass();
+    await expect(async () => { const svg = await readFile(svgPath, 'utf8'); expect(svg).toContain('data-runtime-badge="ReviewMany"'); expect(svg).toContain('>● 3</text>'); expect(svg).toContain('stroke="#228d72"'); expect(svg).not.toMatch(/var\(|djs-outline/); }).toPass();
     const pngPath = resolve(directory, 'runtime.png');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, pngPath);
     await page.getByTitle('Export format', { exact: true }).click(); await page.getByRole('menuitem', { name: 'PNG · white background', exact: true }).click();

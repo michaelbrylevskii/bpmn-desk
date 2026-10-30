@@ -88,7 +88,8 @@ test('история вызванного процесса открываетс�
     await openHistory(page, fixture.terminatedInstanceId);
     await expect(surface(page).locator('.history-details .runtime-instance')).toContainText('Terminated');
     await expect(surface(page).locator('.history-details .runtime-instance')).toContainText('Fixture cancellation');
-    await expect(surface(page).getByRole('button', { name: 'Current state', exact: true })).toBeDisabled();
+    await surface(page).locator('.instance-mode-tabs').getByRole('button', { name: 'Current state', exact: true }).click();
+    await expect(surface(page).locator('.runtime-source-status')).toContainText('absent from runtime');
   } finally { await close(app, directory); }
 });
 
@@ -96,9 +97,9 @@ test('история работающего multi-instance сохраняет о
   const { app, page, directory } = await launch();
   try {
     await openInstance(page, fixture.parallelInstanceId);
-    await surface(page).locator('.runtime-context-bar').getByRole('button', { name: 'Execution history', exact: true }).click();
+    await surface(page).locator('.instance-mode-tabs').getByRole('button', { name: 'Execution history', exact: true }).click();
     await expect(surface(page).locator('.history-activity[data-element-id="ReviewMany"]')).toHaveCount(3);
-    await expect(surface(page).locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('… 3');
+    await expect(surface(page).locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
     for (const theme of ['Light theme', 'Dark theme']) {
       await page.getByTitle(theme, { exact: true }).click(); await page.setViewportSize({ width: 1050, height: 720 });
       for (const selector of ['.history-details', '.history-journal', '.runtime-catalog', '.runtime-context-bar']) expect(await surface(page).locator(selector).evaluate(element => element.scrollWidth <= element.clientWidth + 1), selector).toBe(true);
@@ -106,7 +107,7 @@ test('история работающего multi-instance сохраняет о
     }
     const tab = page.locator('.document-tab[data-kind=monitor]').getByRole('tab'); await page.locator('.new-tab').click(); await tab.click();
     await expect(surface(page).locator('.history-activity[data-element-id="ReviewMany"]')).toHaveCount(3);
-    await surface(page).locator('.runtime-context-bar').getByRole('button', { name: 'Current state', exact: true }).click();
-    await expect(surface(page).locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('3');
+    await surface(page).locator('.instance-mode-tabs').getByRole('button', { name: 'Current state', exact: true }).click();
+    await expect(surface(page).locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
   } finally { await close(app, directory); }
 });

@@ -28,8 +28,8 @@ test('реальный Flowable: multi-instance, executions и локальны�
   const { app, page, directory } = await launch();
   try {
     await openInstance(page, fixture.parallelInstanceId);
-    await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('3');
-    await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewA"]')).toHaveText('1');
+    await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
+    await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewA"]')).toHaveText('● 1');
     await page.locator('.runtime-details').getByRole('button', { name: 'Executions', exact: true }).click();
     const execution = page.locator('.runtime-execution').filter({ has: page.getByRole('button', { name: 'ReviewA', exact: true }) });
     await execution.getByRole('button', { name: 'Open execution variables', exact: true }).click();
@@ -37,7 +37,7 @@ test('реальный Flowable: multi-instance, executions и локальны�
     await expect(page.locator('.runtime-variable').filter({ hasText: 'localReviewerNote' })).toContainText('execution-specific value');
     const canvas = await page.locator('.runtime-canvas .djs-container').elementHandle();
     const transform = await page.locator('.runtime-canvas .viewport').getAttribute('transform');
-    const time = page.locator('.runtime-freshness time'); const before = await time.getAttribute('datetime');
+    const time = page.locator('.runtime-freshness time[data-source=runtime]'); const before = await time.getAttribute('datetime');
     await page.getByRole('button', { name: 'Refresh state', exact: true }).click();
     await expect(time).not.toHaveAttribute('datetime', before!);
     expect(await canvas?.evaluate(node => node.isConnected)).toBe(true);
@@ -45,7 +45,7 @@ test('реальный Flowable: multi-instance, executions и локальны�
     const manual = await time.getAttribute('datetime'); await page.getByLabel('Refresh every 5 seconds').check();
     await expect(time).not.toHaveAttribute('datetime', manual!);
     const immediate = await time.getAttribute('datetime'); await expect(time).not.toHaveAttribute('datetime', immediate!, { timeout: 10000 });
-    await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('3');
+    await expect(page.locator('.runtime-canvas .runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
     await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
     await createDiagram(page, 'BPMN 2.0');
     await page.locator('.document-tab[data-kind=monitor]').getByRole('tab').click();
@@ -149,6 +149,6 @@ test('REST: тест черновика без сохранения, пагин�
     }, { url: fixture.baseUrl, parent: fixture.parentInstanceId });
     expect(result.after).toBe(result.before); expect(result.definitions.data).toHaveLength(2); expect(result.definitions.data[0]?.version).toBe(2);
     expect(result.instances.data).toHaveLength(1); expect(result.instances.data[0]?.processDefinitionName).toBe('deskParallel');
-    expect(result.snapshot.children.map(child => child.id)).toContain(fixture.childInstanceId);
+    expect(result.snapshot?.children.map(child => child.id)).toContain(fixture.childInstanceId);
   } finally { await close(app, directory); }
 });

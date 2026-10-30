@@ -98,7 +98,7 @@ test('AppImage читает историю через production IPC и связ
     await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('✓ 2');
     await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
     await expect(page.locator('.history-activity').last()).toContainText('Проход 2 из 2');
-    await expect(page.locator('.runtime-context-bar')).toContainText('История выполнения');
+    await expect(page.locator('.instance-mode-tabs')).toContainText('История выполнения');
     expect(await app.evaluate(({ app }) => app.commandLine.hasSwitch('no-sandbox'))).toBe(false);
     await page.screenshot({ path: 'test-results/appimage-history.png' });
   } finally { await view?.browser.close(); await app?.close(); await api.stop(); await rm(directory, { recursive: true, force: true }); }

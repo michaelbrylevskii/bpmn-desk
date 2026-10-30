@@ -1,5 +1,7 @@
 export const historyMessages = {
   'Дочерний экземпляр': 'Child instance', 'Название схемы недоступно': 'Diagram name unavailable',
+  'Экземпляра нет в runtime. Он мог завершиться или быть удалён; подробности доступны в истории, если она сохранена.': 'The instance is absent from runtime. It may have finished or been deleted; details are available in history if retained.',
+  '✓ — окончание зафиксировано; ● — текущие executions; ! — dead-letter jobs.': '✓ — end recorded; ● — current executions; ! — dead-letter jobs.',
   'История выполнения': 'Execution history', 'Текущее состояние': 'Current state',
   'Какие экземпляры показывать': 'Instance view', 'Текущие экземпляры': 'Current instances',
   'Завершённые экземпляры': 'Finished instances', 'Все экземпляры из истории': 'All instances in history',

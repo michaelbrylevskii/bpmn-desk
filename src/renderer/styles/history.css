@@ -37,3 +37,8 @@
 .runtime-canvas .djs-connection.runtime-unfinished .djs-visual > path { stroke: #b67b22 !important; stroke-width: 3px !important; }
 .runtime-badge.visited { background: #527bac; }.runtime-badge.unfinished { background: #b67b22; }
 @media (max-width: 1200px) { .history-activity-details { padding-left: 12px; } }
+.runtime-instance-panel { width: clamp(330px, 30vw, 430px); display: flex; flex-direction: column; min-height: 0; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); }
+.runtime-instance-panel > .runtime-details { width: 100%; flex: 1; border-left: 0; }
+.instance-mode-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+.runtime-source-status { overflow: auto; }
+@media (max-width: 1200px) { .runtime-instance-panel { width: 330px; } }

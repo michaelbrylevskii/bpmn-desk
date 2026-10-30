@@ -11,13 +11,12 @@ import { useI18n } from '../i18n/provider';
 import type { RuntimeViewer } from '../bpmn/runtime-viewer';
 import { RuntimeCatalog } from './catalog';
 import { RuntimeDiagram } from './diagram';
-import { InstanceDetails } from './instance-details';
 import { JobDetails } from './job-details';
 import { useSnapshot } from './use-snapshot';
 import { useSummary } from './use-summary';
 import { SummaryDetails } from './summary-details';
 import { useHistory } from './use-history';
-import { HistoryDetails } from './history-details';
+import { InstancePanel } from './instance-panel';
 
 export function RuntimeMonitor({ id, connection, revision, active, copy, publish }: { id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
@@ -26,16 +25,14 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
   const [historyMode, setHistoryMode] = useState(false); const [catalogHidden, setCatalogHidden] = useState(false);
   const [back, setBack] = useState<{ id: string; history: boolean }[]>([]);
   const viewer = useRef<RuntimeViewer | undefined>(undefined); const [ready, setReady] = useState(false);
-  const snapshot = useSnapshot(connection, instanceId, auto, active && !historyMode);
-  const history = useHistory(connection, instanceId, auto, active && historyMode, revision);
-  const historyData = historyMode ? history.data : undefined;
-  const currentData = historyMode ? undefined : snapshot.data;
-  const stateError = historyMode ? history.error : snapshot.error;
-  const busy = historyMode ? history.busy : snapshot.busy;
-  const refreshState = historyMode ? history.refresh : snapshot.refresh;
-  const refreshSnapshot = snapshot.refresh;
+  const snapshot = useSnapshot(connection, instanceId, auto, active);
+  const history = useHistory(connection, instanceId, auto, active, revision);
+  const historyData = history.data; const currentData = snapshot.data;
+  const busy = snapshot.busy || history.busy;
+  const refreshSnapshot = snapshot.refresh; const refreshHistory = history.refresh;
+  const refreshState = useCallback(() => { refreshSnapshot(); refreshHistory(); }, [refreshSnapshot, refreshHistory]);
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
-  const instanceDefinition = historyMode ? history.data?.instance.processDefinitionId ?? snapshot.data?.instance.processDefinitionId : snapshot.data?.instance.processDefinitionId ?? history.data?.instance.processDefinitionId;
+  const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
   const desiredDefinition = instanceDefinition ?? definitionId;
   const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && !!desiredDefinition);
   const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
@@ -80,17 +77,22 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
       <div className="runtime-center"><div className="runtime-context-bar">
         <button className="icon-button" title={t(catalogHidden ? 'Показать каталог' : 'Скрыть каталог')} aria-expanded={!catalogHidden} onClick={() => setCatalogHidden(value => !value)}>{catalogHidden ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}</button>
         {!!back.length && <button className="button small ghost" onClick={() => { const target = back.at(-1); if (target) { setInstanceId(target.id); setHistoryMode(target.history); setSelected(''); setBack(previous => previous.slice(0, -1)); } }}><ArrowLeft size={14} />{t('Назад к экземпляру')}</button>}
-        {!!instanceId && <><button className="button small ghost" aria-pressed={!historyMode} disabled={!!historyData?.instance.endTime} onClick={() => { setHistoryMode(false); setSelected(''); }}>{t('Текущее состояние')}</button>
-          <button className="button small ghost" aria-pressed={historyMode} onClick={() => { setHistoryMode(true); setSelected(''); }}>{t('История выполнения')}</button></>}
+
       </div>
-        {stateError && <p role="alert" className="runtime-error">{text(stateError)} {(historyData || currentData) && t('Последний снимок устарел.')}{historyMode && <span className="history-error-hint">{t('Проверь доступ к history API. Запись могла быть очищена или история отключена.')}</span>}</p>}
+        {snapshot.error && <p role="alert" className="runtime-error">{t('Текущее состояние')}: {text(snapshot.error)} {currentData && t('Последний снимок устарел.')}</p>}
+        {history.error && <p role="alert" className="runtime-error">{t('История выполнения')}: {text(history.error)} {historyData && t('Последний снимок устарел.')}<span className="history-error-hint">{t('Проверь доступ к history API. Запись могла быть очищена или история отключена.')}</span></p>}
+
         {currentData?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
-        {diagram ? <RuntimeDiagram diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !stateError && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
-        {(currentData || historyData) && <div className="runtime-freshness"><time dateTime={(currentData || historyData)!.capturedAt}>{t('Время снимка')}: {new Date((currentData || historyData)!.capturedAt).toLocaleTimeString()}</time><span>{t('Снимок собирается несколькими запросами и может измениться во время чтения.')}</span></div>}
+        {diagram ? <RuntimeDiagram diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
+        {(currentData || historyData) && <div className="runtime-freshness">
+          {currentData && <time data-source="runtime" dateTime={currentData.capturedAt}>{t('Текущее состояние')}: {new Date(currentData.capturedAt).toLocaleTimeString()}</time>}
+          {historyData && <time data-source="history" dateTime={historyData.capturedAt}>{t('История выполнения')}: {new Date(historyData.capturedAt).toLocaleTimeString()}</time>}
+          <span>{t('Снимок собирается несколькими запросами и может измениться во время чтения.')}</span></div>}
+
       </div>
-      {historyData ? <HistoryDetails connection={connection} key={`${connection}:${instanceId}`} snapshot={historyData} xml={diagram?.xml} selected={selected} focus={focus} openInstance={followInstance} /> :
-        currentData ? <InstanceDetails key={`${connection}:${instanceId}`} connection={connection} snapshot={currentData} selected={selected} focus={focus} openInstance={followInstance} jobSelection={selectedJob} /> :
+      {instanceId ? <InstancePanel key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot} history={history} historyMode={historyMode} setHistoryMode={setHistoryMode}
+        xml={diagram?.xml} selected={selected} focus={focus} openInstance={followInstance} jobSelection={selectedJob} /> :
         selectedJob ? <aside className="runtime-details"><JobDetails key={selectedJob.id} connection={connection} job={selectedJob} focus={focus} /></aside> :
           !instanceId && selected && summary.data && <SummaryDetails key={`${diagramKey}:${selected}`} summary={summary.data} element={selected} open={(id, job) => job ? openJob(job) : openInstance(id)} />}
     </div>

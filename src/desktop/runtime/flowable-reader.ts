@@ -44,8 +44,13 @@ export class FlowableReader {
     }
     return instance;
   }
-  async snapshot(id: string): Promise<InstanceSnapshot> {
-    const process = decode.instance(await this.http.get(`runtime/process-instances/${key(id)}`));
+  async snapshot(id: string): Promise<InstanceSnapshot | null> {
+    let process: Instance;
+    try { process = decode.instance(await this.http.get(`runtime/process-instances/${key(id)}`)); }
+    catch (error) {
+      if (error instanceof RuntimeHttpError && error.status === 404) return null;
+      throw error;
+    }
     const warnings: string[] = [];
     const unavailable: InstanceSnapshot['unavailable'] = [];
     const optional = async <T>(section: InstanceSnapshot['unavailable'][number], name: string, action: () => Promise<T>, fallback: T): Promise<T> => {

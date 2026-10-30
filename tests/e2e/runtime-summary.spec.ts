@@ -25,7 +25,7 @@ test('сводка точной версии: multi-instance считается 
     await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(1);
     await page.locator('.runtime-summary-details').getByRole('button', { name: `Open instance: ${fixture.parallelInstanceId}`, exact: true }).click();
     await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
-    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('3');
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
     await definition(page, 'deskParallel'); await page.getByRole('button', { name: 'Version summary', exact: true }).click();
     await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1');
     await page.getByTitle('Hide summary', { exact: true }).click(); await expect(page.locator('.runtime-badge')).toHaveCount(0);
@@ -52,7 +52,7 @@ test('сводка точной версии: multi-instance считается 
     await expect(page.locator('.runtime-catalog .runtime-row')).toHaveCount(1);
     await openInstance(page, fixture.reviewInstanceId); await expect(page.locator('.runtime-diagram-heading')).toContainText('v1');
     await expect(page.locator('.runtime-summary-notice')).toHaveCount(0);
-    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('1');
+    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('● 1');
     await expect(page.locator('.dirty-dot')).toHaveCount(0);
   } finally { await close(app, directory); }
 });

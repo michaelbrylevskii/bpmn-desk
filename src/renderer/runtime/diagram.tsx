@@ -30,7 +30,7 @@ export function RuntimeDiagram({ diagram, snapshot, history, summary, active, su
     </>}<button className="icon-button" title={t('XML схемы')} aria-pressed={xml} onClick={() => setXml(value => !value)}><FileText size={17} /></button>
     <button className="icon-button" title={t('Вписать схему')} onClick={() => viewer.current?.fit()}><Maximize size={17} /></button></div>
     {(snapshot || (summaryEnabled && summary.data)) && <div className="runtime-legend"><span className="active">{t(snapshot ? 'Активные элементы' : 'Экземпляры у элементов')}</span><span className="failed">{t(snapshot ? 'Задания с ошибкой' : 'Экземпляры с dead-letter')}</span></div>}
-    {history && <div className="runtime-legend history-legend"><span className="visited">{t('Окончание зафиксировано')}</span><span className="unfinished">{t('Окончание не зафиксировано')}</span><small>{t('Метки истории не подтверждают успех или текущее состояние шага.')}</small></div>}
+    {history && <div className="runtime-legend history-legend"><span className="visited">{t('Окончание зафиксировано')}</span><span className="unfinished">{t('Окончание не зафиксировано')}</span><small>{t('Метки истории не подтверждают успех или текущее состояние шага.')} {snapshot && t('✓ — окончание зафиксировано; ● — текущие executions; ! — dead-letter jobs.')}</small></div>}
     {summaryEnabled && summary.data && <SummaryNotice summary={summary.data} />}
     {summaryEnabled && summary.error && <p className="runtime-error" role="alert">{text(summary.error)}</p>}
     {error && <p className="runtime-error" role="alert">{text(error)}</p>}

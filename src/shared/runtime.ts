@@ -59,7 +59,7 @@ export interface RuntimeBridge {
   deadLetters(id: string, query: PageQuery): Promise<RuntimePage<DeadLetterJob>>;
   diagram(id: string, definitionId: string): Promise<DeployedDiagram>;
   instance(id: string, instanceId: string): Promise<Instance>;
-  snapshot(id: string, instanceId: string): Promise<InstanceSnapshot>;
+  snapshot(id: string, instanceId: string): Promise<InstanceSnapshot | null>;
   summary(id: string, definitionId: string): Promise<DefinitionSummary>;
   executionVariables(id: string, executionId: string): Promise<Variable[]>;
   stacktrace(id: string, jobId: string): Promise<string>;

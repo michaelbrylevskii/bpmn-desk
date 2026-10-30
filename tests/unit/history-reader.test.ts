@@ -109,3 +109,10 @@ it('сохраняет метаданные связанного экземпл�
   const api = await reader((url, response) => send(response, url.pathname.includes('/runtime/') ? process : {}, url.pathname.includes('/runtime/') ? 200 : 404));
   expect(await api.instance(process.id)).toMatchObject({ id: process.id, processDefinitionId: process.processDefinitionId, processDefinitionName: '' });
 });
+
+it('отличает отсутствие экземпляра в runtime от отказа доступа', async () => {
+  let status = 404;
+  const api = await reader((_url, response) => send(response, {}, status));
+  expect(await api.snapshot('finished')).toBeNull();
+  status = 403; await expect(api.snapshot('private')).rejects.toThrow('403');
+});

@@ -25,6 +25,7 @@ it('использует GET, дочитывает страницы executions �
   const profile: Connection = { id: 'c', name: 'test', engine: 'flowable', baseUrl: `http://127.0.0.1:${address.port}/process-api/`, authentication: 'none', username: '', hasSecret: false, secretStored: false };
   try {
     const snapshot = await new FlowableReader(new RuntimeHttp(profile, '')).snapshot('p1');
+    if (!snapshot) throw new Error('Нет снимка');
     expect(snapshot.executions).toHaveLength(101); expect(snapshot.activeIds).toEqual(['Task_A']);
     expect(snapshot.variables[0]?.value).toEqual({ ok: true }); expect(snapshot.warnings.join(' ')).toContain('403');
     expect(snapshot.unavailable).toContain('deadLetters'); expect(snapshot.unavailable).not.toContain('executions');
