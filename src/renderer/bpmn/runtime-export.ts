@@ -1,8 +1,9 @@
 import { sectionsWidth, type BadgeSection } from './badge-sections';
 import { appendBadgeSvg } from './badge-svg';
+import type { BadgeLeader } from './badge-layout';
 import { elements, parseXml, serializeXml } from './xml';
 import { standaloneSvg } from './diagram-theme';
-export interface RuntimeMark { id: string; marker: 'runtime-active' | 'runtime-failed' | 'runtime-visited' | 'runtime-unfinished'; label: string; x: number; y: number; badge?: boolean; sections?: BadgeSection[] }
+export interface RuntimeMark { id: string; marker: 'runtime-active' | 'runtime-failed' | 'runtime-visited' | 'runtime-unfinished'; label: string; x: number; y: number; badge?: boolean; sections?: BadgeSection[]; leader?: BadgeLeader }
 const color = (mark: RuntimeMark) => ({ 'runtime-active': '#228d72', 'runtime-failed': '#b4233a', 'runtime-visited': '#527bac', 'runtime-unfinished': '#b67b22' })[mark.marker];
 /** HTML overlays переводятся в SVG; изображение не зависит от CSS приложения и viewport. */
 export function runtimeSvg(source: string, marks: RuntimeMark[]): string {
@@ -30,6 +31,7 @@ export function runtimeSvg(source: string, marks: RuntimeMark[]): string {
   }
   const usedIds = new Set(nodes.map(node => node.getAttribute('id'))); let clipNumber = 0;
   const markWidth = (mark: RuntimeMark) => mark.sections?.length ? sectionsWidth(mark.sections) : badgeWidth(mark.label);
+  for (const mark of badges) if (mark.leader) root.appendChild(create('line', { 'data-runtime-leader': mark.id, ...mark.leader, stroke: '#7c8696', 'stroke-width': 1.25, 'stroke-opacity': 0.8 }));
   for (const mark of badges) {
     const group = create('g', { 'data-runtime-badge': mark.id, transform: `translate(${mark.x},${mark.y})` });
     const width = markWidth(mark);

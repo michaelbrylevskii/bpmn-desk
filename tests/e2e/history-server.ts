@@ -2,13 +2,14 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 
 /** Контролируемый read-only стенд для недоступной и неполной истории, не подмена реальных engine-тестов. */
-export async function historyServer() {
-  const xml = await readFile('tools/runtime-fixture/src/main/resources/processes/history.bpmn20.xml', 'utf8');
+export async function historyServer(xmlOverride?: string) {
+  const xml = xmlOverride ?? await readFile('tools/runtime-fixture/src/main/resources/processes/history.bpmn20.xml', 'utf8');
   const state = { summaryJobCount: 0, runtimeJobCount: 0, holdDiagram: false, withoutDi: false, summaryHistoryCount: 0, summaryHistoryTotal: 0, summaryHistoryStatus: undefined as number | undefined, alternateDefinition: false, summaryStatus: 200, summaryCount: 1, summaryTotal: 1, summaryDelay: 0, summaryActive: 0, summaryMaxActive: 0, runtimeStatus: 404, finished: true, unfinishedActivities: false, related: false, metadataStatus: 200, diagramStatus: 200, activityStatus: 200, activityCount: 2, total: 2, delayFirst: 0, deliveredFirst: 0, requests: [] as URL[] };
   const diagrams: (() => void)[] = [];
+  const activityIds = ['HistoryReview'];
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const process = (id: string) => ({ id, name: '', processDefinitionName: id === 'p2' ? 'Review decisions' : 'Order fulfillment', superProcessInstanceId: state.related && id === 'p2' ? 'p1' : '', businessKey: id === 'p2' ? 'Other instance' : 'Historical order', processDefinitionId: 'd1', startTime: '2026-10-01T10:00:00Z', endTime: state.finished ? '2026-10-01T10:02:00Z' : '', durationInMillis: state.finished ? 120000 : null });
-  const jobs = (count: number, instance = 'p1') => Array.from({ length: count }, (_, i) => ({ id: `job${i}`, processInstanceId: instance, processDefinitionId: 'd1', executionId: 'e0', elementId: 'HistoryReview', exceptionMessage: 'Fixture failure', retries: 0 }));
+  const jobs = (count: number, instance = 'p1') => Array.from({ length: count }, (_, i) => ({ id: `job${i}`, processInstanceId: instance, processDefinitionId: 'd1', executionId: 'e0', elementId: activityIds[i % activityIds.length], exceptionMessage: 'Fixture failure', retries: 0 }));
   const server = createServer((request, response) => {
     const url = new URL(request.url!, 'http://localhost'); state.requests.push(url);
     response.setHeader('content-type', 'application/json');
@@ -30,8 +31,8 @@ export async function historyServer() {
         state.summaryActive--;
         if (status !== 200) return send({}, status);
         if (url.pathname.endsWith('/management/deadletter-jobs')) return page(jobs(state.summaryJobCount, 'p0'));
-        if (historical) return page(Array.from({ length: state.summaryHistoryCount }, (_, i) => ({ id: `ha${i}`, activityId: 'HistoryReview', activityType: 'userTask', processInstanceId: `p${i % 2}`, processDefinitionId: url.searchParams.get('processDefinitionId'), startTime: '2026-10-01T10:00:00Z', endTime: '2026-10-01T10:02:00Z' })), state.summaryHistoryTotal);
-        page(Array.from({ length: count }, (_, i) => ({ id: `e${i}`, activityId: 'HistoryReview', processInstanceId: `p${i}` })), Math.max(count, total));
+        if (historical) return page(Array.from({ length: state.summaryHistoryCount }, (_, i) => ({ id: `ha${i}`, activityId: activityIds[i % activityIds.length], activityType: 'userTask', processInstanceId: `p${i % 2}`, processDefinitionId: url.searchParams.get('processDefinitionId'), startTime: '2026-10-01T10:00:00Z', endTime: '2026-10-01T10:02:00Z' })), state.summaryHistoryTotal);
+        page(Array.from({ length: count }, (_, i) => ({ id: `e${i}`, activityId: activityIds[i % activityIds.length], processInstanceId: `p${i}` })), Math.max(count, total));
       };
       if (state.summaryDelay) { const timer = setTimeout(() => { timers.delete(timer); respond(); }, state.summaryDelay); timers.add(timer); } else respond();
       return;
@@ -62,5 +63,5 @@ export async function historyServer() {
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = server.address(); if (!address || typeof address === 'string') throw new Error('Нет порта');
-  return { state, releaseDiagram: () => { state.holdDiagram = false; for (const respond of diagrams.splice(0)) respond(); }, baseUrl: `http://127.0.0.1:${address.port}/process-api/`, stop: async () => { for (const timer of timers) clearTimeout(timer); server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); } };
+  return { state, activityIds, releaseDiagram: () => { state.holdDiagram = false; for (const respond of diagrams.splice(0)) respond(); }, baseUrl: `http://127.0.0.1:${address.port}/process-api/`, stop: async () => { for (const timer of timers) clearTimeout(timer); server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); } };
 }

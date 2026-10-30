@@ -1,4 +1,5 @@
-import { badgeColors, sectionWidth, sectionZigzag } from './badge-sections';
+import { badgeColors, sectionsWidth, sectionWidth, sectionZigzag } from './badge-sections';
+import { layoutBadges, type BadgeOwner } from './badge-layout';
 import Viewer from 'bpmn-js/lib/NavigatedViewer';
 import OutlineModule from 'diagram-js/lib/features/outline';
 import { configureDiagramTheme, rendererColors } from './diagram-theme';
@@ -14,11 +15,11 @@ import { monitorMarks, type MonitorMark } from './monitor-marks';
 
 interface Viewbox { x: number; y: number; width: number; height: number; outer: { width: number; height: number } }
 interface MarkedCanvas extends Canvas { scroll(delta: { dx: number; dy: number }): void; viewbox(box?: { x: number; y: number; width: number; height: number }): Viewbox; addMarker(id: string, marker: string): void; removeMarker(id: string, marker: string): void; findRoot(element: DiagramElement): DiagramElement; setRootElement(element: DiagramElement): void }
-interface Overlays { add(id: string, type: string, options: { position: { bottom: number; right: number }; html: HTMLElement }): string; remove(options: { type: string } | string): void }
+interface Overlays { add(id: string, type: string, options: { position: { top: number; left: number }; html: HTMLElement }): string; remove(options: { type: string } | string): void }
 /** Состояние исполнения — только отображение; XML и команды моделирования не изменяются. */
 export class RuntimeViewer {
   private readonly viewer: Viewer;
-  private rendered = new Map<string, { mark: MonitorMark; overlay?: string; exported: RuntimeMark }>();
+  private rendered = new Map<string, { mark: MonitorMark; overlay?: string; html?: HTMLElement; exported: RuntimeMark }>();
   private marks: RuntimeMark[] = [];
   private fitPending = false;
   private programmaticSelection = false;
@@ -47,7 +48,13 @@ export class RuntimeViewer {
     if (box.outer.width <= margin * 2 || box.outer.height <= margin * 2) return;
     // BPMN bounds не включают HTML-бейджи: оставляем место у крайних событий и стрелок.
     const factor = Math.max(box.outer.width / (box.outer.width - margin * 2), box.outer.height / (box.outer.height - margin * 2));
-    canvas.viewbox({ x: box.x - box.width * (factor - 1) / 2, y: box.y - box.height * (factor - 1) / 2, width: box.width * factor, height: box.height * factor });
+    const registry = this.viewer.get<Registry>('elementRegistry');
+    const badges = this.marks.filter(mark => { const element = registry.get(mark.id); return mark.badge !== false && element && canvas.findRoot(element) === canvas.getRootElement(); });
+    const left = Math.min(box.x - box.width * (factor - 1) / 2, ...badges.map(mark => mark.x - 24));
+    const top = Math.min(box.y - box.height * (factor - 1) / 2, ...badges.map(mark => mark.y - 24));
+    const right = Math.max(box.x + box.width * (factor + 1) / 2, ...badges.map(mark => mark.x + (mark.sections?.length ? sectionsWidth(mark.sections) : sectionWidth(mark.label)) + 24));
+    const bottom = Math.max(box.y + box.height * (factor + 1) / 2, ...badges.map(mark => mark.y + 22 + 24));
+    canvas.viewbox({ x: left, y: top, width: right - left, height: bottom - top });
   }
   async svg(): Promise<string> { const { svg } = await this.viewer.saveSVG(); return runtimeSvg(svg, this.marks); }
   resize(): void {
@@ -77,6 +84,17 @@ export class RuntimeViewer {
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); const registry = this.viewer.get<Registry>('elementRegistry');
     const overlays = this.viewer.get<Overlays>('overlays');
     const next = monitorMarks(snapshot, summary, history); const desired = new Map(next.map(mark => [mark.id, mark]));
+    const geometry = (element: DiagramElement): BadgeOwner | undefined => {
+      if (element.x === undefined || element.y === undefined || !element.width || !element.height) return;
+      const ancestors: string[] = []; let parent = element.parent;
+      while (parent) { ancestors.push(parent.id); parent = parent.parent; }
+      return { id: element.id, x: element.x, y: element.y, width: element.width, height: element.height, ancestors, plane: ancestors.at(-1) ?? element.id };
+    };
+    const shapes = registry.getAll().flatMap(element => { const shape = geometry(element); return shape ? [shape] : []; });
+    const placements = layoutBadges(next.flatMap(mark => {
+      const owner = shapes.find(shape => shape.id === mark.id);
+      return !mark.flow && owner ? [{ owner, width: mark.sections?.length ? sectionsWidth(mark.sections) : sectionWidth(mark.label) }] : [];
+    }), shapes);
     for (const [id, rendered] of this.rendered) {
       const mark = desired.get(id);
       if (mark && mark.marker === rendered.mark.marker && mark.label === rendered.mark.label && mark.flow === rendered.mark.flow && JSON.stringify(mark.sections) === JSON.stringify(rendered.mark.sections)) continue;
@@ -109,8 +127,20 @@ export class RuntimeViewer {
       }
       else if (mark.label) badge.textContent = mark.label;
       else { const dot = document.createElement('span'); dot.className = 'runtime-badge-dot'; badge.append(dot); }
-      const overlay = overlays.add(mark.id, 'desk-runtime', { position: { bottom: 8, right: 8 }, html: badge });
-      this.rendered.set(mark.id, { mark, overlay, exported: { id: mark.id, marker: mark.marker, label: mark.label, sections: mark.sections, x: element.x + (element.width ?? 0) - 8, y: element.y + (element.height ?? 0) - 8 } });
+      const html = document.createElement('div'); html.className = 'runtime-badge-overlay';
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); line.setAttribute('aria-hidden', 'true');
+      line.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'line')); html.append(line, badge);
+      const overlay = overlays.add(mark.id, 'desk-runtime', { position: { top: 0, left: 0 }, html });
+      this.rendered.set(mark.id, { mark, overlay, html, exported: { id: mark.id, marker: mark.marker, label: mark.label, sections: mark.sections, x: element.x, y: element.y } });
+    }
+    for (const [id, rendered] of this.rendered) {
+      const position = placements.get(id); const element = registry.get(id);
+      if (!position || !rendered.html || element?.x === undefined || element.y === undefined) continue;
+      if (rendered.exported.x === position.x && rendered.exported.y === position.y && JSON.stringify(rendered.exported.leader) === JSON.stringify(position.leader)) continue;
+      rendered.html.style.transform = `translate(${position.x - element.x}px, ${position.y - element.y}px)`;
+      const line = rendered.html.querySelector('line')!;
+      for (const [key, value] of Object.entries(position.leader)) line.setAttribute(key, String(value - (key.startsWith('x') ? position.x : position.y)));
+      Object.assign(rendered.exported, { x: position.x, y: position.y, leader: position.leader });
     }
     this.marks = [...this.rendered.values()].map(item => item.exported);
     return missing;

@@ -128,3 +128,6 @@
 .runtime-badge.segmented::after { content: ''; position: absolute; inset: 0; border: 1px solid var(--diagram-bg); border-radius: inherit; pointer-events: none; z-index: 4; }
 .runtime-badge-section { display: inline-flex; align-items: center; justify-content: center; position: relative; box-sizing: border-box; height: 100%; flex-shrink: 0; padding: 0 6px; }
 .runtime-badge-section ~ .runtime-badge-section { margin-left: -3px; padding-left: 9px; }
+.runtime-badge-overlay { position: relative; display: flex; width: max-content; }
+.runtime-badge-overlay > svg { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.runtime-badge-overlay > svg line { stroke: #7c8696; stroke-width: 1.25; stroke-opacity: .8; }

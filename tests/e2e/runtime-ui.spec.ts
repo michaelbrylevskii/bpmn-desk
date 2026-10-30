@@ -152,7 +152,7 @@ test('выделение и фокус холста, центрирование 
     const task = surface(page).locator('.djs-element[data-element-id="ReviewMany"]'); await task.locator('.djs-hit').click();
     await expect(task).toHaveClass(/selected/); await expect(surface(page).locator('.runtime-selection')).toContainText('ReviewMany');
     const badge = surface(page).locator('.runtime-badge[data-activity-id="ReviewMany"]');
-    expect(await badge.evaluate(element => { const style = getComputedStyle(element); return [style.display, style.alignItems, style.justifyContent, style.lineHeight]; })).toEqual(['inline-flex', 'center', 'center', '11px']);
+    expect(await badge.evaluate(element => { const style = getComputedStyle(element); return [style.display, style.alignItems, style.justifyContent, style.lineHeight]; })).toEqual(['flex', 'center', 'center', '11px']);
     for (const theme of ['Light theme', 'Dark theme']) {
       await page.getByTitle(theme, { exact: true }).click(); await surface(page).locator('.djs-container > svg').focus();
       const colors = await surface(page).locator('.djs-container > svg').evaluate(element => ({ outline: getComputedStyle(element).outlineColor, accent: getComputedStyle(element).getPropertyValue('--accent').trim() }));
