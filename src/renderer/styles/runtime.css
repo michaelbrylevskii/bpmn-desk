@@ -17,7 +17,7 @@
 .runtime-row strong { overflow-wrap: anywhere; min-width: 0; font-size: 13px; font-weight: 550; }.runtime-row small { color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }.runtime-row code { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
 .runtime-row .runtime-row-action { align-self: flex-start; color: var(--accent); padding: 4px 0; font-size: 11px; }.runtime-row.failed { border-left: 3px solid var(--danger); }.runtime-row.failed strong { color: var(--danger); }
 .runtime-pagination { display: flex; align-items: center; padding: 5px 9px; border-top: 1px solid var(--border); font-size: 10px; color: var(--muted); }.runtime-pagination span { flex: 1; }
-.runtime-center { display: flex; flex-direction: column; min-width: 0; flex: 1; min-height: 0; }
+.runtime-center { display: flex; flex-direction: column; min-width: 0; flex: 1; min-height: 0; isolation: isolate; }
 .runtime-diagram { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .runtime-diagram-heading { display: flex; align-items: center; gap: 9px; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 12px; min-height: 46px; background: var(--surface); }
 .runtime-diagram-heading strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.runtime-diagram-heading > span:not(.toolbar-spacer) { font-size: 11px; color: var(--muted); }
@@ -29,6 +29,10 @@
 .runtime-canvas .runtime-failed .djs-visual > :first-child { stroke: var(--danger) !important; stroke-width: 3px !important; }
 .runtime-badge { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 22px; min-width: 22px; padding: 0 6px; border-radius: 6px; background: var(--green); color: #fff; font-size: 11px; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; border: 1px solid var(--diagram-bg); box-shadow: 0 2px 5px #0002; white-space: nowrap; }.runtime-badge.failed { background: var(--danger); }
 .runtime-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+/* Бейджи — подписи: события указателя проходят к SVG и штатной навигации bpmn-js. */
+.runtime-canvas .djs-overlay-desk-runtime { pointer-events: none; }
+/* Оставляем место для язычка панели, сохраняя логотип полностью видимым. */
+.runtime-canvas .bjs-powered-by { right: 36px !important; }
 .runtime-xml { flex: 0 1 220px; min-height: 100px; resize: none; border-radius: 0; font: 11px/1.5 ui-monospace, monospace; white-space: pre; }
 .runtime-freshness { display: flex; align-items: center; padding: 5px 12px; min-height: 29px; flex-shrink: 0; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); }
 .runtime-details { width: clamp(330px, 30vw, 430px); flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0; min-width: 0; }
