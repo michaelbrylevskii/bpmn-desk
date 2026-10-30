@@ -18,6 +18,9 @@ test('колёсико над бейджем прокручивает холст
       const before = await matrix(); const box = (await badge.boundingBox())!;
       // Настоящее наведение снаружи SVG и wheel; dispatchEvent не воспроизводит mouseout холста.
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      // ZoomScroll подключает wheel после mouseover SVG. move завершается до обработки
+      // события renderer'ом; ждём реального hover, иначе первый wheel может потеряться.
+      await expect.poll(() => page.locator('.runtime-canvas .djs-container > svg').evaluate(element => element.matches(':hover'))).toBe(true);
       const modifier = gesture === 'shift' ? 'Shift' : gesture === 'zoom' ? 'Control' : undefined;
       if (modifier) await page.keyboard.down(modifier);
       try {
