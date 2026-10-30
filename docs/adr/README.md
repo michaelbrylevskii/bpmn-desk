@@ -35,3 +35,4 @@
 - [0031 — Общая схема runtime и истории](0031-unified-instance-monitor.md)
 - [0032 — Переходы назад и вперёд в мониторе](0032-monitor-navigation.md)
 - [0033 — Единые каталоги, поиск и терминология монитора](0033-monitor-catalog-search.md)
+- [0034 — Автосводка и компактный статус в мониторе](0034-automatic-summary-status.md)

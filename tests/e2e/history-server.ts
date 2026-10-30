@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 /** Контролируемый read-only стенд для недоступной и неполной истории, не подмена реальных engine-тестов. */
 export async function historyServer() {
   const xml = await readFile('tools/runtime-fixture/src/main/resources/processes/history.bpmn20.xml', 'utf8');
-  const state = { runtimeStatus: 404, finished: true, unfinishedActivities: false, related: false, metadataStatus: 200, diagramStatus: 200, activityStatus: 200, activityCount: 2, total: 2, delayFirst: 0, deliveredFirst: 0, requests: [] as URL[] };
+  const state = { alternateDefinition: false, summaryStatus: 200, summaryCount: 1, summaryTotal: 1, summaryDelay: 0, summaryActive: 0, summaryMaxActive: 0, runtimeStatus: 404, finished: true, unfinishedActivities: false, related: false, metadataStatus: 200, diagramStatus: 200, activityStatus: 200, activityCount: 2, total: 2, delayFirst: 0, deliveredFirst: 0, requests: [] as URL[] };
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const process = (id: string) => ({ id, name: '', processDefinitionName: id === 'p2' ? 'Review decisions' : 'Order fulfillment', superProcessInstanceId: state.related && id === 'p2' ? 'p1' : '', businessKey: id === 'p2' ? 'Other instance' : 'Historical order', processDefinitionId: 'd1', startTime: '2026-10-01T10:00:00Z', endTime: state.finished ? '2026-10-01T10:02:00Z' : '', durationInMillis: state.finished ? 120000 : null });
   const server = createServer((request, response) => {
@@ -15,7 +15,20 @@ export async function historyServer() {
     if (url.pathname.endsWith('/resourcedata')) { response.setHeader('content-type', 'application/xml'); response.end(xml); return; }
     const definition = { id: 'd1', key: 'deskHistory', version: 1, graphicalNotationDefined: true };
     if (url.pathname.endsWith('/process-definitions/d1')) return send(definition, state.diagramStatus);
-    if (url.pathname.endsWith('/process-definitions')) return page([definition]);
+    if (url.pathname.endsWith('/process-definitions/d2')) return send({ ...definition, id: 'd2', key: 'deskHistory2', version: 2 }, state.diagramStatus);
+    if (url.pathname.endsWith('/process-definitions')) return page(state.alternateDefinition ? [definition, { ...definition, id: 'd2', key: 'deskHistory2', version: 2 }] : [definition]);
+    if (url.searchParams.has('processDefinitionId') && (url.pathname.endsWith('/runtime/executions') || url.pathname.endsWith('/management/deadletter-jobs'))) {
+      state.summaryActive++; state.summaryMaxActive = Math.max(state.summaryMaxActive, state.summaryActive);
+      const status = state.summaryStatus; const count = url.searchParams.get('processDefinitionId') === 'd2' ? 3 : state.summaryCount; const total = state.summaryTotal;
+      const respond = () => {
+        state.summaryActive--;
+        if (status !== 200) return send({}, status);
+        if (url.pathname.endsWith('/management/deadletter-jobs')) return page([]);
+        page(Array.from({ length: count }, (_, i) => ({ id: `e${i}`, activityId: 'HistoryReview', processInstanceId: `p${i}` })), Math.max(count, total));
+      };
+      if (state.summaryDelay) { const timer = setTimeout(() => { timers.delete(timer); respond(); }, state.summaryDelay); timers.add(timer); } else respond();
+      return;
+    }
     if (/runtime\/process-instances\/p[12]$/.test(url.pathname)) return send(process(url.pathname.endsWith('/p2') ? 'p2' : 'p1'), state.runtimeStatus);
     if (url.pathname.endsWith('/runtime/process-instances')) return page(url.searchParams.has('superProcessInstanceId') ? state.related && url.searchParams.get('superProcessInstanceId') === 'p1' ? [process('p2')] : [] : [process('p1')]);
     if (url.pathname.endsWith('/runtime/executions')) return page([{ id: 'e1', processInstanceId: 'p1', activityId: 'HistoryReview' }]);

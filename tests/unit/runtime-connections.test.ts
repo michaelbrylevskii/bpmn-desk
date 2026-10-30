@@ -13,16 +13,18 @@ describe('подключения', () => {
     try {
       const store = new ConnectionStore(dir, secrets); const saved = await store.save({ ...input, rememberSecret: true });
       const file = join(dir, 'connections.json');
-      const legacy = JSON.parse(await readFile(file, 'utf8')) as { items: { profile: { requestTimeoutSeconds?: number } }[] };
-      delete legacy.items[0]!.profile.requestTimeoutSeconds; await writeFile(file, JSON.stringify(legacy));
+      const legacy = JSON.parse(await readFile(file, 'utf8')) as { items: { profile: { requestTimeoutSeconds?: number; autoSummary?: boolean } }[] };
+      delete legacy.items[0]!.profile.requestTimeoutSeconds; delete legacy.items[0]!.profile.autoSummary; await writeFile(file, JSON.stringify(legacy));
       const reopened = new ConnectionStore(dir, secrets); await reopened.load();
       expect(reopened.list().items[0]?.requestTimeoutSeconds).toBe(15);
-      const edit = { ...input, id: saved.id, secret: undefined, rememberSecret: true, requestTimeoutSeconds: 60 };
+      expect(reopened.list().items[0]?.autoSummary).toBe(true);
+      const edit = { ...input, id: saved.id, secret: undefined, rememberSecret: true, requestTimeoutSeconds: 60, autoSummary: false };
       expect(reopened.preview(edit).connection.requestTimeoutSeconds).toBe(60);
       expect(reopened.list().items[0]?.requestTimeoutSeconds).toBe(15);
       await reopened.save(edit);
       const reloaded = new ConnectionStore(dir, secrets); await reloaded.load();
       expect(reloaded.credentials(saved.id).connection.requestTimeoutSeconds).toBe(60);
+      expect(reloaded.credentials(saved.id).connection.autoSummary).toBe(false);
       expect(reloaded.credentials(saved.id).secret).toBe(input.secret);
     } finally { await rm(dir, { recursive: true, force: true }); }
   });
@@ -72,6 +74,9 @@ describe('подключения', () => {
     expect(() => pageQuery({ order: 'anything' })).toThrow();
     expect(() => pageQuery({ latest: 'true' })).toThrow();
     expect(pageQuery({ latest: true }).latest).toBe(true);
+    expect(() => connectionInput({ ...input, autoSummary: 'false' })).toThrow('автосводки');
+    expect(() => pageQuery({ instanceName: 42 })).toThrow();
+    expect(() => pageQuery({ businessKeyLike: '\n' })).toThrow();
   });
   it('проверка черновика не сохраняет профиль и использует секрет только при совпадении адреса и авторизации', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'desk-preview-'));

@@ -29,6 +29,7 @@ public class FixtureSeed {
         var payload = new ObjectMapper().valueToTree(Map.of("nested", Map.of("ready", true), "items", List.of("first", "second")));
         var vars = Map.<String, Object>of("documentId", "DOC-001", "amount", 42, "approved", false, "reviewers", List.of("alice", "bob", "carol"), "payload", payload);
         var review = engine.getRuntimeService().startProcessInstanceById(first.getId(), "REVIEW:DOCUMENT:" + "abcdef0123456789".repeat(12), vars);
+        engine.getRuntimeService().setProcessInstanceName(review.getId(), "Document review");
         var source = new String(getClass().getResourceAsStream("/processes/review.bpmn20.xml").readAllBytes(), StandardCharsets.UTF_8);
         repository.createDeployment().name("Review v2").addString("processes/review.bpmn20.xml", source.replace("Review document", "Review document v2")).deploy();
         var parallel = engine.getRuntimeService().startProcessInstanceByKey("deskParallel", "parallel-review", vars);

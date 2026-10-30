@@ -1,6 +1,6 @@
 export const historyMessages = {
   'Экземпляр': 'Instance',
-  'Назад': 'Back', 'Вперёд': 'Forward', 'Переходы монитора': 'Monitor navigation', 'Версия схемы': 'Process version',
+  'Назад': 'Back', 'Вперёд': 'Forward', 'Переходы монитора': 'Monitor navigation',
   'Нет предыдущих переходов': 'No previous destinations', 'Нет следующих переходов': 'No next destinations',
   'Текущие': 'Current', 'Окончены': 'Ended', 'Без окончания': 'No end', 'Легенда': 'Legend', 'История': 'History',
   'Родитель': 'Parent', 'Дочерний': 'Child',

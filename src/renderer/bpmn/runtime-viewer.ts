@@ -9,15 +9,15 @@ import type { Canvas, Registry } from './services';
 import type { DiagramElement } from './types';
 import { runtimeSvg, type RuntimeMark } from './runtime-export';
 import type { HistorySnapshot } from '../../shared/history';
-import { monitorMarks } from './monitor-marks';
+import { monitorMarks, type MonitorMark } from './monitor-marks';
 
 interface Viewbox { x: number; y: number; width: number; height: number; outer: { width: number; height: number } }
 interface MarkedCanvas extends Canvas { scroll(delta: { dx: number; dy: number }): void; viewbox(box?: { x: number; y: number; width: number; height: number }): Viewbox; addMarker(id: string, marker: string): void; removeMarker(id: string, marker: string): void; findRoot(element: DiagramElement): DiagramElement; setRootElement(element: DiagramElement): void }
-interface Overlays { add(id: string, type: string, options: { position: { bottom: number; right: number }; html: HTMLElement }): void; remove(options: { type: string }): void }
+interface Overlays { add(id: string, type: string, options: { position: { bottom: number; right: number }; html: HTMLElement }): string; remove(options: { type: string } | string): void }
 /** Состояние исполнения — только отображение; XML и команды моделирования не изменяются. */
 export class RuntimeViewer {
   private readonly viewer: Viewer;
-  private marked: { id: string; marker: string }[] = [];
+  private rendered = new Map<string, { mark: MonitorMark; overlay?: string; exported: RuntimeMark }>();
   private marks: RuntimeMark[] = [];
   private fitPending = false;
   private programmaticSelection = false;
@@ -36,7 +36,7 @@ export class RuntimeViewer {
     this.viewer.get<{ on(event: string, listener: (value: { newSelection: DiagramElement[] }) => void): void }>('eventBus').on('selection.changed', event => { if (!this.programmaticSelection) selected((event.newSelection[0]?.labelTarget ?? event.newSelection[0])?.id ?? ''); });
   }
   async import(xml: string): Promise<void> {
-    this.marked = []; await this.viewer.importXML(normalizeDiagram(xml)); this.fit();
+    this.rendered.clear(); this.marks = []; await this.viewer.importXML(normalizeDiagram(xml)); this.fit();
   }
   fit(): void {
     if (!this.container.clientWidth || !this.container.clientHeight) { this.fitPending = true; return; }
@@ -74,25 +74,34 @@ export class RuntimeViewer {
   }
   state(snapshot: InstanceSnapshot | undefined, summary?: DefinitionSummary, history?: HistorySnapshot): string[] {
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); const registry = this.viewer.get<Registry>('elementRegistry');
-    for (const { id, marker } of this.marked) if (registry.get(id)) canvas.removeMarker(id, marker);
-    this.marked = []; this.marks = []; const overlays = this.viewer.get<Overlays>('overlays'); overlays.remove({ type: 'desk-runtime' });
+    const overlays = this.viewer.get<Overlays>('overlays');
+    const next = monitorMarks(snapshot, summary, history); const desired = new Map(next.map(mark => [mark.id, mark]));
+    for (const [id, rendered] of this.rendered) {
+      const mark = desired.get(id);
+      if (mark && mark.marker === rendered.mark.marker && mark.label === rendered.mark.label && mark.flow === rendered.mark.flow) continue;
+      if (registry.get(id)) canvas.removeMarker(id, rendered.mark.marker);
+      if (rendered.overlay) overlays.remove(rendered.overlay);
+      this.rendered.delete(id);
+    }
     const missing: string[] = [];
-    for (const mark of monitorMarks(snapshot, summary, history)) {
+    for (const mark of next) {
+      if (this.rendered.has(mark.id)) continue;
       const element = registry.get(mark.id);
       if (!element) { missing.push(mark.id); continue; }
-      canvas.addMarker(mark.id, mark.marker); this.marked.push({ id: mark.id, marker: mark.marker });
+      canvas.addMarker(mark.id, mark.marker);
       // Стрелки не получают HTML-бейджи; счётчики проходов доступны в журнале.
       if (mark.flow || element.x === undefined || element.y === undefined) {
-        this.marks.push({ id: mark.id, marker: mark.marker, label: '', x: 0, y: 0, badge: false }); continue;
+        this.rendered.set(mark.id, { mark, exported: { id: mark.id, marker: mark.marker, label: '', x: 0, y: 0, badge: false } }); continue;
       }
       const badge = document.createElement('span');
       const style = { 'runtime-unfinished': 'unfinished', 'runtime-visited': 'visited', 'runtime-active': '', 'runtime-failed': 'failed' }[mark.marker];
       badge.className = `runtime-badge ${style}`; badge.dataset.activityId = mark.id;
       if (mark.label) badge.textContent = mark.label;
       else { const dot = document.createElement('span'); dot.className = 'runtime-badge-dot'; badge.append(dot); }
-      overlays.add(mark.id, 'desk-runtime', { position: { bottom: 8, right: 8 }, html: badge });
-      this.marks.push({ id: mark.id, marker: mark.marker, label: mark.label, x: element.x + (element.width ?? 0) - 8, y: element.y + (element.height ?? 0) - 8 });
+      const overlay = overlays.add(mark.id, 'desk-runtime', { position: { bottom: 8, right: 8 }, html: badge });
+      this.rendered.set(mark.id, { mark, overlay, exported: { id: mark.id, marker: mark.marker, label: mark.label, x: element.x + (element.width ?? 0) - 8, y: element.y + (element.height ?? 0) - 8 } });
     }
+    this.marks = [...this.rendered.values()].map(item => item.exported);
     return missing;
   }
   clearSelection(): void {

@@ -6,12 +6,12 @@ export const requestTimeoutSeconds = { default: 15, min: 5, max: 120 } as const;
 export interface Connection {
   id: string; name: string; engine: RuntimeEngine; baseUrl: string; authentication: Authentication;
   username: string; hasSecret: boolean; secretStored: boolean;
-  requestTimeoutSeconds?: number;
+  requestTimeoutSeconds?: number; autoSummary?: boolean;
 }
 export interface ConnectionInput {
   id?: string; name: string; engine: RuntimeEngine; baseUrl: string; authentication: Authentication;
   username: string; secret?: string; rememberSecret: boolean;
-  requestTimeoutSeconds?: number;
+  requestTimeoutSeconds?: number; autoSummary?: boolean;
 }
 export interface Connections { items: Connection[]; secureStorage: boolean }
 export interface PageQuery {

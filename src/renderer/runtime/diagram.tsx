@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Maximize, FileText, Activity, X, LoaderCircle } from 'lucide-react';
+import { Maximize, FileText } from 'lucide-react';
 import type { DeployedDiagram, InstanceSnapshot } from '../../shared/runtime';
 import { errorMessage } from '../../shared/errors';
 import { useI18n } from '../i18n/provider';
@@ -7,13 +7,15 @@ import { CodeEditor } from '../ui/code-editor';
 import { RuntimeViewer } from '../bpmn/runtime-viewer';
 import type { useSummary } from './use-summary';
 import { RuntimeLegend } from './legend';
-import { SummaryNotice } from './summary-notice';
+import { SummaryStatus } from './summary-status';
 import type { HistorySnapshot } from '../../shared/history';
 
 export function RuntimeDiagram({ instances, definition, dark, selected, diagram, snapshot, history, summary, active, summaryEnabled, select, viewer, onReady }: { instances: () => void; definition?: () => void; dark: boolean; selected: string; diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
   summary: ReturnType<typeof useSummary>; active: boolean; summaryEnabled: boolean;
   select: (id: string) => void; viewer: React.RefObject<RuntimeViewer | undefined>; onReady: (value: boolean) => void }) {
   const { t, language, text } = useI18n(); const container = useRef<HTMLDivElement>(null); const currentLanguage = useRef(language); currentLanguage.current = language;
+  const [summaryVisible, setSummaryVisible] = useState(true);
+  useEffect(() => setSummaryVisible(true), [diagram.definition.id]);
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [missing, setMissing] = useState<string[]>([]); const [xml, setXml] = useState(false);
   useEffect(() => {
     if (!container.current) return;
@@ -23,18 +25,13 @@ export function RuntimeDiagram({ instances, definition, dark, selected, diagram,
     void instance.import(diagram.xml).then(() => { if (!disposed) { setReady(true); onReady(true); } }).catch(error => { if (!disposed) setError(errorMessage(error)); });
     return () => { disposed = true; onReady(false); observer.disconnect(); instance.destroy(); if (viewer.current === instance) viewer.current = undefined; };
   }, [diagram.xml, select, viewer, onReady]);
-  useEffect(() => { if (ready) setMissing(viewer.current?.state(snapshot, summaryEnabled ? summary.data : undefined, history) ?? []); }, [snapshot, history, ready, viewer, summaryEnabled, summary.data]);
+  useEffect(() => { if (ready) setMissing(viewer.current?.state(snapshot, summaryEnabled && summaryVisible ? summary.data : undefined, history) ?? []); }, [snapshot, history, ready, viewer, summaryEnabled, summaryVisible, summary.data]);
   return <section className="runtime-diagram"><div className="runtime-diagram-heading"><strong>{diagram.definition.name || diagram.definition.key}</strong><span>v{diagram.definition.version}</span>
     <button className="runtime-link diagram-context-link" onClick={definition ?? instances}>{t(definition ? 'Определение' : 'Экземпляры')}</button>
-    <span className="toolbar-spacer" />{summaryEnabled && <>
-      <button className="button small runtime-summary-button" disabled={!ready || summary.busy || !active} title={t('Два запроса, до 100 записей каждого вида, не дольше 8 секунд.')} onClick={() => void summary.read()}>
-        {summary.busy ? <LoaderCircle size={15} className="spinning" /> : <Activity size={15} />}{t(summary.data ? 'Обновить сводку' : 'Сводка версии')}</button>
-      {(summary.data || summary.error) && <button className="icon-button" title={t('Скрыть сводку')} disabled={summary.busy} onClick={summary.clear}><X size={15} /></button>}
-    </>}<button className="icon-button" title={t('XML схемы')} aria-pressed={xml} onClick={() => setXml(value => !value)}><FileText size={17} /></button>
+    <span className="toolbar-spacer" />{summaryEnabled && <SummaryStatus summary={summary} visible={summaryVisible} toggle={() => setSummaryVisible(value => !value)} active={active} />}
+    <button className="icon-button" title={t('XML схемы')} aria-pressed={xml} onClick={() => setXml(value => !value)}><FileText size={17} /></button>
     <button className="icon-button" title={t('Вписать схему')} onClick={() => viewer.current?.fit()}><Maximize size={17} /></button></div>
-    <RuntimeLegend runtime={!!snapshot} history={!!history} summary={summaryEnabled && !!summary.data} />
-    {summaryEnabled && summary.data && <SummaryNotice summary={summary.data} />}
-    {summaryEnabled && summary.error && <p className="runtime-error" role="alert">{text(summary.error)}</p>}
+    <RuntimeLegend runtime={!!snapshot} history={!!history} summary={summaryEnabled && summaryVisible && !!summary.data} />
     {error && <p className="runtime-error" role="alert">{text(error)}</p>}
     {!diagram.definition.graphicalNotationDefined && <p className="runtime-warning">{t('Схема не содержит координат BPMN DI.')}</p>}
     {!!missing.length && <p className="runtime-warning">{t('На схеме отсутствуют элементы: {ids}', { ids: missing.join(', ') })}</p>}

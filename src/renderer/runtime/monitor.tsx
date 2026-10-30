@@ -21,7 +21,7 @@ import type { MonitorDestination, MonitorVisit } from './navigation-model';
 import { RuntimeFreshness } from './freshness';
 import { MonitorPanel } from './monitor-panel';
 
-export function RuntimeMonitor({ dark, id, connection, revision, active, copy, publish }: { dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
+export function RuntimeMonitor({ autoSummary, dark, id, connection, revision, active, copy, publish }: { autoSummary: boolean; dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
   const { current: location, past, future, dispatch, setHistoryMode } = useMonitorNavigation();
   const definitionId = location?.definitionId ?? ''; const instanceId = location?.instanceId ?? '';
@@ -33,13 +33,14 @@ export function RuntimeMonitor({ dark, id, connection, revision, active, copy, p
   const snapshot = useSnapshot(connection, instanceId, auto, active);
   const history = useHistory(connection, instanceId, auto, active, revision);
   const historyData = history.data; const currentData = snapshot.data;
-  const busy = snapshot.busy || history.busy;
   const refreshSnapshot = snapshot.refresh; const refreshHistory = history.refresh;
-  const refreshState = useCallback(() => { refreshSnapshot(); refreshHistory(); }, [refreshSnapshot, refreshHistory]);
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
   const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
   const desiredDefinition = instanceDefinition ?? definitionId;
-  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && !!desiredDefinition);
+  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && !!desiredDefinition, autoSummary, auto);
+  const busy = snapshot.busy || history.busy || summary.busy;
+  const readSummary = summary.read;
+  const refreshState = useCallback(() => { if (instanceId) { refreshSnapshot(); refreshHistory(); } else readSummary(); }, [instanceId, refreshSnapshot, refreshHistory, readSummary]);
   const [instancesOf, setInstancesOf] = useState<{ definition: Definition }>();
   const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
   const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
@@ -78,13 +79,13 @@ export function RuntimeMonitor({ dark, id, connection, revision, active, copy, p
     else await bridge.saveFile({ name: `${name}.png`, format: 'png', content: await pngFromSvg(svg, format === 'png-white') });
   }, [diagram, ready]);
   const controls = useMemo<MonitorControls>(() => {
-    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId,
+    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!desiredDefinition || !!instanceId,
       canCopy: !!diagram, canExport: !!diagram && ready, refresh: refreshState,
       // Поле тулбара получает новое checked в том же событии, без ожидания passive effect.
       setAuto: auto => { setAuto(auto); publish(id, { ...value, auto }); },
       copy: () => { if (diagram) copy(diagram); }, fit: () => viewer.current?.fit(), exportDiagram };
     return value;
-  }, [id, publish, diagram, auto, busy, refreshState, instanceId, ready, copy, exportDiagram, past, future, move]);
+  }, [id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move]);
   useEffect(() => { publish(id, controls); }, [id, publish, controls]);
   useEffect(() => () => publish(id, undefined), [id, publish]);
   return <div className="runtime-monitor">

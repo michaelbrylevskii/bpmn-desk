@@ -11,6 +11,7 @@ final class HistorySeed {
         repository.createDeployment().name("History v1").addClasspathResource("processes/history.bpmn20.xml").deploy();
         var definition = repository.createProcessDefinitionQuery().processDefinitionKey("deskHistory").singleResult();
         var instance = engine.getRuntimeService().startProcessInstanceById(definition.getId(), "HISTORY:ORDER:123", Map.of("round", 0, "approved", false));
+        engine.getRuntimeService().setProcessInstanceName(instance.getId(), "Historical order review");
         for (int round = 1; round <= 2; round++) {
             var task = engine.getTaskService().createTaskQuery().processInstanceId(instance.getId()).taskDefinitionKey("HistoryReview").singleResult();
             engine.getTaskService().setAssignee(task.getId(), round == 1 ? "alice" : "bob");

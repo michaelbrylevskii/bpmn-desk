@@ -11,14 +11,16 @@ export function ConnectionForm({ connection, secure, busy, save, test, edited, r
   const [auth, setAuth] = useState<Authentication>(connection?.authentication ?? 'basic');
   const [username, setUsername] = useState(connection?.username ?? ''); const [secret, setSecret] = useState('');
   const [remember, setRemember] = useState(secure && !!connection?.secretStored);
+  const [autoSummary, setAutoSummary] = useState(connection?.autoSummary !== false);
   const [timeout, setTimeout] = useState(String(connection?.requestTimeoutSeconds ?? requestTimeoutSeconds.default));
-  const input = (): ConnectionInput => ({ id: connection?.id, name, baseUrl: url, engine: 'flowable', authentication: auth, username, secret: secret || undefined, rememberSecret: remember, requestTimeoutSeconds: Number(timeout) });
+  const input = (): ConnectionInput => ({ id: connection?.id, name, baseUrl: url, engine: 'flowable', authentication: auth, username, secret: secret || undefined, rememberSecret: remember, requestTimeoutSeconds: Number(timeout), autoSummary });
   return <form className="connection-form" onInput={edited} onSubmit={event => { event.preventDefault(); save(input()); }}>
     <fieldset disabled={busy} className="connection-fields">
       <label>{t('Название подключения')}<input required maxLength={500} value={name} onChange={event => setName(event.target.value)} /></label>
       <label>{t('Движок')}<Select label={t('Движок')} value="flowable" onChange={() => undefined} options={[{ value: 'flowable', label: 'Flowable' }, { value: 'camunda7', label: 'Camunda 7', disabled: true }]} /></label>
       <label>{t('Адрес REST API')}<input required type="url" placeholder="http://localhost:8080/process-api/" maxLength={2000} value={url} onChange={event => setUrl(event.target.value)} /></label>
       <label>{t('Таймаут запроса, секунды')}<input required type="number" min={requestTimeoutSeconds.min} max={requestTimeoutSeconds.max} step={1} value={timeout} onChange={event => setTimeout(event.target.value)} /></label>
+      <label className="runtime-check"><input type="checkbox" checked={autoSummary} onChange={event => setAutoSummary(event.target.checked)} />{t('Загружать сводку определения автоматически')}</label>
       <label>{t('Авторизация')}<Select label={t('Авторизация')} value={auth} onChange={value => { setAuth(value as Authentication); edited(); }} options={[
         { value: 'none', label: t('Без авторизации') }, { value: 'basic', label: 'Basic' }, { value: 'bearer', label: 'Bearer' }]} /></label>
       {auth === 'basic' && <label>{t('Имя пользователя')}<input required autoComplete="off" value={username} onChange={event => setUsername(event.target.value)} /></label>}
