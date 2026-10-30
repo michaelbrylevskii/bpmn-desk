@@ -1,4 +1,5 @@
 export const runtimeMessages = {
+  'Секции бейджа: история — серая, runtime — зелёная, ошибки — красная. Значения могут пересекаться и не складываются.': 'Badge sections: history is grey, runtime is green, errors are red. Values can overlap and must not be added together.',
   'Сводка загрузится после отображения схемы.': 'The summary will load after the diagram is displayed.',
   'Сводка выключена': 'Summary is off', 'Записи истории': 'History records',
   'Обновление и повтор после ошибки — в верхней панели.': 'Refresh and retry from the top toolbar.',

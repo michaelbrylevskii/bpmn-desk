@@ -9,14 +9,14 @@ it('разделяет текущую позицию и посещения, по
   const summary = state();
   expect(summaryInstances(summary, 'Review', 'runtime').map(item => item.id)).toEqual(['p1']);
   expect(summaryInstances(summary, 'Review', 'history').map(item => item.id)).toEqual(['p1', 'p2']);
-  expect(definitionMarks(summary)).toEqual([{ id: 'Review', marker: 'runtime-active', flow: false, label: '1 · ◷ 2' }]);
+  expect(definitionMarks(summary)).toEqual([{ id: 'Review', marker: 'runtime-active', flow: false, label: '◷ 2 · ● 1', sections: [{ kind: 'history', label: '◷ 2' }, { kind: 'runtime', label: '● 1' }] }]);
   summary.executions.data = []; summary.activities.complete = false;
   expect(definitionMarks(summary)[0]).toMatchObject({ marker: 'runtime-visited', label: '◷ 2+' });
 });
 it('сохраняет приоритет dead-letter и не считает записи без ID экземпляра', () => {
   const summary = state(); summary.activities.data.push(activity('d', ''));
   summary.deadLetters.data.push({ id: 'j', elementId: 'Review', processInstanceId: 'p1', executionId: 'e', processDefinitionId: 'd1', elementName: '', exceptionMessage: '', retries: 0, createTime: '', tenantId: '' });
-  expect(definitionMarks(summary)[0]).toMatchObject({ marker: 'runtime-failed', label: '! 1 · ◷ 2+' });
+  expect(definitionMarks(summary)[0]).toMatchObject({ marker: 'runtime-failed', label: '◷ 2+ · ● 1 · ! 1', sections: [{ kind: 'history', label: '◷ 2+' }, { kind: 'runtime', label: '● 1' }, { kind: 'failed', label: '! 1' }] });
 });
 it('мигрирует явно выключенную сводку и сохраняет приоритет глобального значения', () => {
   expect(summaryPreference(null, false)).toBe(false); expect(summaryPreference(null)).toBe(true);

@@ -22,7 +22,7 @@ test('сводка точной версии: multi-instance считается 
   const { app, page, directory } = await launch();
   try {
     await definition(page, 'deskParallel');
-    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1 · ◷ 1');
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('◷ 1 · ● 1');
     await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'ready');
     await page.locator('.runtime-canvas .djs-element[data-element-id="ReviewMany"] .djs-hit').click();
     await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(1);
@@ -30,12 +30,12 @@ test('сводка точной версии: multi-instance считается 
     await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
     await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
     await definition(page, 'deskParallel');
-    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1 · ◷ 1');
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('◷ 1 · ● 1');
     await page.getByRole('button', { name: 'Version summary', exact: true }).click(); await expect(page.locator('.runtime-badge')).toHaveCount(0);
     await definition(page, 'deskFailure');
     await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-pressed', 'false');
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
-    await expect(page.locator('.runtime-badge.failed[data-activity-id="Delivery"]')).toHaveText('! 1');
+    await expect(page.locator('.runtime-badge.failed[data-activity-id="Delivery"]')).toHaveText('● 1 · ! 1');
     const filePath = resolve(directory, 'definition-summary.svg');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, filePath);
     await page.getByTitle('Export SVG', { exact: true }).click();
@@ -92,7 +92,7 @@ test('ограниченная сводка и медленный сервер �
     await savedSummaryOff(page);
     await definition(page, 'deskReview', 1); expect(summaryRequests()).toHaveLength(0);
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
-    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('25+');
+    await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('● 25+');
     await page.getByRole('button', { name: 'Version summary', exact: true }).blur();
     await page.getByRole('button', { name: 'Version summary', exact: true }).focus();
     await expect(page.getByRole('tooltip')).toContainText('100/1000000');

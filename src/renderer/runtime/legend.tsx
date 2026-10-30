@@ -6,7 +6,7 @@ export function RuntimeLegend({ runtime, history, summary }: { runtime: boolean;
   if (!runtime && !history && !summary) return null;
   const items = [
     ...runtime || summary ? [
-      { style: 'active', label: runtime ? t('Текущие') : t('Экземпляры у элементов'), description: t(runtime ? '✓ — окончание зафиксировано; ● — текущие executions; ! — dead-letter jobs.' : 'Разные экземпляры у элемента, а не executions.') },
+      { style: 'active', label: runtime ? t('Текущие') : t('Экземпляры у элементов'), description: `${t(runtime ? '✓ — окончание зафиксировано; ● — текущие executions; ! — dead-letter jobs.' : 'Разные экземпляры у элемента, а не executions.')} ${t('Секции бейджа: история — серая, runtime — зелёная, ошибки — красная. Значения могут пересекаться и не складываются.')}` },
       { style: 'failed', label: 'Dead-letter', description: t(runtime ? 'Задания с ошибкой' : 'Экземпляры с dead-letter') },
     ] : [],
     ...summary ? [{ style: 'visited', label: t('История'), description: t('◷ — разные экземпляры с записью шага в выборке истории. Это не признак успешного завершения.') }] : [],

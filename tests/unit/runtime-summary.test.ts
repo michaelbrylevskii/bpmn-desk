@@ -68,18 +68,18 @@ const execution = (id: string, processInstanceId: string, activityId = 'Review')
 const summary = (): DefinitionSummary => ({ executions: { data: [execution('e1', 'p1'), execution('e2', 'p1'), execution('e3', 'p2')], total: 3, complete: true }, deadLetters: { data: [], total: 0, complete: true }, activities: { data: [], total: 0, complete: true }, capturedAt: '' });
 
 it('не завышает число экземпляров из-за multi-instance и обозначает нижнюю границу при усечении', () => {
-  const state = summary(); expect(summaryBadges(state)).toEqual([{ id: 'Review', failed: false, label: '2' }]);
-  state.executions.complete = false; expect(summaryBadges(state)[0]?.label).toBe('2+');
-  state.executions.data.push(execution('e4', '')); expect(summaryBadges(state)[0]?.label).toBe('2+');
+  const state = summary(); expect(summaryBadges(state)).toEqual([{ id: 'Review', failed: false, label: '● 2', sections: [{ kind: 'runtime', label: '● 2' }] }]);
+  state.executions.complete = false; expect(summaryBadges(state)[0]?.label).toBe('● 2+');
+  state.executions.data.push(execution('e4', '')); expect(summaryBadges(state)[0]?.label).toBe('● 2+');
 });
 
 it('считает разные экземпляры с ошибкой, использует известный execution и не выдумывает позицию', () => {
   const state = summary();
   const job = { id: 'j1', processInstanceId: 'p1', processDefinitionId: 'd1', executionId: 'e1', elementId: '', elementName: '', exceptionMessage: '', retries: 0, createTime: '', tenantId: '' };
   state.deadLetters.data = [job, { ...job, id: 'j2' }]; state.deadLetters.total = 2;
-  expect(summaryBadges(state)[0]).toEqual({ id: 'Review', failed: true, label: '! 1' });
+  expect(summaryBadges(state)[0]).toEqual({ id: 'Review', failed: true, label: '● 2 · ! 1', sections: [{ kind: 'runtime', label: '● 2' }, { kind: 'failed', label: '! 1' }] });
   state.deadLetters.data.push({ ...job, id: 'j3', executionId: 'unknown' });
-  expect(summaryBadges(state)[0]?.label).toBe('! 1+'); expect(summaryBadges(state)).toHaveLength(1);
+  expect(summaryBadges(state)[0]?.label).toBe('● 2 · ! 1+'); expect(summaryBadges(state)).toHaveLength(1);
 });
 
 for (const timeout of [5, 120]) it(`сводка использует таймаут подключения ${timeout} с вместо фиксированных 8 с`, async () => {

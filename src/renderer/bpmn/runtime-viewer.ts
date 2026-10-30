@@ -1,3 +1,4 @@
+import { badgeColors, sectionWidth, sectionZigzag } from './badge-sections';
 import Viewer from 'bpmn-js/lib/NavigatedViewer';
 import OutlineModule from 'diagram-js/lib/features/outline';
 import { configureDiagramTheme, rendererColors } from './diagram-theme';
@@ -78,7 +79,7 @@ export class RuntimeViewer {
     const next = monitorMarks(snapshot, summary, history); const desired = new Map(next.map(mark => [mark.id, mark]));
     for (const [id, rendered] of this.rendered) {
       const mark = desired.get(id);
-      if (mark && mark.marker === rendered.mark.marker && mark.label === rendered.mark.label && mark.flow === rendered.mark.flow) continue;
+      if (mark && mark.marker === rendered.mark.marker && mark.label === rendered.mark.label && mark.flow === rendered.mark.flow && JSON.stringify(mark.sections) === JSON.stringify(rendered.mark.sections)) continue;
       if (registry.get(id)) canvas.removeMarker(id, rendered.mark.marker);
       if (rendered.overlay) overlays.remove(rendered.overlay);
       this.rendered.delete(id);
@@ -96,10 +97,20 @@ export class RuntimeViewer {
       const badge = document.createElement('span');
       const style = { 'runtime-unfinished': 'unfinished', 'runtime-visited': 'visited', 'runtime-active': '', 'runtime-failed': 'failed' }[mark.marker];
       badge.className = `runtime-badge ${style}`; badge.dataset.activityId = mark.id;
-      if (mark.label) badge.textContent = mark.label;
+      if (mark.sections?.length) {
+        badge.classList.add('segmented'); badge.setAttribute('role', 'img'); badge.setAttribute('aria-label', mark.label);
+        mark.sections.forEach((section, index) => {
+          if (index) { const separator = document.createElement('span'); separator.hidden = true; separator.textContent = ' · '; badge.append(separator); }
+          const part = document.createElement('span'); part.className = `runtime-badge-section ${section.kind}`; part.dataset.source = section.kind;
+          part.setAttribute('aria-hidden', 'true'); part.textContent = section.label; part.style.backgroundColor = badgeColors[section.kind]; part.style.width = `${sectionWidth(section.label)}px`;
+          if (index < mark.sections!.length - 1) part.style.clipPath = `polygon(0 0, ${sectionZigzag}, 0 100%)`;
+          part.style.zIndex = String(mark.sections!.length - index); badge.append(part);
+        });
+      }
+      else if (mark.label) badge.textContent = mark.label;
       else { const dot = document.createElement('span'); dot.className = 'runtime-badge-dot'; badge.append(dot); }
       const overlay = overlays.add(mark.id, 'desk-runtime', { position: { bottom: 8, right: 8 }, html: badge });
-      this.rendered.set(mark.id, { mark, overlay, exported: { id: mark.id, marker: mark.marker, label: mark.label, x: element.x + (element.width ?? 0) - 8, y: element.y + (element.height ?? 0) - 8 } });
+      this.rendered.set(mark.id, { mark, overlay, exported: { id: mark.id, marker: mark.marker, label: mark.label, sections: mark.sections, x: element.x + (element.width ?? 0) - 8, y: element.y + (element.height ?? 0) - 8 } });
     }
     this.marks = [...this.rendered.values()].map(item => item.exported);
     return missing;

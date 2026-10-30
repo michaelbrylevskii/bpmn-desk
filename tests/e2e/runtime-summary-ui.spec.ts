@@ -11,7 +11,7 @@ test('автосводка компактна; обновления сохран
     const status = page.getByRole('button', { name: 'Version summary', exact: true });
     await expect(status).toHaveAttribute('data-summary-state', 'ready');
     await expect(page.locator('.runtime-summary-notice')).toHaveCount(0);
-    const badge = page.locator('.runtime-badge[data-activity-id="HistoryReview"]'); await expect(badge).toHaveText('20');
+    const badge = page.locator('.runtime-badge[data-activity-id="HistoryReview"]'); await expect(badge).toHaveText('● 20');
     await status.focus(); await expect(page.getByRole('tooltip')).toContainText('20/20');
     await expect(page.getByRole('tooltip')).not.toContainText('Green'); await page.keyboard.press('Escape');
     const node = page.locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]'); await node.locator('.djs-hit').click();
@@ -22,7 +22,7 @@ test('автосводка компактна; обновления сохран
     const body = page.locator('.runtime-summary-details'); await body.evaluate(element => { element.scrollTop = 50; }); const scroll = await body.evaluate(element => element.scrollTop); expect(scroll).toBeGreaterThan(0);
     api.state.summaryDelay = 150;
     await page.getByTitle('Refresh state', { exact: true }).click();
-    await expect(status).toHaveAttribute('data-summary-state', 'loading'); await expect(badge).toHaveText('20');
+    await expect(status).toHaveAttribute('data-summary-state', 'loading'); await expect(badge).toHaveText('● 20');
     await expect(status).toHaveAttribute('data-summary-state', 'ready');
     expect(await originalBadge!.evaluate(element => element.isConnected)).toBe(true); expect(await originalNode!.evaluate(element => element.isConnected)).toBe(true);
     expect(await body.evaluate(element => element.scrollTop)).toBe(scroll); expect(await viewport.getAttribute('transform')).toBe(transform);
@@ -33,12 +33,12 @@ test('автосводка компактна; обновления сохран
     await expect(status).toHaveAttribute('data-summary-state', 'ready');
     expect(await originalBadge!.evaluate(element => element.isConnected)).toBe(true);
     await page.getByLabel('Refresh every 5 seconds').uncheck(); await expect(status).toHaveAttribute('data-summary-state', 'ready');
-    const loaded = requests(); await status.click(); await expect(badge).toHaveCount(0); await status.click(); await expect(badge).toHaveText('20'); await expect(status).toHaveAttribute('data-summary-state', 'ready'); expect(requests()).toBe(loaded + 3);
+    const loaded = requests(); await status.click(); await expect(badge).toHaveCount(0); await status.click(); await expect(badge).toHaveText('● 20'); await expect(status).toHaveAttribute('data-summary-state', 'ready'); expect(requests()).toBe(loaded + 3);
     api.state.summaryStatus = 503; await page.getByTitle('Refresh state', { exact: true }).click();
-    await expect(status).toHaveAttribute('data-summary-state', 'error'); await expect(badge).toHaveText('20');
+    await expect(status).toHaveAttribute('data-summary-state', 'error'); await expect(badge).toHaveText('● 20');
     await status.focus(); await expect(page.getByRole('tooltip')).toContainText('503'); await expect(page.getByRole('tooltip')).toContainText('stale'); await page.keyboard.press('Escape'); await status.blur();
     api.state.summaryStatus = 200; api.state.summaryTotal = 1000000;
-    await page.getByTitle('Refresh state', { exact: true }).click(); await expect(status).toHaveAttribute('data-summary-state', 'partial'); await expect(badge).toHaveText('20+');
+    await page.getByTitle('Refresh state', { exact: true }).click(); await expect(status).toHaveAttribute('data-summary-state', 'partial'); await expect(badge).toHaveText('● 20+');
     await status.focus(); await expect(page.getByRole('tooltip')).toContainText('20/1000000'); await expect(page.getByRole('tooltip')).toContainText('Partial sample');
     await page.screenshot({ path: 'test-results/runtime-summary-status.png' });
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
@@ -70,7 +70,7 @@ test('смена определения не перекрывает сводки
     const status = page.getByRole('button', { name: 'Version summary', exact: true });
     await expect(status).toHaveAttribute('data-summary-state', 'loading');
     await expect(page.locator('.runtime-badge')).toHaveCount(0);
-    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('3');
+    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('● 3');
     await expect(status).toHaveAttribute('data-summary-state', 'ready'); expect(api.state.summaryMaxActive).toBe(3);
     await expect(page.locator('.runtime-diagram-heading')).toContainText('v2');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }

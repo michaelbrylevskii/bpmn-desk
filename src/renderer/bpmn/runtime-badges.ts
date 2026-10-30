@@ -1,7 +1,8 @@
+import { badgeLabel, type BadgeSection } from './badge-sections';
 import { sampleCount } from './sample-count';
 import type { DefinitionSummary, InstanceSnapshot } from '../../shared/runtime';
 
-export interface RuntimeBadge { id: string; failed: boolean; label: string }
+export interface RuntimeBadge { id: string; failed: boolean; label: string; sections: BadgeSection[] }
 
 export function instanceBadges(snapshot: InstanceSnapshot): RuntimeBadge[] {
   const counts = new Map<string, number>(); const failed = new Map<string, number>();
@@ -11,8 +12,12 @@ export function instanceBadges(snapshot: InstanceSnapshot): RuntimeBadge[] {
     const id = job.elementId || snapshot.executions.find(item => item.id === job.executionId)?.activityId;
     if (id) failed.set(id, (failed.get(id) ?? 0) + 1);
   }
-  return [...new Set([...snapshot.activeIds, ...failed.keys()])].map(id => ({ id, failed: failed.has(id),
-    label: failed.has(id) ? `! ${failed.get(id)}` : counts.has(id) ? String(counts.get(id)) : '' }));
+  return [...new Set([...snapshot.activeIds, ...failed.keys()])].map(id => {
+    const sections: BadgeSection[] = [];
+    if (snapshot.activeIds.includes(id)) sections.push({ kind: 'runtime', label: `●${counts.has(id) ? ` ${counts.get(id)}` : ''}` });
+    if (failed.has(id)) sections.push({ kind: 'failed', label: `! ${failed.get(id)}` });
+    return { id, failed: failed.has(id), sections, label: badgeLabel(sections) };
+  });
 }
 
 /** У версии считаются разные экземпляры у элемента, а не executions. Пустой ID не считается экземпляром. */
@@ -32,6 +37,10 @@ export function summaryBadges(summary: DefinitionSummary): RuntimeBadge[] {
   }
   const incompleteExecutions = !summary.executions.complete || summary.executions.data.some(item => !item.processInstanceId);
   const count = (value: number, incomplete: boolean) => sampleCount(value, !incomplete);
-  return [...new Set([...active.keys(), ...failed.keys()])].map(id => ({ id, failed: failed.has(id),
-    label: failed.has(id) ? `! ${count(failed.get(id)!.size, incompleteJobs)}` : count(active.get(id)!.size, incompleteExecutions) }));
+  return [...new Set([...active.keys(), ...failed.keys()])].map(id => {
+    const sections: BadgeSection[] = [];
+    if (active.has(id)) sections.push({ kind: 'runtime', label: `● ${count(active.get(id)!.size, incompleteExecutions)}` });
+    if (failed.has(id)) sections.push({ kind: 'failed', label: `! ${count(failed.get(id)!.size, incompleteJobs)}` });
+    return { id, failed: failed.has(id), sections, label: badgeLabel(sections) };
+  });
 }
