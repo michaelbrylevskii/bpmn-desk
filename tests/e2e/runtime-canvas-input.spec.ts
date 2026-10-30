@@ -20,15 +20,16 @@ test('колёсико над бейджем прокручивает холст
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       const modifier = gesture === 'shift' ? 'Shift' : gesture === 'zoom' ? 'Control' : undefined;
       if (modifier) await page.keyboard.down(modifier);
-      try { await page.mouse.wheel(gesture === 'horizontal' ? 40 : 0, gesture === 'horizontal' ? 0 : gesture === 'zoom' ? -60 : 40); }
-      finally { if (modifier) await page.keyboard.up(modifier); }
-      if (gesture === 'zoom') await expect.poll(async () => (await matrix()).scale).toBeGreaterThan(before.scale);
-      else {
-        const axis = gesture === 'vertical' ? 'y' : 'x'; const other = axis === 'y' ? 'x' : 'y';
-        await expect.poll(async () => Math.abs((await matrix())[axis] - before[axis])).toBeGreaterThan(10);
-        expect((await matrix())[other]).toBeCloseTo(before[other], 3);
-        expect((await matrix()).scale).toBeCloseTo(before.scale, 5);
-      }
+      try {
+        await page.mouse.wheel(gesture === 'horizontal' ? 40 : 0, gesture === 'horizontal' ? 0 : gesture === 'zoom' ? -60 : 40);
+        if (gesture === 'zoom') await expect.poll(async () => (await matrix()).scale).toBeGreaterThan(before.scale);
+        else {
+          const axis = gesture === 'vertical' ? 'y' : 'x'; const other = axis === 'y' ? 'x' : 'y';
+          await expect.poll(async () => Math.abs((await matrix())[axis] - before[axis])).toBeGreaterThan(10);
+          expect((await matrix())[other]).toBeCloseTo(before[other], 3);
+          expect((await matrix()).scale).toBeCloseTo(before.scale, 5);
+        }
+      } finally { if (modifier) await page.keyboard.up(modifier); }
     }
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
