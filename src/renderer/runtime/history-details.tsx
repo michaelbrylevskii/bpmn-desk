@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { InstanceRelationships } from './relationships';
 import type { HistorySnapshot } from '../../shared/history';
 import { useI18n } from '../i18n/provider';
 import { Variables } from './variables';
 import { HistoryList } from './history-list';
 import { historyDuration, historyTime } from './history-format';
 
-export function HistoryDetails({ snapshot, xml, selected, focus, openInstance }: {
-  snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string) => void;
+export function HistoryDetails({ connection, snapshot, xml, selected, focus, openInstance }: {
+  connection: string; snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string) => void;
 }) {
   const { t, text, language } = useI18n(); const [tab, setTab] = useState<'history' | 'variables'>('history');
   const process = snapshot.instance;
@@ -21,11 +21,7 @@ export function HistoryDetails({ snapshot, xml, selected, focus, openInstance }:
         {process.deleteReason && <><dt>{t('Причина прекращения')}</dt><dd>{process.deleteReason}</dd></>}
       </dl>
       <details className="history-metadata"><summary>{t('Подробности экземпляра')}</summary><dl><dt>{t('ID определения')}</dt><dd><code>{process.processDefinitionId}</code></dd><dt>{t('Tenant ID')}</dt><dd>{process.tenantId || '—'}</dd></dl></details>
-      {(process.superProcessInstanceId || snapshot.children.data.length > 0 || !snapshot.children.complete) && <details className="instance-relationships"><summary>{t('Связанные экземпляры')}</summary>
-        {process.superProcessInstanceId && <button className="related-instance" onClick={() => openInstance(process.superProcessInstanceId)}><ArrowRight size={14} /><span>{t('Родительский экземпляр')}: <code>{process.superProcessInstanceId}</code></span></button>}
-        {snapshot.children.data.map(child => <button key={child.id} className="related-instance" onClick={() => openInstance(child.id)}><ArrowRight size={14} /><span><strong>{child.businessKey || child.name || child.id}</strong><code>{child.id}</code></span></button>)}
-        {!snapshot.children.complete && <p className="runtime-warning">{snapshot.children.error ? text(snapshot.children.error) : t('Список дочерних экземпляров неполный.')}</p>}
-      </details>}
+      <InstanceRelationships connection={connection} parent={process.superProcessInstanceId} children={snapshot.children.data} incomplete={!snapshot.children.complete} open={openInstance} />
     </div>
     <nav className="runtime-tabs"><button aria-pressed={tab === 'history'} onClick={() => setTab('history')}>{t('История выполнения')}</button><button aria-pressed={tab === 'variables'} onClick={() => setTab('variables')}>{t('Сохранённые переменные')}</button></nav>
     <div className="runtime-detail-body">{tab === 'history' ? <HistoryList snapshot={snapshot} xml={xml} selected={selected} focus={focus} openInstance={openInstance} /> : <>

@@ -58,6 +58,7 @@ export interface RuntimeBridge {
   history(id: string, instanceId: string): Promise<HistorySnapshot>;
   deadLetters(id: string, query: PageQuery): Promise<RuntimePage<DeadLetterJob>>;
   diagram(id: string, definitionId: string): Promise<DeployedDiagram>;
+  instance(id: string, instanceId: string): Promise<Instance>;
   snapshot(id: string, instanceId: string): Promise<InstanceSnapshot>;
   summary(id: string, definitionId: string): Promise<DefinitionSummary>;
   executionVariables(id: string, executionId: string): Promise<Variable[]>;
@@ -67,5 +68,5 @@ export const runtimeChannels = {
   connections: 'runtime:connections', save: 'runtime:save-connection', delete: 'runtime:delete-connection', test: 'runtime:test', testDraft: 'runtime:test-draft',
   definitions: 'runtime:definitions', instances: 'runtime:instances', deadLetters: 'runtime:dead-letters',
   historicInstances: 'runtime:historic-instances', history: 'runtime:history',
-  diagram: 'runtime:diagram', snapshot: 'runtime:snapshot', summary: 'runtime:summary', executionVariables: 'runtime:execution-variables', stacktrace: 'runtime:stacktrace',
+  instance: 'runtime:instance', diagram: 'runtime:diagram', snapshot: 'runtime:snapshot', summary: 'runtime:summary', executionVariables: 'runtime:execution-variables', stacktrace: 'runtime:stacktrace',
 } as const;

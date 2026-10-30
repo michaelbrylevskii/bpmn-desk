@@ -30,7 +30,7 @@ export function InstanceDetails({ connection, snapshot, selected, focus, openIns
         <dt>{t('ID определения')}</dt><dd>{process.processDefinitionId}</dd><dt>{t('Tenant ID')}</dt><dd>{process.tenantId || '—'}</dd>
         <dt>{t('Начат')}</dt><dd>{process.startTime ? new Date(process.startTime).toLocaleString() : '—'}</dd></dl>
       {!!snapshot.deadLetters.length && <button className="runtime-error runtime-job-alert" onClick={() => { setTab('jobs'); jobsTab.current?.focus(); jobsTab.current?.scrollIntoView({ block: 'nearest' }); }}><span>{t('Есть dead-letter jobs')}: {snapshot.deadLetters.length}</span><ArrowRight size={16} aria-hidden="true" /></button>}
-      <InstanceRelationships snapshot={snapshot} open={openInstance} />
+      <InstanceRelationships connection={connection} parent={process.superProcessInstanceId} children={snapshot.children} incomplete={snapshot.unavailable.includes('children')} open={openInstance} />
       {selected && <p className="runtime-selection">{t('Выбранный элемент')}: <code>{selected}</code></p>}
     </div>
     <nav className="runtime-tabs">{([{ id: 'variables', label: 'Переменные процесса' }, { id: 'executions', label: 'Executions' }, { id: 'jobs', label: 'Dead-letter jobs' }, { id: 'tasks', label: 'Задачи' }] as const).map(item =>

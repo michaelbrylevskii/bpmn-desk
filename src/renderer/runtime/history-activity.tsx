@@ -1,10 +1,12 @@
-import { ArrowRight, Check, Clock3 } from 'lucide-react';
+import { Check, Clock3 } from 'lucide-react';
+import type { Instance } from '../../shared/runtime';
+import { RelatedInstance } from './relationships';
 import type { HistoricActivity } from '../../shared/history';
 import { useI18n } from '../i18n/provider';
 import { historyDuration, historyTime } from './history-format';
 
-export function HistoryActivity({ activity, index, count, complete, selected, choose, openInstance }: {
-  activity: HistoricActivity; index: number; count: number; complete: boolean; selected: boolean;
+export function HistoryActivity({ activity, child, index, count, complete, selected, choose, openInstance }: {
+  child?: Instance; activity: HistoricActivity; index: number; count: number; complete: boolean; selected: boolean;
   choose: () => void; openInstance: (id: string) => void;
 }) {
   const { t, language } = useI18n();
@@ -27,6 +29,6 @@ export function HistoryActivity({ activity, index, count, complete, selected, ch
       <dt>{t('ID выполнения шага')}</dt><dd><code>{activity.id}</code></dd>
       <dt>{t('ID execution')}</dt><dd><code>{activity.executionId || '—'}</code></dd>
       {activity.taskId && <><dt>{t('ID задачи')}</dt><dd><code>{activity.taskId}</code></dd></>}
-    </dl>{activity.calledProcessInstanceId && <button className="related-instance" onClick={() => openInstance(activity.calledProcessInstanceId)}><ArrowRight size={14} /><span>{t('Дочерний экземпляр: {id}', { id: activity.calledProcessInstanceId })}</span></button>}</div>}
+    </dl>{activity.calledProcessInstanceId && <RelatedInstance role="child" id={activity.calledProcessInstanceId} instance={child} open={openInstance} />}</div>}
   </article>;
 }

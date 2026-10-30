@@ -28,7 +28,7 @@ export function HistoryList({ snapshot, xml, selected, focus, openInstance }: {
     const rows = matching.filter(item => parentOf(item.activityId) === parent);
     const groups = structure.groups.filter(group => group.parent === parent && groupVisible(group.id));
     const entries = [
-      ...rows.map(item => ({ key: item.id, time: Date.parse(item.startTime) || 0, content: <HistoryActivity key={item.id} activity={item} index={indices.get(item.id) ?? 1} count={counts.get(item.activityId) ?? 1} complete={snapshot.activities.complete}
+      ...rows.map(item => ({ key: item.id, time: Date.parse(item.startTime) || 0, content: <HistoryActivity key={item.id} activity={item} child={snapshot.children.data.find(child => child.id === item.calledProcessInstanceId)} index={indices.get(item.id) ?? 1} count={counts.get(item.activityId) ?? 1} complete={snapshot.activities.complete}
         selected={choice === item.id && (!selected || selected === item.activityId)} choose={() => { setChoice(previous => previous === item.id ? '' : item.id); focus(item.activityId); }} openInstance={openInstance} /> })),
       ...groups.map(group => ({ key: group.id, time: Math.min(...activities.filter(item => within(item.activityId, group.id)).map(item => Date.parse(item.startTime) || 0)),
         content: <details className="history-group" key={group.id} open><summary>{group.name}<code>{group.id}</code></summary>{render(group.id)}</details> })),

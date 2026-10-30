@@ -1,6 +1,6 @@
-import type { DeployedDiagram, InstanceSnapshot, PageQuery, RuntimePage, Variable } from '../../shared/runtime';
+import type { DeployedDiagram, Instance, InstanceSnapshot, PageQuery, RuntimePage, Variable } from '../../shared/runtime';
 import { errorMessage } from '../../shared/errors';
-import { RuntimeHttp } from './http';
+import { RuntimeHttp, RuntimeHttpError } from './http';
 import * as decode from './flowable-decode';
 import { identifier } from './validation';
 import { readDefinitionSummary } from './definition-summary';
@@ -29,6 +29,20 @@ export class FlowableReader {
     const xml = await this.http.get(`repository/process-definitions/${key(id)}/resourcedata`, {}, false);
     if (typeof xml !== 'string') throw new Error('API вернул некорректную схему.');
     return { definition, xml };
+  }
+  async instance(id: string): Promise<Instance> {
+    const path = key(id);
+    let instance: Instance;
+    try { instance = decode.instance(await this.http.get(`runtime/process-instances/${path}`)); }
+    catch (error) {
+      if (!(error instanceof RuntimeHttpError) || error.status !== 404) throw error;
+      instance = decode.instance(await this.http.get(`history/historic-process-instances/${path}`));
+    }
+    if (!instance.processDefinitionName && instance.processDefinitionId) {
+      try { instance.processDefinitionName = decode.definition(await this.http.get(`repository/process-definitions/${key(instance.processDefinitionId)}`)).name; }
+      catch { /* Удалённый deployment не должен скрывать ссылку на экземпляр. */ }
+    }
+    return instance;
   }
   async snapshot(id: string): Promise<InstanceSnapshot> {
     const process = decode.instance(await this.http.get(`runtime/process-instances/${key(id)}`));

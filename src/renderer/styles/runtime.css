@@ -31,7 +31,7 @@
 .runtime-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .runtime-xml { flex: 0 1 220px; min-height: 100px; resize: none; border-radius: 0; font: 11px/1.5 ui-monospace, monospace; white-space: pre; }
 .runtime-freshness { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); }
-.runtime-details { width: 350px; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0; min-width: 0; }
+.runtime-details { width: clamp(330px, 30vw, 430px); flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0; min-width: 0; }
 .runtime-instance { padding: 16px; border-bottom: 1px solid var(--border); font-size: 12px; }.runtime-instance > strong { overflow-wrap: anywhere; display: block; font-size: 15px; margin-bottom: 8px; }.runtime-instance > code { display: block; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
 .runtime-instance dl, .runtime-job dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 11px; margin: 15px 0; }.runtime-instance dt, .runtime-job dt { color: var(--muted); }.runtime-instance dd, .runtime-job dd { margin: 0; overflow-wrap: anywhere; }
 .runtime-details .runtime-tabs { display: grid; grid-template-columns: 1fr 1fr; }.runtime-detail-body { flex: 1; overflow-y: auto; min-height: 0; padding: 12px; font-size: 12px; }
@@ -53,7 +53,7 @@
 .connection-form { display: grid; gap: 14px; }.connection-fields > label:not(.runtime-check) { display: grid; gap: 7px; font-size: 12px; }.runtime-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin: -7px 0 0; }.connection-form > button { justify-self: start; }
 .runtime-actions { display: flex; gap: 8px; padding-top: 14px; }.runtime-actions .danger { color: var(--danger); }.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .spinning { animation: runtime-spin 1s linear infinite; }@keyframes runtime-spin { to { transform: rotate(360deg); } }
-@media (max-width: 1200px) { .runtime-catalog { width: 245px; }.runtime-details { width: 310px; }.toolbar .brand strong, .toolbar .version { display: none; } }
+@media (max-width: 1200px) { .runtime-catalog { width: 245px; }.runtime-details { width: 330px; }.toolbar .brand strong, .toolbar .version { display: none; } }
 @media (prefers-reduced-motion: reduce) { .spinning { animation: none; } }
 .runtime-toolbar-tools { display: flex; align-items: center; gap: 5px; min-width: 0; }
 .connection-picker { width: clamp(160px, 17vw, 240px); }.runtime-toolbar-tools .button { white-space: nowrap; }
@@ -90,3 +90,5 @@
 .runtime-list .runtime-error p { margin: 0; }.runtime-list .runtime-error p + p { margin-top: 8px; font-size: 11px; line-height: 1.5; }
 .runtime-list .runtime-stale { padding: 8px 12px; margin: 0; font-size: 11px; background: var(--accent-soft); }
 .runtime-summary-details .runtime-instance p { color: var(--muted); font-size: 11px; line-height: 1.5; }.runtime-summary-details .related-instance.failed { border-left: 3px solid var(--danger); }.runtime-summary-details .related-instance.failed strong { color: var(--danger); }
+
+.related-instance small { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }

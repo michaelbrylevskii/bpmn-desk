@@ -87,3 +87,25 @@ it('сохраняет область task/execution для одноимённы
   expect(historicVariable({ processInstanceId: 'p', taskId: 't', executionId: 'e', variable }).scope).toBe('task:t');
   expect(historicVariable({ variable }).scope).toBe('unknown');
 });
+
+
+it('читает метаданные родителя без полного снимка и ищет завершённого родителя в history только после 404', async () => {
+  const requests: string[] = []; let status = 404;
+  const api = await reader((url, response) => {
+    requests.push(url.pathname);
+    if (url.pathname.includes('/runtime/')) return send(response, {}, status);
+    if (url.pathname.includes('/history/')) return send(response, process);
+    send(response, { id: process.processDefinitionId, key: 'definition', name: 'Order processing', version: 1 });
+  });
+  expect(await api.instance(process.id)).toMatchObject({ id: process.id, processDefinitionName: 'Order processing' });
+  expect(requests).toHaveLength(3);
+  expect(requests.some(path => /activities|variables|executions/.test(path))).toBe(false);
+  requests.length = 0; status = 403;
+  await expect(api.instance(process.id)).rejects.toThrow('403');
+  expect(requests).toHaveLength(1);
+});
+
+it('сохраняет метаданные связанного экземпляра после удаления deployment', async () => {
+  const api = await reader((url, response) => send(response, url.pathname.includes('/runtime/') ? process : {}, url.pathname.includes('/runtime/') ? 200 : 404));
+  expect(await api.instance(process.id)).toMatchObject({ id: process.id, processDefinitionId: process.processDefinitionId, processDefinitionName: '' });
+});

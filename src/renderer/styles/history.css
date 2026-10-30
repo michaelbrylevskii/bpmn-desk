@@ -4,7 +4,6 @@
 .runtime-context-bar [aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
 .history-catalog-mode { padding: 9px 12px 0; }.history-catalog-mode > .select-control { width: 100%; }
 .history-error-hint { display: block; margin-top: 5px; font-size: 11px; }
-.history-details { width: clamp(330px, 30vw, 430px); }
 .history-details .runtime-instance { padding: 12px 16px; }
 .history-details .runtime-instance dl { margin: 12px 0; }
 .history-details .runtime-detail-body { padding: 0; }
@@ -37,4 +36,4 @@
 .runtime-canvas .djs-connection.runtime-visited .djs-visual > path { stroke: #527bac !important; stroke-width: 3px !important; }
 .runtime-canvas .djs-connection.runtime-unfinished .djs-visual > path { stroke: #b67b22 !important; stroke-width: 3px !important; }
 .runtime-badge.visited { background: #527bac; }.runtime-badge.unfinished { background: #b67b22; }
-@media (max-width: 1200px) { .history-details { width: 330px; }.history-activity-details { padding-left: 12px; } }
+@media (max-width: 1200px) { .history-activity-details { padding-left: 12px; } }

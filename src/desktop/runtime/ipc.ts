@@ -33,6 +33,7 @@ export function registerRuntimeIpc(window: BrowserWindow): void {
   ipcMain.handle(channels.history, async (event, id: unknown, instance: unknown) => { await validate(event); return reader(id).history(identifier(instance)); });
   ipcMain.handle(channels.deadLetters, async (event, id: unknown, query: unknown) => { await validate(event); return reader(id).deadLetters(pageQuery(query)); });
   ipcMain.handle(channels.diagram, async (event, id: unknown, definition: unknown) => { await validate(event); return reader(id).diagram(identifier(definition)); });
+  ipcMain.handle(channels.instance, async (event, id: unknown, instance: unknown) => { await validate(event); return reader(id).instance(identifier(instance)); });
   ipcMain.handle(channels.snapshot, async (event, id: unknown, instance: unknown) => { await validate(event); return reader(id).snapshot(identifier(instance)); });
   ipcMain.handle(channels.summary, async (event, id: unknown, definition: unknown) => { await validate(event); return reader(id).summary(identifier(definition)); });
   ipcMain.handle(channels.executionVariables, async (event, id: unknown, execution: unknown) => { await validate(event); return reader(id).executionVariables(identifier(execution)); });

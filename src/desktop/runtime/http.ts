@@ -1,6 +1,10 @@
 import type { Connection } from '../../shared/runtime';
 import { requestTimeoutSeconds } from '../../shared/runtime';
 
+export class RuntimeHttpError extends Error {
+  constructor(readonly status: number, path: string) { super(`API вернул HTTP ${status}: ${path}.`); }
+}
+
 /** Только GET к заранее выбранному REST root. Редиректы и URL из ответов не используются. */
 export class RuntimeHttp {
   constructor(private readonly connection: Connection, private readonly secret: string) {}
@@ -18,7 +22,7 @@ export class RuntimeHttp {
     let response: Response;
     try { response = await fetch(url, { method: 'GET', headers, redirect: 'error', signal }); }
     catch { throw new Error(signal.aborted ? 'Превышено время ожидания API.' : 'Не удалось подключиться к API: проверь адрес, сеть, TLS и отсутствие редиректа.'); }
-    if (!response.ok) { await response.body?.cancel(); throw new Error(`API вернул HTTP ${response.status}: ${path}.`); }
+    if (!response.ok) { await response.body?.cancel(); throw new RuntimeHttpError(response.status, path); }
     if (json && !response.headers.get('content-type')?.includes('application/json')) { await response.body?.cancel(); throw new Error('API вернул не JSON. Проверь адрес REST API и авторизацию.'); }
     if (!response.body) throw new Error('API вернул пустой ответ.');
     const reader = response.body.getReader(); const chunks: Uint8Array[] = []; let size = 0;

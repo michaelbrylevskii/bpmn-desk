@@ -1,4 +1,5 @@
 export const historyMessages = {
+  'Дочерний экземпляр': 'Child instance', 'Название схемы недоступно': 'Diagram name unavailable',
   'История выполнения': 'Execution history', 'Текущее состояние': 'Current state',
   'Какие экземпляры показывать': 'Instance view', 'Текущие экземпляры': 'Current instances',
   'Завершённые экземпляры': 'Finished instances', 'Все экземпляры из истории': 'All instances in history',
