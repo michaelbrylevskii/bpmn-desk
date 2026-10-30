@@ -27,7 +27,7 @@ Linux and Windows · local files · open source
 - **XML.** Syntax highlighting, search and replace, navigation to the selected element, extension editing and data preservation checks.
 - **Workspace.** Independent tabs and undo/redo, recent files, drag-and-drop, CLI, draft recovery and external file change detection.
 - **Flowable monitor.** Saved connections with configurable timeouts, deployed versions, instances, executions, tasks and variables. Dead-letter jobs, stack traces, diagram markers and bounded summaries.
-- **Execution history.** Find finished or ongoing Flowable instances, inspect individual activity visits, loops, multi-instance tasks and called processes. The same diagram combines recorded visits and confirmed runtime positions; switch between Current state and Execution history in the right panel. Select a journal entry to locate it on the deployed diagram, or select a diagram element to filter its visits.
+- **Execution history.** Find finished or ongoing Flowable instances, inspect individual activity visits, loops, multi-instance tasks and called processes. The same diagram combines recorded visits and confirmed runtime positions; switch between Current state and Execution history in the right panel. Use the monitor toolbar to navigate back/forward through processes, instances and jobs; destination tooltips show the process and instance details. Select a journal entry to locate it on the deployed diagram, or select a diagram element to filter its visits.
 - **Export.** SVG and PNG with white or transparent backgrounds; monitor exports include state markers.
 - **Interface.** English and Russian, system/light/dark themes, interface and diagram zoom.
 

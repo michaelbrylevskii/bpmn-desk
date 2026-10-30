@@ -68,6 +68,9 @@ async function start(): Promise<void> {
     // При зависшем renderer закрытие также требует явного решения пользователя.
     closeTimer = setTimeout(() => completeClose(true), 1500);
   });
+  window.on('app-command', (_event, command) => {
+    if (command === 'browser-backward' || command === 'browser-forward') window.webContents.send(channels.action, command);
+  });
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   const zoomMenu = await interfaceZoomMenu(window, () => language.get());

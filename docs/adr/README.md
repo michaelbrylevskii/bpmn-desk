@@ -33,3 +33,4 @@
 - [0029 — Поток по умолчанию в свойствах стрелки](0029-default-sequence-flow.md)
 - [0030 — История выполнения Flowable](0030-flowable-instance-history.md)
 - [0031 — Общая схема runtime и истории](0031-unified-instance-monitor.md)
+- [0032 — Переходы назад и вперёд в мониторе](0032-monitor-navigation.md)

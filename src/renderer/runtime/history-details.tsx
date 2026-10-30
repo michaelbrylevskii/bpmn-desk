@@ -1,3 +1,4 @@
+import type { Instance } from '../../shared/runtime';
 import { useState } from 'react';
 import { InstanceRelationships } from './relationships';
 import type { HistorySnapshot } from '../../shared/history';
@@ -7,7 +8,7 @@ import { HistoryList } from './history-list';
 import { historyDuration, historyTime } from './history-format';
 
 export function HistoryDetails({ connection, snapshot, xml, selected, focus, openInstance }: {
-  connection: string; snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string) => void;
+  connection: string; snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void;
 }) {
   const { t, text, language } = useI18n(); const [tab, setTab] = useState<'history' | 'variables'>('history');
   const process = snapshot.instance;

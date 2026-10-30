@@ -1,3 +1,4 @@
+import type { Instance } from '../../shared/runtime';
 import type { DeadLetterJob } from '../../shared/runtime';
 import { useI18n } from '../i18n/provider';
 import { InstanceDetails } from './instance-details';
@@ -8,7 +9,7 @@ import type { useHistory } from './use-history';
 export function InstancePanel({ connection, snapshot, history, historyMode, setHistoryMode, xml, selected, focus, openInstance, jobSelection }: {
   connection: string; snapshot: ReturnType<typeof useSnapshot>; history: ReturnType<typeof useHistory>;
   historyMode: boolean; setHistoryMode: (value: boolean) => void; xml?: string; selected: string;
-  focus: (id: string) => void; openInstance: (id: string) => void; jobSelection?: DeadLetterJob;
+  focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void; jobSelection?: DeadLetterJob;
 }) {
   const { t, text } = useI18n();
   const source = historyMode ? history : snapshot;

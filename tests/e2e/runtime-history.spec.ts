@@ -83,7 +83,7 @@ test('история вызванного процесса открываетс�
     const child = surface(page).locator('.history-activity[data-element-id="HistoryChild"]'); await child.getByRole('button').click();
     await child.getByRole('button', { name: `Child instance: ${fixture.historyChildId}`, exact: true }).click();
     await expect(surface(page).locator('.history-details .runtime-instance > code')).toHaveText(fixture.historyChildId);
-    await surface(page).getByRole('button', { name: 'Back to instance', exact: true }).click();
+    await page.locator('.monitor-navigation').getByRole('button', { name: 'Back', exact: true }).click();
     await expect(surface(page).locator('.history-details .runtime-instance > code')).toHaveText(fixture.historyInstanceId);
     await openHistory(page, fixture.terminatedInstanceId);
     await expect(surface(page).locator('.history-details .runtime-instance')).toContainText('Terminated');

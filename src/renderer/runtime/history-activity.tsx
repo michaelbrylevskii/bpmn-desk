@@ -7,7 +7,7 @@ import { historyDuration, historyTime } from './history-format';
 
 export function HistoryActivity({ activity, child, index, count, complete, selected, choose, openInstance }: {
   child?: Instance; activity: HistoricActivity; index: number; count: number; complete: boolean; selected: boolean;
-  choose: () => void; openInstance: (id: string) => void;
+  choose: () => void; openInstance: (id: string, preview?: Instance) => void;
 }) {
   const { t, language } = useI18n();
   return <article className={`history-activity ${selected ? 'selected' : ''}`} data-history-id={activity.id} data-element-id={activity.activityId}>

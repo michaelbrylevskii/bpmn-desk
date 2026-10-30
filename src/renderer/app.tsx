@@ -61,6 +61,8 @@ export function App() {
     if (monitoring && ['save', 'save-as', 'undo', 'redo'].includes(action)) return;
     const editor = active ? docs.editors.current.get(active.id) : undefined;
     switch (action) {
+      case 'browser-backward': if (monitoring && managing === undefined) controls?.navigation.move('back'); break;
+      case 'browser-forward': if (monitoring && managing === undefined) controls?.navigation.move('forward'); break;
       case 'new': requestNew(); break;
       case 'open': openContent(docs.open); break;
       case 'save': docs.run(() => docs.save(false, active?.id)); break;
@@ -71,7 +73,7 @@ export function App() {
       case 'fit': if (monitoring) controls?.fit(); else editor?.fit(); break;
       case 'prepare-close': docs.run(docs.prepareClose); break;
     }
-  }, [docs, active, monitoring, home, controls, exportDiagram, requestNew, openContent]);
+  }, [docs, active, monitoring, home, controls, exportDiagram, requestNew, openContent, managing]);
   useEffect(() => bridge.onAction(onAction), [onAction]);
   useEffect(() => {
     if (window.desktop) return;

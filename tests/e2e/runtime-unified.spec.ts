@@ -49,7 +49,7 @@ test('родитель и дочерний экземпляр имеют оди�
     await page.locator('.instance-mode-tabs').getByRole('button', { name: 'Execution history', exact: true }).click();
     await expect(parent).toContainText('Order fulfillment');
     await parent.click(); await expect(page.locator('.runtime-instance > code')).toHaveText('p1');
-    await page.getByRole('button', { name: 'Back to instance', exact: true }).click(); await expect(page.locator('.runtime-instance > code')).toHaveText('p2');
+    await page.locator('.monitor-navigation').getByRole('button', { name: 'Back', exact: true }).click(); await expect(page.locator('.runtime-instance > code')).toHaveText('p2');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });
 

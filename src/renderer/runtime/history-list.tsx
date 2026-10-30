@@ -1,3 +1,4 @@
+import type { Instance } from '../../shared/runtime';
 import { useMemo, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import type { HistorySnapshot } from '../../shared/history';
@@ -6,7 +7,7 @@ import { historyStructure, orderedActivities } from '../bpmn/history-model';
 import { HistoryActivity } from './history-activity';
 
 export function HistoryList({ snapshot, xml, selected, focus, openInstance }: {
-  snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string) => void;
+  snapshot: HistorySnapshot; xml?: string; selected: string; focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void;
 }) {
   const { t, text } = useI18n(); const [search, setSearch] = useState(''); const [flows, setFlows] = useState(false); const [choice, setChoice] = useState('');
   const activities = useMemo(() => orderedActivities(snapshot.activities.data), [snapshot.activities.data]);

@@ -6,9 +6,15 @@ export function Tooltip({ children, content }: { children: ReactElement<{ 'aria-
   const id = useId(); const anchor = useRef<HTMLSpanElement>(null); const popup = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [open, setOpen] = useState(false); const [position, setPosition] = useState({ left: 0, top: 0 });
-  const show = () => { clearTimeout(timer.current); setOpen(true); };
+  const dismiss = () => { clearTimeout(timer.current); setOpen(false); };
+  const show = () => { clearTimeout(timer.current); window.dispatchEvent(new CustomEvent('bpmn-desk-tooltip', { detail: id })); setOpen(true); };
   const hide = () => { timer.current = setTimeout(() => setOpen(false), 120); };
   useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    const another = (event: Event) => { if (event instanceof CustomEvent && event.detail !== id) { clearTimeout(timer.current); setOpen(false); } };
+    window.addEventListener('bpmn-desk-tooltip', another);
+    return () => window.removeEventListener('bpmn-desk-tooltip', another);
+  }, [id]);
   useLayoutEffect(() => {
     if (!open) return;
     const place = () => {
@@ -21,7 +27,7 @@ export function Tooltip({ children, content }: { children: ReactElement<{ 'aria-
     place(); window.addEventListener('resize', place); window.addEventListener('scroll', place, true); window.addEventListener('keydown', escape);
     return () => { window.removeEventListener('resize', place); window.removeEventListener('scroll', place, true); window.removeEventListener('keydown', escape); };
   }, [open, content]);
-  return <span className="tooltip-anchor" ref={anchor} onMouseEnter={show} onMouseLeave={hide} onFocus={show} onBlur={hide}>
+  return <span className="tooltip-anchor" ref={anchor} onMouseEnter={show} onMouseLeave={hide} onFocus={show} onBlur={hide} onClickCapture={dismiss}>
     {cloneElement(children, { 'aria-describedby': open ? id : undefined })}
     {open && createPortal(<div id={id} role="tooltip" className="app-tooltip" ref={popup} style={position} onMouseEnter={show} onMouseLeave={hide}>{content}</div>, document.body)}
   </span>;

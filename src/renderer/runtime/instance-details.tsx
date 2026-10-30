@@ -1,3 +1,4 @@
+import type { Instance } from '../../shared/runtime';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import type { DeadLetterJob, InstanceSnapshot, Variable } from '../../shared/runtime';
@@ -9,7 +10,7 @@ import { JobDetails } from './job-details';
 import { InstanceRelationships } from './relationships';
 
 export function InstanceDetails({ connection, snapshot, selected, focus, openInstance, jobSelection }: {
-  connection: string; snapshot: InstanceSnapshot; selected: string; focus: (id: string) => void; openInstance: (id: string) => void;
+  connection: string; snapshot: InstanceSnapshot; selected: string; focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void;
   jobSelection?: DeadLetterJob;
 }) {
   const { t, text } = useI18n(); const [tab, setTab] = useState<'variables' | 'executions' | 'jobs' | 'tasks'>(jobSelection ? 'jobs' : 'variables');

@@ -1,4 +1,7 @@
 export const historyMessages = {
+  'Экземпляр': 'Instance',
+  'Назад': 'Back', 'Вперёд': 'Forward', 'Переходы монитора': 'Monitor navigation', 'Версия схемы': 'Process version',
+  'Нет предыдущих переходов': 'No previous destinations', 'Нет следующих переходов': 'No next destinations',
   'Текущие': 'Current', 'Окончены': 'Ended', 'Без окончания': 'No end', 'Легенда': 'Legend', 'История': 'History',
   'Родитель': 'Parent', 'Дочерний': 'Child',
   'Разные экземпляры у элемента, а не executions.': 'Distinct instances at the element, rather than executions.',

@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
+import type { MonitorDestination } from './navigation-model';
 import type { DiagramExport } from '../../shared/contracts';
 export interface MonitorControls {
+  navigation: { back?: MonitorDestination; forward?: MonitorDestination; move(direction: 'back' | 'forward'): void };
   title: string; auto: boolean; busy: boolean; canRefresh: boolean; canCopy: boolean; canExport: boolean;
   setAuto(value: boolean): void; refresh(): void; copy(): void; fit(): void; exportDiagram(format: DiagramExport): Promise<void>;
 }
