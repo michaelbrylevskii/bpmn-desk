@@ -104,6 +104,10 @@ test('журнал раскрывает несколько записей без
     const source = await xml.textContent();
     await xml.click(); await page.keyboard.type('MUST_NOT_BE_INSERTED');
     expect(await xml.textContent()).toBe(source);
+    await page.locator('.runtime-xml').getByTitle('Search XML (Ctrl+F)', { exact: true }).click();
+    await page.locator('.runtime-xml').getByRole('textbox', { name: 'Find', exact: true }).fill('HistoryReview');
+    await expect(page.locator('.runtime-xml .xml-search-count')).not.toHaveText('0/0');
+    await expect(page.locator('.runtime-xml').getByRole('button', { name: 'Show replacement', exact: true })).toHaveCount(0);
     await page.getByTitle('Dark theme', { exact: true }).click();
     expect(await xml.textContent()).toBe(source);
     await expect(page.locator('.dirty-dot')).toHaveCount(0);

@@ -10,6 +10,7 @@ export class XmlSearchPanel {
   private readonly replacement = document.createElement('input');
   private readonly counter = document.createElement('span');
   private readonly replaceRow = document.createElement('div');
+  private readonly replaceToggle: HTMLButtonElement;
   private readonly translated: { node: HTMLElement; phrase: string; text: boolean }[] = [];
   private readonly flags = new Map<'caseSensitive' | 'regexp' | 'wholeWord', HTMLButtonElement>();
   private matches: { from: number; to: number }[] = [];
@@ -36,6 +37,7 @@ export class XmlSearchPanel {
       toggle.setAttribute('aria-expanded', String(!this.replaceRow.hidden));
       if (!this.replaceRow.hidden) this.replacement.focus();
     });
+    this.replaceToggle = toggle;
     toggle.setAttribute('aria-expanded', 'false');
     row.append(toggle, this.button('×', 'Close search', () => { closeSearchPanel(view); view.focus(); }));
     this.replaceRow.className = 'xml-search-row xml-replace-row'; this.replaceRow.hidden = true;
@@ -64,6 +66,8 @@ export class XmlSearchPanel {
   update(update: ViewUpdate): void { this.refresh(update.docChanged); }
   private refresh(docChanged: boolean): void {
     const state = this.view.state; const query = getSearchQuery(state);
+    this.replaceToggle.hidden = state.readOnly;
+    if (state.readOnly) { this.replaceRow.hidden = true; this.replaceToggle.setAttribute('aria-expanded', 'false'); }
     this.dom.setAttribute('aria-label', state.phrase('XML search'));
     for (const input of [this.input, this.replacement]) {
       const phrase = state.phrase(input === this.input ? 'Find' : 'Replace');

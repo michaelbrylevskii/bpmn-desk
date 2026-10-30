@@ -16,6 +16,7 @@
   border: 1px solid transparent; border-radius: 5px; color: var(--muted); background: transparent;
   padding: 0 7px; font-size: 12px; line-height: 18px; white-space: nowrap; flex-shrink: 0;
 }
+.code-editor .xml-search-icon[hidden] { display: none; }
 .code-editor .xml-search-icon { width: 30px; padding: 0; font-size: 17px; }
 .code-editor .xml-search-flag { font-family: monospace; font-size: 12px; }
 .code-editor .whole-word { text-decoration: underline; text-underline-offset: 3px; }
