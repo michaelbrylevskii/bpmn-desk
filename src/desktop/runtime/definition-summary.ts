@@ -7,17 +7,17 @@ import { identifier } from './validation';
 
 /** Ровно три страницы, без дочитывания, N+1 и переменных. Общий deadline включает чтение body. */
 export async function readDefinitionSummary(http: RuntimeHttp, id: string, deadline = http.deadline()): Promise<DefinitionSummary> {
-  const sample = async <T>(path: string, parse: (value: unknown) => T, sort: string, order: 'asc' | 'desc' = 'asc'): Promise<RuntimeSample<T>> => {
+  const sample = async <T>(path: string, parse: (value: unknown) => T, sort: string, order: 'asc' | 'desc' = 'asc', limit = 100): Promise<RuntimeSample<T>> => {
     try {
-      const page = decode.page(await http.get(path, { processDefinitionId: identifier(id), start: 0, size: 100, sort, order }, true, deadline), parse);
-      if (page.data.length > 100 || page.start !== 0) throw new Error('API не соблюдает ограничение выборки сводки.');
+      const page = decode.page(await http.get(path, { processDefinitionId: identifier(id), start: 0, size: limit, sort, order }, true, deadline), parse);
+      if (page.data.length > limit || page.start !== 0) throw new Error('API не соблюдает ограничение выборки сводки.');
       return { data: page.data, total: page.total, complete: page.data.length >= page.total };
     } catch (error) { return { data: [], complete: false, error: errorMessage(error) }; }
   };
   const [executions, deadLetters, activities] = await Promise.all([
     sample('runtime/executions', decode.execution, 'processInstanceId'),
     sample('management/deadletter-jobs', decode.deadLetter, 'id'),
-    sample('history/historic-activity-instances', historicActivity, 'startTime', 'desc'),
+    sample('history/historic-activity-instances', historicActivity, 'startTime', 'desc', 1000),
   ]);
   return { executions, deadLetters, activities, capturedAt: new Date().toISOString() };
 }

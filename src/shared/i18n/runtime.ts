@@ -1,7 +1,7 @@
 export const runtimeMessages = {
   'Сводка выключена': 'Summary is off', 'Записи истории': 'History records',
   'Обновление и повтор после ошибки — в верхней панели.': 'Refresh and retry from the top toolbar.',
-  'Три запроса, до 100 записей каждого вида, до {seconds} с.': 'Three requests, up to 100 records each, within {seconds} s.',
+  'До 100 executions, 100 dead-letter jobs и 1000 шагов истории; три запроса, до {seconds} с.': 'Up to 100 executions, 100 dead-letter jobs and 1000 history activities; three requests, within {seconds} s.',
   'Нажми, чтобы выключить сводку для всех мониторов.': 'Click to turn summaries off in all monitors.',
   'Нажми, чтобы включить сводку для всех мониторов.': 'Click to turn summaries on in all monitors.',
   'Выберите элемент для просмотра подробностей': 'Select an element to view details',

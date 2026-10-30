@@ -4,7 +4,7 @@ import { historyServer } from './history-server';
 import { selectOption } from './select';
 
 test('история сводки считает разные экземпляры, открывает History и не меняет ширину панели при сбросе выбора', async () => {
-  const api = await historyServer(); api.state.runtimeStatus = 200; api.state.summaryHistoryCount = 5; api.state.summaryHistoryTotal = 500;
+  const api = await historyServer(); api.state.runtimeStatus = 200; api.state.summaryHistoryCount = 1000; api.state.summaryHistoryTotal = 10000;
   const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
   try {
     await page.locator('.runtime-catalog .runtime-row').click();
@@ -14,8 +14,11 @@ test('история сводки считает разные экземпляр
     const element = canvas.locator('[data-element-id="HistoryReview"]');
     await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('1 · ◷ ≥2');
     const request = api.state.requests.find(url => url.pathname.endsWith('/historic-activity-instances') && url.searchParams.has('processDefinitionId'))!;
-    expect(request.searchParams.get('processDefinitionId')).toBe('d1'); expect(request.searchParams.get('size')).toBe('100');
+    expect(request.searchParams.get('processDefinitionId')).toBe('d1'); expect(request.searchParams.get('size')).toBe('1000');
     expect(request.searchParams.get('sort')).toBe('startTime'); expect(request.searchParams.get('order')).toBe('desc');
+    const toggle = page.getByRole('button', { name: 'Version summary', exact: true }); await toggle.focus();
+    await expect(page.getByRole('tooltip')).toContainText('1000/10000');
+    await expect(page.getByRole('tooltip')).toContainText('1000 history activities'); await page.keyboard.press('Escape');
     const count = api.state.requests.length;
     await element.locator('.djs-hit').click();
     await panel.locator('.summary-source-tabs').getByRole('button', { name: 'History', exact: true }).click();

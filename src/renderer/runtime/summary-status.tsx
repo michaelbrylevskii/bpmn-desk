@@ -22,7 +22,7 @@ export function SummaryStatus({ summary, enabled, toggle, timeout }: { summary: 
       {summary.error && <p className="summary-error">{text(summary.error)}</p>}
       {data && [data.executions, data.deadLetters, data.activities].flatMap((sample, i) => sample.error ? [<p key={i} className="summary-error">{t(i === 0 ? 'Executions' : i === 1 ? 'Dead-letter jobs' : 'Записи истории')}: {text(sample.error)}</p>] : [])}
       <p>{t('Обновление и повтор после ошибки — в верхней панели.')}</p>
-      <small>{t('Три запроса, до 100 записей каждого вида, до {seconds} с.', { seconds: timeout })}</small>
+      <small>{t('До 100 executions, 100 dead-letter jobs и 1000 шагов истории; три запроса, до {seconds} с.', { seconds: timeout })}</small>
     </>}
     <p>{t(enabled ? 'Нажми, чтобы выключить сводку для всех мониторов.' : 'Нажми, чтобы включить сводку для всех мониторов.')}</p>
   </div>;

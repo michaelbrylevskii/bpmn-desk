@@ -18,14 +18,16 @@ it('ограничивает сводку тремя GET по конкретно
   await withApi((request, response) => {
     expect(request.method).toBe('GET'); const url = new URL(request.url!, 'http://localhost'); requests.push(url);
     response.setHeader('content-type', 'application/json');
-    response.end(JSON.stringify({ start: 0, total: 1000000, data: Array.from({ length: 100 }, (_, index) => ({ id: `e${index}`, activityId: 'Review', processInstanceId: `p${index % 10}` })) }));
+    const count = url.pathname.endsWith('/historic-activity-instances') ? 1000 : 100;
+    response.end(JSON.stringify({ start: 0, total: 1000000, data: Array.from({ length: count }, (_, index) => ({ id: `e${index}`, activityId: 'Review', processDefinitionId: 'desk:2:d2', processInstanceId: `p${index % 10}` })) }));
   }, async http => {
     const summary = await readDefinitionSummary(http, 'desk:2:d2');
     expect(summary.executions.complete).toBe(false); expect(summary.executions.data).toHaveLength(100);
+    expect(summary.activities.error).toBeUndefined(); expect(summary.activities.data).toHaveLength(1000); expect(summary.activities.complete).toBe(false);
     expect(requests).toHaveLength(3);
     expect(requests.map(url => url.pathname)).toEqual(['/process-api/runtime/executions', '/process-api/management/deadletter-jobs', '/process-api/history/historic-activity-instances']);
     for (const url of requests) {
-      expect(url.searchParams.get('size')).toBe('100'); expect(url.searchParams.get('start')).toBe('0'); expect(url.searchParams.get('processDefinitionId')).toBe('desk:2:d2');
+      expect(url.searchParams.get('size')).toBe(url.pathname.endsWith('/historic-activity-instances') ? '1000' : '100'); expect(url.searchParams.get('start')).toBe('0'); expect(url.searchParams.get('processDefinitionId')).toBe('desk:2:d2');
     }
   });
 });
@@ -54,10 +56,12 @@ for (const bodyStarted of [false, true]) it(`общий deadline останав�
   });
 });
 
-it('не принимает серверную страницу сверх лимита или с другой позиции', async () => {
+for (const { count, start, source } of [
+  { count: 101, start: 0, source: 'executions' }, { count: 1001, start: 0, source: 'activities' }, { count: 1, start: 1, source: 'activities' },
+] as const) it(`отклоняет страницу ${source}: ${count} записей с позиции ${start}`, async () => {
   await withApi((_request, response) => {
-    response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ start: 0, total: 101, data: Array.from({ length: 101 }, (_, i) => ({ id: `e${i}` })) }));
-  }, async http => { expect((await readDefinitionSummary(http, 'd1')).executions.error).toContain('ограничение'); });
+    response.setHeader('content-type', 'application/json'); response.end(JSON.stringify({ start, total: count, data: Array.from({ length: count }, (_, i) => ({ id: `e${i}`, processInstanceId: 'p1', processDefinitionId: 'd1' })) }));
+  }, async http => { expect((await readDefinitionSummary(http, 'd1'))[source].error).toContain('ограничение'); });
 });
 
 const execution = (id: string, processInstanceId: string, activityId = 'Review'): Execution => ({ id, activityId, processInstanceId, parentId: '', suspended: false });
