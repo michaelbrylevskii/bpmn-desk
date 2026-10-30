@@ -1,10 +1,17 @@
 # Проверка релиза 0.6.0
 
-Кандидат 0.6.0 подготовлен из локально проверенных изменений монитора; предыдущий релиз сохранён в [протоколе 0.5.0](archive/validation-0.5.0.md). После локальных проверок основная ветка и тег должны пройти нативную матрицу Linux/Windows. Результаты CI и опубликованные артефакты будут добавлены после выпуска; до этого новые Windows-проверки не заявляются.
+Проверенный коммит: `7cc934ed3873253000ac6c37dd0dcd0ce5975587`, тег `v0.6.0`.
 
-## Локальная проверка кандидата
+[Релиз](https://github.com/michaelbrylevskii/bpmn-desk/releases/tag/v0.6.0) · [Проверка main](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/41045033446) · [Релизная матрица](https://github.com/michaelbrylevskii/bpmn-desk/actions/runs/41046196631) · [Предыдущий релиз](archive/validation-0.5.0.md)
 
-Linux x86_64: strict TypeScript, ESLint и 111 unit-тестов; 92 E2E успешно, 18 ожидаемых пропусков; 33 Flowable runtime-теста. AppImage 0.6.0 собрана и запущена с sandbox в двух E2E; семь файлов out, версия, штатные примеры и лицензии совпадают с app.asar/ресурсами. Официальные Flowable converter 7.2 и Camunda Model API 7.24 проверили экспорты. GitHub Markdown API сохранил галерею обеих README и закрытый русский details релиза.
+| Среда | Unit | E2E | Flowable runtime |
+| --- | --- | --- | --- |
+| Ubuntu 24.04 | 111 passed | 92 passed, включая 2 AppImage; 18 ожидаемых skip | 33 passed |
+| Windows Server 2022 | 109 passed, 2 symlink skip | 75 passed, включая готовый EXE | 33 passed |
+
+Обе матрицы, main и тег, успешно выполнили strict TypeScript, ESLint, нативную сборку, UI/Electron, независимый Flowable/H2 и официальные Flowable converter 7.2 / Camunda Model API 7.24. Ожидаемые Linux-пропуски общего E2E относятся к Windows и отдельному Flowable-стенду; runtime запускается следующим самостоятельным шагом.
+
+Локально на Linux перед push также прошли `check`, `package:linux`, полный E2E, 33 runtime-теста и оба Java-валидатора. GitHub Markdown API сохранил галерею обеих README и закрытый русский details релиза. Скриншоты монитора и истории сняты с версии 0.6.0 на оригинальных MIT-схемах стенда.
 
 ## Покрытие
 
@@ -16,6 +23,18 @@ Linux x86_64: strict TypeScript, ESLint и 111 unit-тестов; 92 E2E усп�
 - Сворачиваемые панели, уведомление о новом выборе без раскрытия, компактная легенда/время и доступные с клавиатуры подсказки.
 - Настоящие wheel-события над бейджем: обе оси, Shift и Ctrl; логотип не перекрывает кнопки панелей. Обе темы, размеры окна 1500 и 1050 px.
 - Регрессия редактора: copy/paste между схемами, перестановка вкладок, независимый undo/redo, BPMN default, XML/расширения, экспорт, файлы, recovery, темы и локализация.
+
+## Артефакты
+
+AppImage, installer, portable и `SHA256SUMS` собраны релизным GitHub Actions. Все четыре опубликованных файла скачаны: размеры и SHA-256 совпали с manifest и GitHub asset.digest. Тег указывает на проверенный коммит, release опубликован как latest. Описание совпало с генератором: английский текст, русский перевод в закрытом details и ссылка на релизный CI.
+
+Опубликованная AppImage распакована: версия 0.6.0, все семь скомпилированных файлов out, примеры, provenance и лицензии совпали с локальной сборкой/репозиторием. В корне ASAR находятся только out, node_modules, package.json, LICENSE и THIRD_PARTY_NOTICES.md; тестовый стенд, Java, кеши и пользовательские данные в поставку не входят.
+
+| Дистрибутив | Размер, байт | SHA-256 |
+| --- | ---: | --- |
+| Linux AppImage x86_64 | 132300003 | `e1aff202ff616b5b979579ca1db694a2566170847c8ee8ea8f9c5e7b49fb767a` |
+| Windows installer x64 | 115924093 | `fbe60cfe1f3475d52320fcf9ef56c925383648c211662122be9ae13abb158cd1` |
+| Windows portable x64 | 115761067 | `4e8bd8fa581d02b13d88b314ce360032abfa38a390e27bec933b9a86686495c7` |
 
 ## Границы подтверждения
 
