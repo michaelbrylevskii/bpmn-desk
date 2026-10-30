@@ -27,6 +27,7 @@ Linux and Windows · local files · open source
 - **XML.** Syntax highlighting, search and replace, navigation to the selected element, extension editing and data preservation checks.
 - **Workspace.** Independent tabs and undo/redo, recent files, drag-and-drop, CLI, draft recovery and external file change detection.
 - **Flowable monitor.** Saved connections with configurable timeouts, deployed versions, instances, executions, tasks and variables. Dead-letter jobs, stack traces, diagram markers and bounded summaries.
+- **Execution history.** Find finished or ongoing Flowable instances, inspect individual activity visits, loops, multi-instance tasks and called processes. Select a journal entry to locate it on the deployed diagram, or select a diagram element to filter its visits.
 - **Export.** SVG and PNG with white or transparent backgrounds; monitor exports include state markers.
 - **Interface.** English and Russian, system/light/dark themes, interface and diagram zoom.
 
@@ -63,7 +64,7 @@ Without FUSE, use `--appimage-extract-and-run` as the first argument. Windows ex
 
 - Visual editing requires BPMN DI; automatic layout is not provided. Saving may change XML formatting.
 - The editor does not execute processes or provide deployment/retry actions. DMN/CMMN, Camunda 8/Zeebe and external form designers are not supported.
-- Monitoring excludes history, completed instances and Camunda 7 runtime. Snapshots are not transactional; summaries are bounded. [API details](docs/runtime-monitor.md).
+- History requires retained Flowable history and API access. Each snapshot loads up to 1000 activity records, 100 children and 100 saved variables; incomplete results are marked. Saved variables are latest values, not values at a selected step. Snapshots are not transactional; route arrows require recorded sequence flows. Camunda 7 runtime is not supported. [API details](docs/runtime-monitor.md).
 - Local files are limited to 20 MB. PNG is limited to 16,384 px per side and 32 million pixels; SVG is available for larger diagrams.
 
 ## Development and license

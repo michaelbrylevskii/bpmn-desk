@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import org.flowable.engine.ProcessEngine;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
@@ -44,10 +45,12 @@ public class FixtureSeed {
         var execution = engine.getRuntimeService().createExecutionQuery().processInstanceId(parallel.getId()).activityId("ReviewA").singleResult();
         engine.getRuntimeService().setVariableLocal(execution.getId(), "localReviewerNote", "execution-specific value");
         var output = Path.of(System.getenv("BPMN_DESK_FIXTURE_OUTPUT"));
-        Files.writeString(output, new ObjectMapper().writeValueAsString(Map.of(
+        var result = new LinkedHashMap<String, String>(Map.of(
             "baseUrl", "http://127.0.0.1:" + context.getWebServer().getPort() + "/process-api/",
             "reviewInstanceId", review.getId(), "reviewDefinitionId", first.getId(), "parallelInstanceId", parallel.getId(),
             "failedInstanceId", failure.getId(), "deadLetterId", job.getId(), "parentInstanceId", parent.getId(), "childInstanceId", child.getId()
-        )));
+        ));
+        result.putAll(HistorySeed.seed(engine));
+        Files.writeString(output, new ObjectMapper().writeValueAsString(result));
     }
 }

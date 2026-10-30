@@ -3,7 +3,8 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { selectOption } from './select';
-export interface Fixture { baseUrl: string; parallelInstanceId: string; failedInstanceId: string; reviewInstanceId: string; reviewDefinitionId: string; parentInstanceId: string; childInstanceId: string }
+export interface Fixture { baseUrl: string; parallelInstanceId: string; failedInstanceId: string; reviewInstanceId: string; reviewDefinitionId: string; parentInstanceId: string; childInstanceId: string;
+  historyInstanceId: string; historyDefinitionId: string; historyChildId: string; terminatedInstanceId: string }
 export let fixture: Fixture;
 /** Hooks регистрируются в каждом spec, а не как побочный эффект кешируемого импорта. */
 export function useRuntimeFixture(): void {

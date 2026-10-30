@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import packageInfo from '../../package.json' with { type: 'json' };
 import { packagedWindow, type PackagedView } from './packaged-window';
+import { historyServer } from './history-server';
 
 const image = resolve(`release/BPMN-Desk-${packageInfo.version}-x86_64.AppImage`);
 test('извлечённая AppImage открывает демонстрационную схему с включённым sandbox', async () => {
@@ -70,4 +71,35 @@ test('извлечённая AppImage открывает демонстраци�
     await page.getByRole('button', { name: 'Диагностика', exact: false }).click();
     await expect(page.locator('.diagnostics-panel')).toContainText('Проблем не обнаружено');
   } finally { await view?.browser.close(); await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
+test('AppImage читает историю через production IPC и связывает журнал со схемой', async () => {
+  test.skip(process.platform !== 'linux' || !existsSync(image), 'Сначала собери Linux AppImage.');
+  const api = await historyServer();
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-history-appimage-'));
+  let app: Awaited<ReturnType<typeof electron.launch>> | undefined; let view: PackagedView | undefined;
+  try {
+    expect(spawnSync(image, ['--appimage-extract'], { cwd: directory, stdio: 'ignore' }).status).toBe(0);
+    app = await electron.launch({ executablePath: resolve(directory, 'squashfs-root/bpmn-desk'), chromiumSandbox: true,
+      env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' }, timeout: 30000 });
+    view = await packagedWindow(app); const { page } = view;
+    await selectOption(page.getByRole('combobox', { name: 'Select a connection', exact: true }), '@new');
+    await page.getByLabel('Connection name', { exact: true }).fill('History fixture');
+    await page.getByLabel('REST API URL', { exact: true }).fill(api.baseUrl);
+    await selectOption(page.getByRole('combobox', { name: 'Authentication', exact: true }), 'none');
+    await page.getByRole('button', { name: 'Save connection', exact: true }).click();
+    await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
+    await selectOption(page.getByRole('combobox', { name: 'Instance view', exact: true }), 'completed');
+    await page.getByLabel('Instance ID', { exact: true }).fill('p1'); await page.getByRole('button', { name: 'Open instance', exact: true }).click();
+    await expect(page.locator('.history-activity')).toHaveCount(2);
+    await page.locator('.history-activity').last().getByRole('button').click();
+    await expect(page.locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]')).toHaveClass(/selected/);
+    await expect(page.locator('.runtime-badge[data-activity-id="HistoryReview"]')).toHaveText('✓ 2');
+    await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
+    await expect(page.locator('.history-activity').last()).toContainText('Проход 2 из 2');
+    await expect(page.locator('.runtime-context-bar')).toContainText('История выполнения');
+    expect(await app.evaluate(({ app }) => app.commandLine.hasSwitch('no-sandbox'))).toBe(false);
+    await page.screenshot({ path: 'test-results/appimage-history.png' });
+  } finally { await view?.browser.close(); await app?.close(); await api.stop(); await rm(directory, { recursive: true, force: true }); }
 });

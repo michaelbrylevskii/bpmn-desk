@@ -1,0 +1,40 @@
+.runtime-catalog-host { display: flex; flex-shrink: 0; min-height: 0; }
+.runtime-catalog-host[hidden] { display: none; }
+.runtime-context-bar { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-bottom: 1px solid var(--border); background: var(--surface); min-height: 39px; flex-shrink: 0; flex-wrap: wrap; }
+.runtime-context-bar [aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.history-catalog-mode { padding: 9px 12px 0; }.history-catalog-mode > .select-control { width: 100%; }
+.history-error-hint { display: block; margin-top: 5px; font-size: 11px; }
+.history-details { width: clamp(330px, 30vw, 430px); }
+.history-details .runtime-instance { padding: 12px 16px; }
+.history-details .runtime-instance dl { margin: 12px 0; }
+.history-details .runtime-detail-body { padding: 0; }
+.history-details .runtime-variables { padding: 0 12px 12px; }
+.history-metadata { border: 0; }.history-metadata summary { cursor: pointer; color: var(--muted); font-size: 11px; padding: 5px 0; }
+.history-list-controls { display: grid; gap: 9px; padding: 12px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.history-list-controls small { font-size: 10px; color: var(--muted); }
+.history-element-filter { display: flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); font-size: 11px; }
+.history-element-filter > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.history-note { color: var(--muted); font-size: 10px; line-height: 1.6; margin: 9px 12px; }
+.history-activity { border-bottom: 1px solid var(--border); border-left: 3px solid transparent; }
+.history-activity.selected { border-left-color: var(--accent); background: var(--accent-soft); }
+.history-activity-choice { display: flex; align-items: flex-start; gap: 9px; padding: 12px 10px; text-align: left; width: 100%; }
+.history-activity-choice:hover { background: var(--accent-soft); }
+.history-activity-choice > span:last-child { display: grid; gap: 6px; min-width: 0; }
+.history-activity-choice strong { font-size: 12px; font-weight: 550; overflow-wrap: anywhere; }
+.history-activity-choice small { color: var(--muted); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.history-step-icon { display: flex; width: 22px; height: 22px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 6px; background: var(--input); }
+.history-step-icon.ended { color: #527bac; }.history-step-icon.unfinished { color: #b67b22; }
+.history-activity-details { padding: 0 12px 12px 42px; }.history-activity-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 10px; font-size: 10px; margin: 0; }
+.history-activity-details dt { color: var(--muted); }.history-activity-details dd { margin: 0; overflow-wrap: anywhere; }
+.history-group { margin: 8px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.history-group > summary { padding: 10px; background: var(--input); cursor: pointer; font-size: 11px; overflow-wrap: anywhere; }
+.history-group > summary code { display: block; color: var(--muted); font-size: 10px; margin: 5px 0 0 12px; }
+.history-group .history-activity:last-child { border-bottom: 0; }
+.history-legend { flex-wrap: wrap; gap: 8px 16px; align-items: center; }.history-legend small { font-size: 10px; }
+.runtime-legend .visited::before { background: #527bac; }.runtime-legend .unfinished::before { background: #b67b22; }
+.runtime-canvas .runtime-visited .djs-visual > :first-child { stroke: #527bac !important; stroke-width: 3px !important; }
+.runtime-canvas .runtime-unfinished .djs-visual > :first-child { stroke: #b67b22 !important; stroke-width: 3px !important; }
+.runtime-canvas .djs-connection.runtime-visited .djs-visual > path { stroke: #527bac !important; stroke-width: 3px !important; }
+.runtime-canvas .djs-connection.runtime-unfinished .djs-visual > path { stroke: #b67b22 !important; stroke-width: 3px !important; }
+.runtime-badge.visited { background: #527bac; }.runtime-badge.unfinished { background: #b67b22; }
+@media (max-width: 1200px) { .history-details { width: 330px; }.history-activity-details { padding-left: 12px; } }

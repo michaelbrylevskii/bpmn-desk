@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original BPMN Desk test scenario. License: MIT. -->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="https://bpmndesk.org/test">
+  <process id="deskHistory" name="deskHistory" isExecutable="true">
+    <startEvent id="HistoryStart"/>
+    <subProcess id="HistoryChecks" name="Document checks">
+      <startEvent id="CheckStart"/>
+      <userTask id="HistoryReview" name="Historical review"/>
+      <exclusiveGateway id="CheckDecision" default="CheckDone"/>
+      <endEvent id="CheckEnd"/>
+      <sequenceFlow id="CheckBegin" sourceRef="CheckStart" targetRef="HistoryReview"/>
+      <sequenceFlow id="CheckResult" sourceRef="HistoryReview" targetRef="CheckDecision"/>
+      <sequenceFlow id="CheckAgain" sourceRef="CheckDecision" targetRef="HistoryReview"><conditionExpression xsi:type="tFormalExpression">${round &lt; 2}</conditionExpression></sequenceFlow>
+      <sequenceFlow id="CheckDone" sourceRef="CheckDecision" targetRef="CheckEnd"/>
+    </subProcess>
+    <callActivity id="HistoryChild" name="Final review" calledElement="deskReview"/>
+    <endEvent id="HistoryEnd"/>
+    <sequenceFlow id="HistoryBegin" sourceRef="HistoryStart" targetRef="HistoryChecks"/>
+    <sequenceFlow id="HistoryChecked" sourceRef="HistoryChecks" targetRef="HistoryChild"/>
+    <sequenceFlow id="HistoryDone" sourceRef="HistoryChild" targetRef="HistoryEnd"/>
+  </process>
+  <bpmndi:BPMNDiagram id="HistoryDiagram"><bpmndi:BPMNPlane id="HistoryPlane" bpmnElement="deskHistory">
+    <bpmndi:BPMNShape id="HistoryStart_di" bpmnElement="HistoryStart"><dc:Bounds x="60" y="220" width="36" height="36"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="HistoryChecks_di" bpmnElement="HistoryChecks" isExpanded="true"><dc:Bounds x="150" y="120" width="470" height="260"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="CheckStart_di" bpmnElement="CheckStart"><dc:Bounds x="185" y="220" width="36" height="36"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="HistoryReview_di" bpmnElement="HistoryReview"><dc:Bounds x="270" y="200" width="130" height="80"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="CheckDecision_di" bpmnElement="CheckDecision"><dc:Bounds x="445" y="215" width="50" height="50"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="CheckEnd_di" bpmnElement="CheckEnd"><dc:Bounds x="545" y="220" width="36" height="36"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="HistoryChild_di" bpmnElement="HistoryChild"><dc:Bounds x="680" y="200" width="130" height="80"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNShape id="HistoryEnd_di" bpmnElement="HistoryEnd"><dc:Bounds x="875" y="220" width="36" height="36"/></bpmndi:BPMNShape>
+    <bpmndi:BPMNEdge id="HistoryBegin_di" bpmnElement="HistoryBegin"><di:waypoint x="96" y="238"/><di:waypoint x="150" y="238"/></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="CheckBegin_di" bpmnElement="CheckBegin"><di:waypoint x="221" y="238"/><di:waypoint x="270" y="238"/></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="CheckResult_di" bpmnElement="CheckResult"><di:waypoint x="400" y="240"/><di:waypoint x="445" y="240"/></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="CheckAgain_di" bpmnElement="CheckAgain"><di:waypoint x="470" y="215"/><di:waypoint x="470" y="170"/><di:waypoint x="335" y="170"/><di:waypoint x="335" y="200"/></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="CheckDone_di" bpmnElement="CheckDone"><di:waypoint x="495" y="240"/><di:waypoint x="545" y="238"/></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="HistoryChecked_di" bpmnElement="HistoryChecked"><di:waypoint x="620" y="240"/><di:waypoint x="680" y="240"/></bpmndi:BPMNEdge>
+    <bpmndi:BPMNEdge id="HistoryDone_di" bpmnElement="HistoryDone"><di:waypoint x="810" y="240"/><di:waypoint x="875" y="238"/></bpmndi:BPMNEdge>
+  </bpmndi:BPMNPlane></bpmndi:BPMNDiagram>
+</definitions>

@@ -18,6 +18,10 @@
     {
       "name": "review.bpmn20.xml",
       "sha256": "33f9f1d36316b00865fafe1bc42aa1e97693aa26c86592035ada20e08669db02"
+    },
+    {
+      "name": "history.bpmn20.xml",
+      "sha256": "4ce73c8a6a02354a280eb8d3c977e61322b8d2db0a57cb6b4a5e9830b4d028e4"
     }
   ]
 }
