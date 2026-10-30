@@ -15,9 +15,10 @@ Linux и Windows · локальные файлы · открытый исход
 
 <table>
 <tr>
-<td width="33%"><a href="docs/images/start.png"><img src="docs/images/start.png" alt="Стартовая страница" width="100%"></a><br><sub>Стартовая страница</sub></td>
-<td width="33%"><a href="docs/images/camunda.png"><img src="docs/images/camunda.png" alt="Свойства Camunda 7" width="100%"></a><br><sub>Camunda 7</sub></td>
-<td width="33%"><a href="docs/images/monitor.png"><img src="docs/images/monitor.png" alt="Монитор Flowable и dead-letter" width="100%"></a><br><sub>Монитор Flowable</sub></td>
+<td width="25%"><a href="docs/images/start.png"><img src="docs/images/start.png" alt="Стартовая страница" width="100%"></a><br><sub>Стартовая страница</sub></td>
+<td width="25%"><a href="docs/images/camunda.png"><img src="docs/images/camunda.png" alt="Свойства Camunda 7" width="100%"></a><br><sub>Camunda 7</sub></td>
+<td width="25%"><a href="docs/images/monitor.png"><img src="docs/images/monitor.png" alt="Монитор Flowable и dead-letter" width="100%"></a><br><sub>Монитор Flowable</sub></td>
+<td width="25%"><a href="docs/images/history.png"><img src="docs/images/history.png" alt="История Flowable с привязкой к развёрнутой схеме" width="100%"></a><br><sub>История выполнения</sub></td>
 </tr>
 </table>
 
@@ -55,7 +56,7 @@ Linux и Windows · локальные файлы · открытый исход
 
 ```bash
 chmod +x BPMN-Desk-*.AppImage
-./BPMN-Desk-0.5.0-x86_64.AppImage
+./BPMN-Desk-0.6.0-x86_64.AppImage
 ```
 
 Без FUSE: `--appimage-extract-and-run` первым аргументом. Windows EXE не подписаны; macOS пока не поставляется.

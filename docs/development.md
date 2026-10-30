@@ -35,6 +35,6 @@ CI выполняет нативную матрицу Linux/Windows и пров�
 
 Скриншоты показывают настоящие страницы приложения без изменения его кода. Обложка снимается с двух живых копий одной схемы: слева светлая тема, справа тёмная. Дополнительные изображения размещаются HTML-таблицей с относительными ссылками на полные PNG.
 
-Скриншот монитора: `npm run test:runtime`, затем копирование `test-results/runtime-dead-letter.png` в `docs/images/monitor.png`. Источник — оригинальная MIT-схема [failure](../tools/runtime-fixture/src/main/resources/processes/failure.bpmn20.xml); [provenance](../tools/runtime-fixture/src/main/resources/processes/provenance.json). Остальные изображения используют [встроенные примеры](../examples/provenance.json).
+Скриншоты монитора: `npm run test:runtime`, затем копирование `test-results/runtime-dead-letter.png` в `docs/images/monitor.png`, а `test-results/runtime-history-finished.png` — в `docs/images/history.png`. Источники — оригинальные MIT-схемы [failure](../tools/runtime-fixture/src/main/resources/processes/failure.bpmn20.xml) и [history](../tools/runtime-fixture/src/main/resources/processes/history.bpmn20.xml); [provenance](../tools/runtime-fixture/src/main/resources/processes/provenance.json). Остальные изображения используют [встроенные примеры](../examples/provenance.json).
 
 README — английский основной и [русский](../README.ru.md) с одинаковыми возможностями, изображениями и ссылками. Проектная документация — на русском; GitHub release notes — английский текст и русский перевод в `<details>`.

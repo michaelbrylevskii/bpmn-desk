@@ -15,9 +15,10 @@ Linux and Windows · local files · open source
 
 <table>
 <tr>
-<td width="33%"><a href="docs/images/start.png"><img src="docs/images/start.png" alt="Start page" width="100%"></a><br><sub>Start page</sub></td>
-<td width="33%"><a href="docs/images/camunda.png"><img src="docs/images/camunda.png" alt="Camunda 7 properties" width="100%"></a><br><sub>Camunda 7</sub></td>
-<td width="33%"><a href="docs/images/monitor.png"><img src="docs/images/monitor.png" alt="Flowable monitor and dead-letter jobs" width="100%"></a><br><sub>Flowable monitor</sub></td>
+<td width="25%"><a href="docs/images/start.png"><img src="docs/images/start.png" alt="Start page" width="100%"></a><br><sub>Start page</sub></td>
+<td width="25%"><a href="docs/images/camunda.png"><img src="docs/images/camunda.png" alt="Camunda 7 properties" width="100%"></a><br><sub>Camunda 7</sub></td>
+<td width="25%"><a href="docs/images/monitor.png"><img src="docs/images/monitor.png" alt="Flowable monitor and dead-letter jobs" width="100%"></a><br><sub>Flowable monitor</sub></td>
+<td width="25%"><a href="docs/images/history.png"><img src="docs/images/history.png" alt="Flowable execution history linked to its deployed diagram" width="100%"></a><br><sub>Execution history</sub></td>
 </tr>
 </table>
 
@@ -55,7 +56,7 @@ The [latest release](https://github.com/michaelbrylevskii/bpmn-desk/releases/lat
 
 ```bash
 chmod +x BPMN-Desk-*.AppImage
-./BPMN-Desk-0.5.0-x86_64.AppImage
+./BPMN-Desk-0.6.0-x86_64.AppImage
 ```
 
 Without FUSE, use `--appimage-extract-and-run` as the first argument. Windows executables are unsigned; macOS is not available yet.
