@@ -102,7 +102,7 @@ test('история работающего multi-instance сохраняет о
     await expect(surface(page).locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
     for (const theme of ['Light theme', 'Dark theme']) {
       await page.getByTitle(theme, { exact: true }).click(); await page.setViewportSize({ width: 1050, height: 720 });
-      for (const selector of ['.history-details', '.history-journal', '.runtime-catalog', '.runtime-context-bar']) expect(await surface(page).locator(selector).evaluate(element => element.scrollWidth <= element.clientWidth + 1), selector).toBe(true);
+      for (const selector of ['.history-details', '.history-journal', '.runtime-catalog', '.instance-mode-tabs']) expect(await surface(page).locator(selector).evaluate(element => element.scrollWidth <= element.clientWidth + 1), selector).toBe(true);
       await page.screenshot({ path: `test-results/runtime-history-${theme.startsWith('Light') ? 'light' : 'dark'}.png` });
     }
     const tab = page.locator('.document-tab[data-kind=monitor]').getByRole('tab'); await page.locator('.new-tab').click(); await tab.click();

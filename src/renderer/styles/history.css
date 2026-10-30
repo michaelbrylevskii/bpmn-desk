@@ -42,3 +42,16 @@
 .instance-mode-tabs { display: grid; grid-template-columns: 1fr 1fr; }
 .runtime-source-status { overflow: auto; }
 @media (max-width: 1200px) { .runtime-instance-panel { width: 330px; } }
+
+.runtime-panel { position: relative; display: flex; min-height: 0; flex-shrink: 0; }
+.runtime-panel-content { display: flex; min-height: 0; }
+.runtime-panel-content[hidden] { display: none; }
+.runtime-panel-toggle { position: absolute; bottom: 12px; width: 24px; height: 42px; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 12; color: var(--muted); background: var(--surface); border: 1px solid var(--border); box-shadow: 0 2px 5px #0001; }
+.runtime-panel-toggle:hover { color: var(--accent); background: var(--accent-soft); }
+.runtime-panel-left .runtime-panel-toggle { right: -24px; border-left: 0; border-radius: 0 8px 8px 0; }
+.runtime-panel-right .runtime-panel-toggle { left: -24px; border-right: 0; border-radius: 8px 0 0 8px; }
+.runtime-panel-toggle[data-updated]::after { content: ''; position: absolute; top: 5px; right: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+.runtime-panel-toggle.updated { animation: runtime-panel-update 1100ms ease-out; }
+@keyframes runtime-panel-update { 0%, 100% { box-shadow: 0 2px 5px #0001; } 35% { background: var(--accent-soft); box-shadow: 0 0 14px 3px color-mix(in srgb, var(--accent) 25%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .runtime-panel-toggle.updated { animation: none; } }
+.runtime-freshness { padding-left: 36px; padding-right: 36px; }

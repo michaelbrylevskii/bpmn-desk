@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { MonitorControls } from './controls';
 import type { DiagramExport } from '../../shared/contracts';
 import { bridge } from '../platform/bridge';
@@ -17,12 +17,13 @@ import { useSummary } from './use-summary';
 import { SummaryDetails } from './summary-details';
 import { useHistory } from './use-history';
 import { InstancePanel } from './instance-panel';
+import { MonitorPanel } from './monitor-panel';
 
 export function RuntimeMonitor({ id, connection, revision, active, copy, publish }: { id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
   const [definitionId, setDefinitionId] = useState(''); const [instanceId, setInstanceId] = useState('');
   const [auto, setAuto] = useState(false); const [selected, setSelected] = useState(''); const [selectedJob, setSelectedJob] = useState<DeadLetterJob>();
-  const [historyMode, setHistoryMode] = useState(false); const [catalogHidden, setCatalogHidden] = useState(false);
+  const [historyMode, setHistoryMode] = useState(false); const [catalogHidden, setCatalogHidden] = useState(false); const [detailsHidden, setDetailsHidden] = useState(false);
   const [back, setBack] = useState<{ id: string; history: boolean }[]>([]);
   const viewer = useRef<RuntimeViewer | undefined>(undefined); const [ready, setReady] = useState(false);
   const snapshot = useSnapshot(connection, instanceId, auto, active);
@@ -72,13 +73,11 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
   useEffect(() => { publish(id, controls); }, [id, publish, controls]);
   useEffect(() => () => publish(id, undefined), [id, publish]);
   return <div className="runtime-monitor">
-    <div className="runtime-body"><div className="runtime-catalog-host" hidden={catalogHidden}><RuntimeCatalog connection={connection} revision={revision} selectedInstance={instanceId} selectedDefinition={definitionId}
-      definition={item => { setDefinitionId(item.id); setInstanceId(''); setSelected(''); setSelectedJob(undefined); setHistoryMode(false); setBack([]); }} instance={openInstance} job={openJob} /></div>
-      <div className="runtime-center"><div className="runtime-context-bar">
-        <button className="icon-button" title={t(catalogHidden ? 'Показать каталог' : 'Скрыть каталог')} aria-expanded={!catalogHidden} onClick={() => setCatalogHidden(value => !value)}>{catalogHidden ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}</button>
-        {!!back.length && <button className="button small ghost" onClick={() => { const target = back.at(-1); if (target) { setInstanceId(target.id); setHistoryMode(target.history); setSelected(''); setBack(previous => previous.slice(0, -1)); } }}><ArrowLeft size={14} />{t('Назад к экземпляру')}</button>}
-
-      </div>
+    <div className="runtime-body"><MonitorPanel side="left" hidden={catalogHidden} toggle={() => setCatalogHidden(value => !value)}><RuntimeCatalog connection={connection} revision={revision} selectedInstance={instanceId} selectedDefinition={definitionId}
+      definition={item => { setDefinitionId(item.id); setInstanceId(''); setSelected(''); setSelectedJob(undefined); setHistoryMode(false); setBack([]); }} instance={openInstance} job={openJob} /></MonitorPanel>
+      <div className="runtime-center">{!!back.length && <div className="runtime-context-bar">
+        <button className="button small ghost" onClick={() => { const target = back.at(-1); if (target) { setInstanceId(target.id); setHistoryMode(target.history); setSelected(''); setBack(previous => previous.slice(0, -1)); } }}><ArrowLeft size={14} />{t('Назад к экземпляру')}</button>
+      </div>}
         {snapshot.error && <p role="alert" className="runtime-error">{t('Текущее состояние')}: {text(snapshot.error)} {currentData && t('Последний снимок устарел.')}</p>}
         {history.error && <p role="alert" className="runtime-error">{t('История выполнения')}: {text(history.error)} {historyData && t('Последний снимок устарел.')}<span className="history-error-hint">{t('Проверь доступ к history API. Запись могла быть очищена или история отключена.')}</span></p>}
 
@@ -91,10 +90,12 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
           <span>{t('Снимок собирается несколькими запросами и может измениться во время чтения.')}</span></div>}
 
       </div>
-      {instanceId ? <InstancePanel key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot} history={history} historyMode={historyMode} setHistoryMode={setHistoryMode}
+      {(!!instanceId || !!selectedJob || !!selected && !!summary.data) && <MonitorPanel side="right" hidden={detailsHidden} toggle={() => setDetailsHidden(value => !value)} changed={`${instanceId}:${selected}`}>
+        {instanceId ? <InstancePanel key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot} history={history} historyMode={historyMode} setHistoryMode={setHistoryMode}
         xml={diagram?.xml} selected={selected} focus={focus} openInstance={followInstance} jobSelection={selectedJob} /> :
         selectedJob ? <aside className="runtime-details"><JobDetails key={selectedJob.id} connection={connection} job={selectedJob} focus={focus} /></aside> :
           !instanceId && selected && summary.data && <SummaryDetails key={`${diagramKey}:${selected}`} summary={summary.data} element={selected} open={(id, job) => job ? openJob(job) : openInstance(id)} />}
+      </MonitorPanel>}
     </div>
   </div>;
 }

@@ -18,7 +18,8 @@ export class RuntimeViewer {
   private readonly viewer: Viewer;
   private marked: { id: string; marker: string }[] = [];
   private marks: RuntimeMark[] = [];
-  constructor(container: HTMLElement, language: () => Language, selected: (id: string) => void) {
+  private fitPending = false;
+  constructor(private readonly container: HTMLElement, language: () => Language, selected: (id: string) => void) {
     this.viewer = new Viewer({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language)] });
     configureDiagramTheme(this.viewer.get('bpmnRenderer'));
     this.viewer.get<{ on(event: string, listener: (value: { newSelection: DiagramElement[] }) => void): void }>('eventBus').on('selection.changed', event => selected((event.newSelection[0]?.labelTarget ?? event.newSelection[0])?.id ?? ''));
@@ -27,6 +28,8 @@ export class RuntimeViewer {
     this.marked = []; await this.viewer.importXML(normalizeDiagram(xml)); this.fit();
   }
   fit(): void {
+    if (!this.container.clientWidth || !this.container.clientHeight) { this.fitPending = true; return; }
+    this.fitPending = false;
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); canvas.zoom('fit-viewport', 'auto');
     const box = canvas.viewbox(); const margin = 40;
     if (box.outer.width <= margin * 2 || box.outer.height <= margin * 2) return;
@@ -36,6 +39,10 @@ export class RuntimeViewer {
   }
   async svg(): Promise<string> { const { svg } = await this.viewer.saveSVG(); return runtimeSvg(svg, this.marks); }
   resize(): void {
+    // canvas.resized запускает KeepSelectionVisible. В скрытом SVG getCTM возвращает единичную
+    // матрицу, и автоматический scrollToElement способен потерять масштаб сохранённой вкладки.
+    if (!this.container.clientWidth || !this.container.clientHeight) return;
+    if (this.fitPending) { this.viewer.get<MarkedCanvas>('canvas').resized(); this.fit(); return; }
     const canvas = this.viewer.get<MarkedCanvas>('canvas'); const previous = canvas.viewbox(); canvas.resized(); const next = canvas.viewbox();
     if (!previous.outer.width || !previous.outer.height || !next.outer.width || !next.outer.height) return;
     if (previous.outer.width === next.outer.width && previous.outer.height === next.outer.height) return;
