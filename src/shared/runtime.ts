@@ -1,4 +1,4 @@
-import type { HistoricInstance, HistoryQuery, HistorySnapshot } from './history';
+import type { HistoricActivity, HistoricInstance, HistoryQuery, HistorySnapshot } from './history';
 /** Контракты чтения состояния движка. Секреты возвращаются только внутри main. */
 export type RuntimeEngine = 'flowable' | 'camunda7';
 export type Authentication = 'none' | 'basic' | 'bearer';
@@ -6,12 +6,16 @@ export const requestTimeoutSeconds = { default: 15, min: 5, max: 120 } as const;
 export interface Connection {
   id: string; name: string; engine: RuntimeEngine; baseUrl: string; authentication: Authentication;
   username: string; hasSecret: boolean; secretStored: boolean;
-  requestTimeoutSeconds?: number; autoSummary?: boolean;
+  requestTimeoutSeconds?: number;
+  /** @deprecated Только для однократной миграции старого профиля в глобальный переключатель. */
+  autoSummary?: boolean;
 }
 export interface ConnectionInput {
   id?: string; name: string; engine: RuntimeEngine; baseUrl: string; authentication: Authentication;
   username: string; secret?: string; rememberSecret: boolean;
-  requestTimeoutSeconds?: number; autoSummary?: boolean;
+  requestTimeoutSeconds?: number;
+  /** @deprecated Только для однократной миграции старого профиля в глобальный переключатель. */
+  autoSummary?: boolean;
 }
 export interface Connections { items: Connection[]; secureStorage: boolean }
 export interface PageQuery {
@@ -44,7 +48,7 @@ export interface DeployedDiagram { definition: Definition; xml: string }
 /** Ограниченная выборка, а не полный обход версии процесса. Ошибка отличается от пустого результата. */
 export interface RuntimeSample<T> { data: T[]; total?: number; complete: boolean; error?: string }
 export interface DefinitionSummary {
-  executions: RuntimeSample<Execution>; deadLetters: RuntimeSample<DeadLetterJob>; capturedAt: string;
+  executions: RuntimeSample<Execution>; deadLetters: RuntimeSample<DeadLetterJob>; activities: RuntimeSample<HistoricActivity>; capturedAt: string;
 }
 export interface RuntimeBridge {
   connections(): Promise<Connections>;

@@ -21,7 +21,7 @@ import type { MonitorDestination, MonitorVisit } from './navigation-model';
 import { RuntimeFreshness } from './freshness';
 import { MonitorPanel } from './monitor-panel';
 
-export function RuntimeMonitor({ autoSummary, dark, id, connection, revision, active, copy, publish }: { autoSummary: boolean; dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
+export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeout, dark, id, connection, revision, active, copy, publish }: { summaryEnabled: boolean; setSummaryEnabled: (value: boolean) => void; requestTimeout: number; dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
   const { current: location, past, future, dispatch, setHistoryMode } = useMonitorNavigation();
   const definitionId = location?.definitionId ?? ''; const instanceId = location?.instanceId ?? '';
@@ -37,10 +37,10 @@ export function RuntimeMonitor({ autoSummary, dark, id, connection, revision, ac
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
   const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
   const desiredDefinition = instanceDefinition ?? definitionId;
-  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && !!desiredDefinition, autoSummary, auto);
+  const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && summaryEnabled && !!desiredDefinition, auto);
   const busy = snapshot.busy || history.busy || summary.busy;
   const readSummary = summary.read;
-  const refreshState = useCallback(() => { if (instanceId) { refreshSnapshot(); refreshHistory(); } else readSummary(); }, [instanceId, refreshSnapshot, refreshHistory, readSummary]);
+  const refreshState = useCallback(() => { if (instanceId) { refreshSnapshot(); refreshHistory(); } else if (summaryEnabled) readSummary(); }, [instanceId, refreshSnapshot, refreshHistory, readSummary, summaryEnabled]);
   const [instancesOf, setInstancesOf] = useState<{ definition: Definition }>();
   const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
   const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
@@ -58,6 +58,7 @@ export function RuntimeMonitor({ autoSummary, dark, id, connection, revision, ac
   const followInstance = (id: string, preview?: Instance) => openInstance(id, historyMode, preview);
   const openDefinition = (item: Definition) => visit({ instanceId: '', definitionId: item.id, history: false,
     destination: { kind: 'definition', id: item.id, name: item.name || item.key, version: item.version } });
+  const openDefinitionId = (id: string) => visit({ instanceId: '', definitionId: id, history: false, destination: { kind: 'definition', id, name: diagram?.definition.id === id ? diagram.definition.name || diagram.definition.key : id, version: diagram?.definition.id === id ? diagram.definition.version : undefined } });
   const move = useCallback((direction: 'back' | 'forward') => { if (!(direction === 'back' ? past.length : future.length)) return; dispatch({ type: 'move', direction, leaving: destination }); setSelected(''); setHistoryFilter(''); viewer.current?.clearSelection(); }, [dispatch, destination, past.length, future.length]);
   useEffect(() => {
     if (!connection || !desiredDefinition) return;
@@ -79,13 +80,13 @@ export function RuntimeMonitor({ autoSummary, dark, id, connection, revision, ac
     else await bridge.saveFile({ name: `${name}.png`, format: 'png', content: await pngFromSvg(svg, format === 'png-white') });
   }, [diagram, ready]);
   const controls = useMemo<MonitorControls>(() => {
-    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!desiredDefinition || !!instanceId,
+    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId || !!desiredDefinition && summaryEnabled,
       canCopy: !!diagram, canExport: !!diagram && ready, refresh: refreshState,
       // Поле тулбара получает новое checked в том же событии, без ожидания passive effect.
       setAuto: auto => { setAuto(auto); publish(id, { ...value, auto }); },
       copy: () => { if (diagram) copy(diagram); }, fit: () => viewer.current?.fit(), exportDiagram };
     return value;
-  }, [id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move]);
+  }, [id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move, summaryEnabled]);
   useEffect(() => { publish(id, controls); }, [id, publish, controls]);
   useEffect(() => () => publish(id, undefined), [id, publish]);
   return <div className="runtime-monitor">
@@ -97,15 +98,15 @@ export function RuntimeMonitor({ autoSummary, dark, id, connection, revision, ac
 
         {currentData?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
-        {diagram ? <RuntimeDiagram instances={() => { if (diagram) { setInstancesOf({ definition: diagram.definition }); setCatalogHidden(false); } }} definition={instanceId ? () => openDefinition(diagram.definition) : undefined} dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери определение или экземпляр.')}</p>}
+        {diagram ? <RuntimeDiagram instances={() => { if (diagram) { setInstancesOf({ definition: diagram.definition }); setCatalogHidden(false); } }} definition={instanceId ? () => openDefinition(diagram.definition) : undefined} dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} definitionView={!instanceId} summaryEnabled={summaryEnabled} setSummaryEnabled={setSummaryEnabled} requestTimeout={requestTimeout} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери определение или экземпляр.')}</p>}
         <RuntimeFreshness runtime={currentData?.capturedAt} history={historyData?.capturedAt} />
 
       </div>
-      {(!!instanceId || !!selectedJob || !!selected && !!summary.data) && <MonitorPanel side="right" hidden={detailsHidden} toggle={() => setDetailsHidden(value => !value)} changed={`${instanceId}:${selected}`}>
+      {(!!instanceId || !!selectedJob || !!definitionId) && <MonitorPanel side="right" hidden={detailsHidden} toggle={() => setDetailsHidden(value => !value)} changed={`${instanceId}:${selected}`}>
         {instanceId ? <InstancePanel key={`${connection}:${instanceId}`} connection={connection} snapshot={snapshot} history={history} historyMode={historyMode} setHistoryMode={setHistoryMode}
-        xml={diagram?.xml} selected={selected} historyFilter={historyFilter} clearHistoryFilter={clearHistoryFilter} focus={focus} openInstance={followInstance} jobSelection={selectedJob} /> :
+        xml={diagram?.xml} selected={selected} historyFilter={historyFilter} clearHistoryFilter={clearHistoryFilter} focus={focus} openInstance={followInstance} definition={openDefinitionId} jobSelection={selectedJob} /> :
         selectedJob ? <aside className="runtime-details"><JobDetails key={selectedJob.id} connection={connection} job={selectedJob} focus={focus} /></aside> :
-          !instanceId && selected && summary.data && <SummaryDetails key={`${diagramKey}:${selected}`} summary={summary.data} element={selected} open={(id, job) => job ? openJob(job) : openInstance(id)} />}
+          <SummaryDetails key={diagramKey} summary={summary} enabled={summaryEnabled} element={selected} open={(id, history, job) => job ? openJob(job) : openInstance(id, history)} />}
       </MonitorPanel>}
     </div>
   </div>;

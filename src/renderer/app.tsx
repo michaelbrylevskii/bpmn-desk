@@ -22,6 +22,7 @@ import { useTabs } from './workspace/use-tabs';
 import { RuntimeWorkspace } from './runtime/workspace';
 import { RuntimeToolbar } from './runtime/toolbar';
 import { ConnectionsDialog } from './runtime/connections-dialog';
+import { useSummaryPreference } from './runtime/use-summary-preference';
 import { useConnections } from './runtime/use-connections';
 import { useMonitorControls } from './runtime/controls';
 export function App() {
@@ -37,6 +38,7 @@ export function App() {
   const createHome = tabs.createHome;
   const requestNew = useCallback(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); createHome(); }, [createHome]);
   const profiles = useConnections(home || managing !== undefined || !!monitors.length); const handles = useMonitorControls(); const controls = handles.controls[tabs.activeId];
+  const summaryPreference = useSummaryPreference(profiles.data.items, monitoring ? activeTab.connectionId : profiles.preferredId, profiles.ready);
   const { mode: theme, dark, setMode: setTheme } = useTheme(); const [examples, setExamples] = useState<string[]>([]); const [recent, setRecent] = useState<string[]>([]); const [dragging, setDragging] = useState(false);
   const addDocument = docs.add;
   const copy = useCallback((diagram: DeployedDiagram) => { addDocument({ name: `${diagram.definition.key}.bpmn20.xml`, path: '', token: '', xml: diagram.xml }); }, [addDocument]);
@@ -97,7 +99,7 @@ export function App() {
     {docs.documents.length > 0 && docs.recovery.length > 0 && <div className="pending-recovery"><span>{t('Остались несохранённые документы предыдущей сессии: {count}', { count: docs.recovery.length })}</span><button className="button small" onClick={docs.restore}>{t('Восстановить')}</button><button className="button small ghost" onClick={docs.discardRecovery}>{t('Отбросить')}</button></div>}
     <div className="workspaces">{docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={record.id === tabs.activeId}
       editors={docs.editors.current} clipboard={clipboard} dark={dark} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
-      {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace dark={dark} id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}
+      {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace summaryEnabled={summaryPreference.enabled} setSummaryEnabled={summaryPreference.setEnabled} dark={dark} id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}
       {home && <Welcome key={sourceHome ?? 'initial'} create={profile => docs.run(() => { tabs.documentOpened(docs.create(profile), sourceHome); })} open={() => openContent(docs.open)}
         examples={examples} recent={recent} openExample={name => openContent(() => docs.openExample(name))} openRecent={path => openContent(() => docs.openRecent(path))}
         connections={profiles.data.items} savedId={profiles.preferredId} connectionError={profiles.error} manage={() => setManaging('')}

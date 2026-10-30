@@ -1,4 +1,13 @@
 export const runtimeMessages = {
+  'Сводка выключена': 'Summary is off', 'Записи истории': 'History records',
+  'Обновление и повтор после ошибки — в верхней панели.': 'Refresh and retry from the top toolbar.',
+  'Три запроса, до 100 записей каждого вида, до {seconds} с.': 'Three requests, up to 100 records each, within {seconds} s.',
+  'Нажми, чтобы выключить сводку для всех мониторов.': 'Click to turn summaries off in all monitors.',
+  'Нажми, чтобы включить сводку для всех мониторов.': 'Click to turn summaries on in all monitors.',
+  'Выберите элемент для просмотра подробностей': 'Select an element to view details',
+  'Включи сводку для просмотра экземпляров элемента.': 'Enable the summary to view instances at this element.',
+  '◷ — разные экземпляры с записью шага в выборке истории. Это не признак успешного завершения.': '◷ counts distinct instances with an activity record in the history sample. It does not indicate successful completion.',
+
   'Общий для Runtime, History и Dead-letter jobs': 'Shared by Runtime, History and Dead-letter jobs',
   'Недопустимая настройка автосводки.': 'Invalid automatic summary setting.',
   'Загружать сводку определения автоматически': 'Load definition summary automatically',

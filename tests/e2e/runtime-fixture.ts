@@ -42,3 +42,11 @@ export async function openInstance(page: Page, id: string, history = false) {
   await expect(page.locator('.workspace-surface:not([hidden]) .runtime-instance > code')).toHaveText(id);
 }
 export async function close(app: ElectronApplication, directory: string) { await app.close(); await rm(directory, { recursive: true, force: true }); }
+
+/** Исходное выключенное предпочтение, сохранённое предыдущей сессией приложения. */
+export async function savedSummaryOff(page: Page) {
+  await page.evaluate(() => localStorage.setItem('bpmn-desk:summary-enabled', 'false'));
+  await page.reload();
+  await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+  await expect(page.locator('.runtime-catalog .runtime-row').first()).toBeVisible();
+}

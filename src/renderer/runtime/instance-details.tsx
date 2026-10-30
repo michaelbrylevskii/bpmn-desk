@@ -7,11 +7,12 @@ import { runtimeBridge } from '../platform/runtime';
 import { useI18n } from '../i18n/provider';
 import { Variables } from './variables';
 import { JobDetails } from './job-details';
+import { InstanceFields } from './instance-fields';
 import { InstanceRelationships } from './relationships';
 
-export function InstanceDetails({ connection, snapshot, selected, focus, openInstance, jobSelection }: {
+export function InstanceDetails({ connection, snapshot, selected, focus, openInstance, definition, jobSelection }: {
   connection: string; snapshot: InstanceSnapshot; selected: string; focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void;
-  jobSelection?: DeadLetterJob;
+  definition: (id: string) => void; jobSelection?: DeadLetterJob;
 }) {
   const { t, text } = useI18n(); const [tab, setTab] = useState<'variables' | 'executions' | 'jobs' | 'tasks'>(jobSelection ? 'jobs' : 'variables');
   const jobsTab = useRef<HTMLButtonElement>(null);
@@ -27,9 +28,7 @@ export function InstanceDetails({ connection, snapshot, selected, focus, openIns
   const process = snapshot.instance;
   return <aside className="runtime-details">
     <div className="runtime-instance"><strong>{process.businessKey || process.name || process.id}</strong><code>{process.id}</code>
-      <dl><dt>{t('Движок')}</dt><dd>Flowable</dd><dt>{t('Состояние')}</dt><dd>{process.suspended ? t('Приостановлен') : t('Активен')}</dd>
-        <dt>{t('ID определения')}</dt><dd>{process.processDefinitionId}</dd><dt>{t('Tenant ID')}</dt><dd>{process.tenantId || '—'}</dd>
-        <dt>{t('Начат')}</dt><dd>{process.startTime ? new Date(process.startTime).toLocaleString() : '—'}</dd></dl>
+      <InstanceFields process={process} definition={definition} />
       {!!snapshot.deadLetters.length && <button className="runtime-error runtime-job-alert" onClick={() => { setTab('jobs'); jobsTab.current?.focus(); jobsTab.current?.scrollIntoView({ block: 'nearest' }); }}><span>{t('Есть dead-letter jobs')}: {snapshot.deadLetters.length}</span><ArrowRight size={16} aria-hidden="true" /></button>}
       <InstanceRelationships connection={connection} parent={process.superProcessInstanceId} children={snapshot.children} incomplete={snapshot.unavailable.includes('children')} open={openInstance} />
       {selected && <p className="runtime-selection">{t('Выбранный элемент')}: <code>{selected}</code></p>}

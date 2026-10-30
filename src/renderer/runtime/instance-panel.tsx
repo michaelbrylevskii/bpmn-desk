@@ -6,10 +6,10 @@ import { HistoryDetails } from './history-details';
 import type { useSnapshot } from './use-snapshot';
 import type { useHistory } from './use-history';
 
-export function InstancePanel({ connection, snapshot, history, historyMode, setHistoryMode, xml, selected, historyFilter, clearHistoryFilter, focus, openInstance, jobSelection }: {
+export function InstancePanel({ connection, snapshot, history, historyMode, setHistoryMode, xml, selected, historyFilter, clearHistoryFilter, focus, openInstance, definition, jobSelection }: {
   connection: string; snapshot: ReturnType<typeof useSnapshot>; history: ReturnType<typeof useHistory>;
   historyMode: boolean; setHistoryMode: (value: boolean) => void; xml?: string; selected: string; historyFilter: string; clearHistoryFilter: () => void;
-  focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void; jobSelection?: DeadLetterJob;
+  focus: (id: string) => void; openInstance: (id: string, preview?: Instance) => void; definition: (id: string) => void; jobSelection?: DeadLetterJob;
 }) {
   const { t, text } = useI18n();
   const source = historyMode ? history : snapshot;
@@ -18,8 +18,8 @@ export function InstancePanel({ connection, snapshot, history, historyMode, setH
       <button aria-pressed={!historyMode} onClick={() => setHistoryMode(false)}>{t('Текущее состояние')}</button>
       <button aria-pressed={historyMode} onClick={() => setHistoryMode(true)}>{t('История')}</button>
     </nav>
-    {historyMode ? history.data && <HistoryDetails connection={connection} snapshot={history.data} xml={xml} filter={historyFilter} clearFilter={clearHistoryFilter} focus={focus} openInstance={openInstance} /> :
-      snapshot.data && <InstanceDetails connection={connection} snapshot={snapshot.data} selected={selected} focus={focus} openInstance={openInstance} jobSelection={jobSelection} />}
+    {historyMode ? history.data && <HistoryDetails definition={definition} connection={connection} snapshot={history.data} xml={xml} filter={historyFilter} clearFilter={clearHistoryFilter} focus={focus} openInstance={openInstance} /> :
+      snapshot.data && <InstanceDetails definition={definition} connection={connection} snapshot={snapshot.data} selected={selected} focus={focus} openInstance={openInstance} jobSelection={jobSelection} />}
     {!source.data && <div className="runtime-source-status">
       {source.error ? <p className="runtime-error" role="alert">{text(source.error)}</p> : source.busy ? <p className="runtime-empty">{t('Загрузка состояния…')}</p> :
         !historyMode && snapshot.missing && <p className="runtime-empty">{t('Экземпляра нет в runtime. Он мог завершиться или быть удалён; подробности доступны в истории, если она сохранена.')}</p>}

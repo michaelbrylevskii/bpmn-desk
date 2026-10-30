@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fixture, launch, openInstance, close, useRuntimeFixture } from './runtime-fixture';
+import { fixture, launch, openInstance, close, useRuntimeFixture, savedSummaryOff } from './runtime-fixture';
 useRuntimeFixture();
 
 async function definition(page: Page, key: string, version?: number) {
@@ -22,7 +22,7 @@ test('сводка точной версии: multi-instance считается 
   const { app, page, directory } = await launch();
   try {
     await definition(page, 'deskParallel');
-    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1');
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1 · ◷ 1');
     await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'ready');
     await page.locator('.runtime-canvas .djs-element[data-element-id="ReviewMany"] .djs-hit').click();
     await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(1);
@@ -30,15 +30,22 @@ test('сводка точной версии: multi-instance считается 
     await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
     await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('● 3');
     await definition(page, 'deskParallel');
-    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1');
+    await expect(page.locator('.runtime-badge[data-activity-id="ReviewMany"]')).toHaveText('1 · ◷ 1');
     await page.getByRole('button', { name: 'Version summary', exact: true }).click(); await expect(page.locator('.runtime-badge')).toHaveCount(0);
     await definition(page, 'deskFailure');
+    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await page.getByRole('button', { name: 'Version summary', exact: true }).click();
     await expect(page.locator('.runtime-badge.failed[data-activity-id="Delivery"]')).toHaveText('! 1');
     const filePath = resolve(directory, 'definition-summary.svg');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, filePath);
     await page.getByTitle('Export SVG', { exact: true }).click();
     await expect(async () => { expect(await readFile(filePath, 'utf8')).toContain('>! 1</text>'); }).toPass();
     await page.locator('.runtime-canvas .djs-element[data-element-id="Delivery"] .djs-hit').click();
+    // Неудачная async-транзакция не обязана оставить historic activity на позиции dead-letter.
+    const sources = page.locator('.runtime-summary-details .summary-source-tabs');
+    await sources.getByRole('button', { name: 'History', exact: true }).click();
+    await expect(page.locator('.runtime-summary-details')).toContainText('The loaded sample has no instances at this element.');
+    await sources.getByRole('button', { name: 'Runtime', exact: true }).click();
     await page.locator('.runtime-summary-details').getByRole('button', { name: `Open instance: ${fixture.failedInstanceId}`, exact: true }).click();
     await expect(page.locator('.runtime-details .runtime-job summary')).toBeVisible();
     await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.failedInstanceId);
@@ -62,11 +69,11 @@ test('ограниченная сводка и медленный сервер �
   const server = createServer((request, response) => {
     const url = new URL(request.url!, new URL(fixture.baseUrl).origin); requests.push(url);
     if (denyDetails && ['/deadletter-jobs', '/tasks', '/variables'].some(path => url.pathname.endsWith(path))) { response.setHeader('content-type', 'application/json'); response.statusCode = 403; response.end('{}'); return; }
-    const summary = url.searchParams.has('processDefinitionId') && (url.pathname.endsWith('/executions') || url.pathname.endsWith('/deadletter-jobs'));
+    const summary = url.searchParams.has('processDefinitionId') && (url.pathname.endsWith('/executions') || url.pathname.endsWith('/deadletter-jobs') || url.pathname.endsWith('/historic-activity-instances'));
     if (summary) {
       response.setHeader('content-type', 'application/json');
       if (mode === 'slow') { response.write('{'); return; }
-      if (url.pathname.endsWith('/deadletter-jobs')) { response.statusCode = 403; response.end('{}'); return; }
+      if (url.pathname.endsWith('/deadletter-jobs') || url.pathname.endsWith('/historic-activity-instances')) { response.statusCode = 403; response.end('{}'); return; }
       response.end(JSON.stringify({ start: 0, total: 1000000, data: Array.from({ length: 100 }, (_, index) => ({ id: `e${index}`, activityId: 'Review', processInstanceId: `p${index % 25}` })) })); return;
     }
     void fetch(url, { headers: { Authorization: request.headers.authorization ?? '' } }).then(async upstream => {
@@ -76,12 +83,13 @@ test('ограниченная сводка и медленный сервер �
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = server.address(); if (!address || typeof address === 'string') throw new Error('Нет порта');
   const { app, page, directory } = await launch(`http://127.0.0.1:${address.port}/process-api/`).catch(async error => { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); throw error; });
-  const summaryRequests = () => requests.filter(url => url.searchParams.has('processDefinitionId') && (url.pathname.endsWith('/executions') || url.pathname.endsWith('/deadletter-jobs')));
+  const summaryRequests = () => requests.filter(url => url.searchParams.has('processDefinitionId') && (url.pathname.endsWith('/executions') || url.pathname.endsWith('/deadletter-jobs') || url.pathname.endsWith('/historic-activity-instances')));
   try {
     await page.getByTitle('Manage connections', { exact: true }).click();
-    await page.getByLabel('Load definition summary automatically').uncheck();
+    await page.getByLabel('Request timeout, seconds', { exact: true }).fill('5');
     await page.getByRole('button', { name: 'Save connection', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await savedSummaryOff(page);
     await definition(page, 'deskReview', 1); expect(summaryRequests()).toHaveLength(0);
     await page.getByRole('button', { name: 'Version summary', exact: true }).click();
     await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('≥25');
@@ -90,7 +98,7 @@ test('ограниченная сводка и медленный сервер �
     await expect(page.getByRole('tooltip')).toContainText('100/1000000');
     await expect(page.getByRole('tooltip')).toContainText('Partial sample');
     await expect(page.getByRole('tooltip')).toContainText('403');
-    await page.keyboard.press('Escape'); await page.getByRole('button', { name: 'Version summary', exact: true }).blur(); expect(summaryRequests()).toHaveLength(2);
+    await page.keyboard.press('Escape'); await page.getByRole('button', { name: 'Version summary', exact: true }).blur(); expect(summaryRequests()).toHaveLength(3);
     for (const theme of ['Light theme', 'Dark theme']) {
       await page.getByTitle(theme, { exact: true }).click(); await page.setViewportSize({ width: 1050, height: 680 });
       expect(await page.locator('.runtime-diagram-heading').evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
@@ -106,21 +114,20 @@ test('ограниченная сводка и медленный сервер �
     await expect(page.locator('.runtime-summary-details').getByRole('button', { name: 'Open instance: p10', exact: true })).toBeVisible();
     await page.locator('.runtime-summary-details').getByTitle('Next page', { exact: true }).click();
     await expect(page.locator('.runtime-summary-details .related-instance')).toHaveCount(5);
-    expect(summaryRequests()).toHaveLength(2);
+    expect(summaryRequests()).toHaveLength(3);
     mode = 'slow'; await page.getByTitle('Refresh state', { exact: true }).click();
-    await expect.poll(() => summaryRequests().length).toBe(4);
-    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-disabled', 'true');
+    await expect.poll(() => summaryRequests().length).toBe(6);
+    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'loading');
     await definition(page, 'deskParallel');
     await expect(page.locator('.runtime-canvas')).toContainText('Team review'); await expect(page.locator('.runtime-summary-notice')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-disabled', 'false');
-    await expect(page.locator('.runtime-badge')).toHaveCount(0); expect(summaryRequests()).toHaveLength(4);
-    await page.getByRole('button', { name: 'Version summary', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.runtime-badge')).toHaveCount(0); expect(summaryRequests()).toHaveLength(6);
     await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'error', { timeout: 20000 });
     await page.getByRole('button', { name: 'Version summary', exact: true }).blur();
     await page.getByRole('button', { name: 'Version summary', exact: true }).focus();
     await expect(page.getByRole('tooltip')).toContainText('API request timed out.');
     await page.keyboard.press('Escape'); await page.getByRole('button', { name: 'Version summary', exact: true }).blur();
-    expect(summaryRequests()).toHaveLength(6);
+    expect(summaryRequests()).toHaveLength(9);
     await openInstance(page, fixture.reviewInstanceId);
     await page.locator('.runtime-variables > input').fill('missing-variable'); await expect(page.locator('.runtime-variables')).toContainText('No results');
     await expect(page.locator('.runtime-catalog .runtime-instance-status')).toHaveCount(0);

@@ -118,3 +118,8 @@
 
 .catalog-condition.shared-context { color: light-dark(#7540a3, #d3adfa); background: light-dark(#f0e5fa, #39294d); }
 .catalog-condition.shared-context:hover { background: light-dark(#e5d4f4, #4b3565); }
+
+.runtime-summary-status[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); border-radius: 6px; }
+.summary-source-count { display: contents; }
+.runtime-details-placeholder { margin: auto; }
+.instance-definition-link { font-size: inherit; }.instance-definition-link code { font-size: inherit; }
