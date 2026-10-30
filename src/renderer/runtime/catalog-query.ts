@@ -30,3 +30,8 @@ export function removeCatalogCondition(query: HistoryQuery, key: keyof HistoryQu
 export function cleanCatalogQuery(query: HistoryQuery): HistoryQuery {
   return Object.fromEntries(Object.entries({ ...query, start: 0 }).map(([key, value]) => [key, typeof value === 'string' ? value.trim() || undefined : value]));
 }
+
+export interface DefinitionContext { id: string; label: string }
+export function resetContextPages(queries: Partial<Record<CatalogKind, HistoryQuery>>): Partial<Record<CatalogKind, HistoryQuery>> {
+  return { ...queries, ...Object.fromEntries((['runtime', 'history', 'jobs'] as const).map(kind => [kind, { ...queries[kind] ?? defaultCatalogQuery(kind), definitionId: undefined, start: 0 }])) };
+}

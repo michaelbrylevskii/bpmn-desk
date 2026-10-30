@@ -20,3 +20,13 @@ describe('условия каталога', () => {
     expect(catalogConditions('history', query).map(item => item.key)).toEqual(['search', 'instanceName', 'finished']);
   });
 });
+
+it('смена общего контекста сбрасывает страницы трёх источников, сохраняя локальные условия и каталог определений', async () => {
+  const { resetContextPages } = await import('../../src/renderer/runtime/catalog-query');
+  const queries = { runtime: { start: 50, definitionId: 'old', search: 'order' }, history: { start: 100, finished: false }, jobs: { start: 25, executionId: 'e' }, definitions: { start: 25, latest: false } };
+  const next = resetContextPages(queries);
+  expect(next.runtime).toMatchObject({ start: 0, definitionId: undefined, search: 'order' });
+  expect(next.history).toMatchObject({ start: 0, finished: false });
+  expect(next.jobs).toMatchObject({ start: 0, executionId: 'e' });
+  expect(next.definitions).toEqual(queries.definitions); expect(queries.runtime.definitionId).toBe('old');
+});

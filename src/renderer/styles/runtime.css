@@ -115,3 +115,6 @@
 .instance-card { padding: 7px 9px; }.instance-card > span { gap: 3px; }.instance-card .related-role { color: var(--muted); font-weight: 400; margin-right: 4px; }
 
 .monitor-navigation { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }.navigation-destination { display: grid; gap: 4px; }.navigation-destination small { color: var(--muted); }
+
+.catalog-condition.shared-context { color: light-dark(#7540a3, #d3adfa); background: light-dark(#f0e5fa, #39294d); }
+.catalog-condition.shared-context:hover { background: light-dark(#e5d4f4, #4b3565); }

@@ -6,21 +6,28 @@ import { runtimeBridge } from '../platform/runtime';
 import { useI18n } from '../i18n/provider';
 import { CatalogFilters } from './catalog-filters';
 import type { HistoricInstance, HistoryQuery } from '../../shared/history';
-import { defaultCatalogQuery, type CatalogKind } from './catalog-query';
+import { defaultCatalogQuery, resetContextPages, type DefinitionContext, type CatalogKind } from './catalog-query';
 
 type CatalogPage = { kind: 'definitions'; page: RuntimePage<Definition> } | { kind: 'runtime' | 'history'; page: RuntimePage<Instance | HistoricInstance> } | { kind: 'jobs'; page: RuntimePage<DeadLetterJob> };
 export function RuntimeCatalog({ connection, revision: profileRevision, selectedInstance, selectedDefinition, instancesOf, definition, instance, job }: { connection: string; revision: number; selectedInstance: string; selectedDefinition: string; instancesOf?: { definition: Definition }; definition: (item: Definition) => void; instance: (id: string, history?: boolean, preview?: Instance) => void; job: (item: DeadLetterJob) => void }) {
   const { t, text } = useI18n(); const [kind, setKind] = useState<CatalogKind>('definitions');
-  const [scope, setScope] = useState<Definition>();
+  const [scope, setScope] = useState<DefinitionContext>();
   const [queries, setQueries] = useState<Partial<Record<CatalogKind, HistoryQuery>>>({});
   const history = kind === 'history';
-  const query = useMemo(() => queries[kind] ?? defaultCatalogQuery(kind), [queries, kind]);
-  const setQuery = (next: SetStateAction<HistoryQuery>) => setQueries(previous => ({ ...previous, [kind]: typeof next === 'function' ? next(previous[kind] ?? defaultCatalogQuery(kind)) : next }));
+  const query = useMemo(() => ({ ...queries[kind] ?? defaultCatalogQuery(kind), ...(kind !== 'definitions' && scope ? { definitionId: scope.id } : {}) }), [queries, kind, scope]);
+  const setQuery = (action: SetStateAction<HistoryQuery>) => {
+    const next = typeof action === 'function' ? action(query) : action;
+    const shared = kind !== 'definitions' && !!scope;
+    const changedScope = shared && next.definitionId !== scope.id;
+    if (changedScope) setScope(next.definitionId ? { id: next.definitionId, label: next.definitionId } : undefined);
+    setQueries(previous => ({ ...(changedScope ? resetContextPages(previous) : previous), [kind]: { ...next, ...(shared ? { definitionId: undefined } : {}) } }));
+  };
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     if (!instancesOf) return;
-    setScope(instancesOf.definition); setKind('runtime');
-    setQueries(previous => ({ ...previous, ...Object.fromEntries((['runtime', 'history', 'jobs'] as const).map(key => [key, { ...previous[key] ?? defaultCatalogQuery(key), definitionId: instancesOf.definition.id, start: 0 }])) }));
+    const item = instancesOf.definition;
+    setScope({ id: item.id, label: `${item.name || item.key} · v${item.version}` }); setKind('runtime');
+    setQueries(resetContextPages);
   }, [instancesOf]);
   const requestKey = JSON.stringify({ connection, query, kind, profileRevision });
   const [response, setResponse] = useState<{ key: string; result: CatalogPage }>(); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);

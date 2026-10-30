@@ -1,4 +1,5 @@
 export const runtimeMessages = {
+  'Общий для Runtime, History и Dead-letter jobs': 'Shared by Runtime, History and Dead-letter jobs',
   'Недопустимая настройка автосводки.': 'Invalid automatic summary setting.',
   'Загружать сводку определения автоматически': 'Load definition summary automatically',
   'Загрузка сводки…': 'Loading summary…', 'Ошибка сводки': 'Summary error', 'Частичная сводка': 'Partial summary', 'Сводка загружена': 'Summary loaded', 'Сводка не загружена': 'Summary not loaded',

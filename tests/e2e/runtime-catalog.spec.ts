@@ -36,7 +36,12 @@ test('сворачиваемые фильтры, отдельные источн
     await expect.poll(() => runtime().searchParams.has('processDefinitionId')).toBe(false);
     expect(runtime().searchParams.get('businessKeyLikeIgnoreCase')).toBe('%order%');
     await tabs.getByRole('button', { name: 'History', exact: true }).click();
-    await expect(catalog.locator('.catalog-condition')).toContainText('Definition: deskHistory · v1');
+    await expect(catalog.locator('.shared-context')).toHaveCount(0);
+    await expect.poll(() => api.state.requests.filter(url => url.pathname.endsWith('/historic-process-instances')).at(-1)?.searchParams.has('processDefinitionId')).toBe(false);
+    await tabs.getByRole('button', { name: 'Dead-letter jobs', exact: true }).click();
+    await expect(catalog.locator('.shared-context')).toHaveCount(0);
+    await expect.poll(() => api.state.requests.filter(url => url.pathname.endsWith('/deadletter-jobs')).at(-1)?.searchParams.has('processDefinitionId')).toBe(false);
+    await tabs.getByRole('button', { name: 'History', exact: true }).click();
     await catalog.locator('.runtime-row').first().click();
     await expect(page.locator('.instance-mode-tabs').getByRole('button', { name: 'History', exact: true })).toHaveAttribute('aria-pressed', 'true');
     filters = await openCatalogFilters(page);
@@ -74,5 +79,32 @@ test('сворачиваемые фильтры, отдельные источн
     await expect(catalog.getByLabel('ID execution', { exact: true })).toBeVisible();
     expect(await catalog.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: 'test-results/runtime-catalog-ru.png' });
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});
+
+test('сброс общего контекста сохраняет локальные условия других каталогов', async () => {
+  const api = await historyServer(); api.state.runtimeStatus = 200;
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  try {
+    const catalog = page.locator('.runtime-catalog'); const tabs = catalog.locator('> .runtime-tabs');
+    let filters = await openCatalogFilters(page, 'History');
+    await filters.getByLabel('Tenant ID', { exact: true }).fill('history-tenant'); await filters.getByRole('button', { name: 'Apply filters', exact: true }).click();
+    filters = await openCatalogFilters(page, 'Runtime');
+    await filters.getByLabel('Business key (exact match)', { exact: true }).fill('order-1'); await filters.getByRole('button', { name: 'Apply filters', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Definitions', exact: true }).click(); await catalog.locator('.runtime-row').click();
+    await page.locator('.runtime-diagram-heading').getByRole('button', { name: 'Instances', exact: true }).click();
+    const shared = catalog.locator('.shared-context'); await shared.focus();
+    await expect(page.getByRole('tooltip')).toContainText('Shared by Runtime, History and Dead-letter jobs');
+    await page.keyboard.press('Escape');
+    for (const theme of ['Light theme', 'Dark theme']) {
+      await page.getByTitle(theme, { exact: true }).click(); await page.screenshot({ path: `test-results/runtime-shared-context-${theme.startsWith('Light') ? 'light' : 'dark'}.png` });
+    }
+    await tabs.getByRole('button', { name: 'Dead-letter jobs', exact: true }).click(); await expect(shared).toBeVisible();
+    await catalog.getByRole('button', { name: 'Reset filters', exact: true }).click(); await expect(shared).toHaveCount(0);
+    await tabs.getByRole('button', { name: 'History', exact: true }).click(); await expect(shared).toHaveCount(0);
+    await expect(catalog.locator('.catalog-condition')).toHaveText('Tenant ID: history-tenant');
+    await expect.poll(() => api.state.requests.filter(url => url.pathname.endsWith('/historic-process-instances')).at(-1)?.searchParams.get('tenantId')).toBe('history-tenant');
+    await tabs.getByRole('button', { name: 'Runtime', exact: true }).click(); await expect(shared).toHaveCount(0);
+    await expect(catalog.locator('.catalog-condition')).toHaveText('Business key (exact match): order-1');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });

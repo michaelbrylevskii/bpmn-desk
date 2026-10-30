@@ -1,16 +1,15 @@
 import { RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { HistoryQuery } from '../../shared/history';
-import type { Definition } from '../../shared/runtime';
 import { useI18n } from '../i18n/provider';
 import { Select } from '../ui/select';
 import { CatalogConditions } from './catalog-conditions';
 import { CatalogFields } from './catalog-fields';
-import { catalogConditions, cleanCatalogQuery, defaultCatalogQuery, type CatalogKind } from './catalog-query';
+import { catalogConditions, cleanCatalogQuery, defaultCatalogQuery, type DefinitionContext, type CatalogKind } from './catalog-query';
 import { HistoryFilters } from './history-filters';
 
 export function CatalogFilters({ kind, query, apply, busy, refresh, open, definition }: {
-  kind: CatalogKind; query: HistoryQuery; apply: (query: HistoryQuery) => void; busy: boolean; refresh: () => void; open: (id: string) => void; definition?: Definition;
+  kind: CatalogKind; query: HistoryQuery; apply: (query: HistoryQuery) => void; busy: boolean; refresh: () => void; open: (id: string) => void; definition?: DefinitionContext;
 }) {
   const { t, text } = useI18n(); const [draft, setDraft] = useState(query);
   const history = kind === 'history'; const defaultOrder = history ? 'desc' : 'asc';
