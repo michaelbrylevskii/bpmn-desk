@@ -1,8 +1,8 @@
 import type { HistoricInstance, HistoryQuery, HistorySnapshot } from '../../shared/history';
 import type { RuntimePage, RuntimeSample } from '../../shared/runtime';
 import { errorMessage } from '../../shared/errors';
-import { page, variable } from './flowable-decode';
-import { historicActivity, historicInstance } from './history-decode';
+import { page } from './flowable-decode';
+import { historicActivity, historicInstance, historicVariable } from './history-decode';
 import type { RuntimeHttp } from './http';
 import { identifier } from './validation';
 
@@ -25,10 +25,7 @@ export class HistoryReader {
     const [activities, children, variables] = await Promise.all([
       this.sample('history/historic-activity-instances', historicActivity, { processInstanceId: id }, 'activityInstanceId', 1000, deadline),
       this.sample('history/historic-process-instances', historicInstance, { superProcessInstanceId: id }, 'processInstanceId', 100, deadline),
-      this.sample('history/historic-variable-instances', value => {
-        const data = value && typeof value === 'object' && 'variable' in value ? value.variable : value;
-        return variable(data);
-      }, { processInstanceId: id }, 'variableName', 100, deadline),
+      this.sample('history/historic-variable-instances', historicVariable, { processInstanceId: id }, 'variableName', 100, deadline),
     ]);
     return { instance, activities, children, variables, capturedAt: new Date().toISOString() };
   }

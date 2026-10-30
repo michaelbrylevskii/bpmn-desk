@@ -2,7 +2,7 @@ import { afterEach, expect, it } from 'vitest';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { FlowableReader } from '../../src/desktop/runtime/flowable-reader';
 import { RuntimeHttp } from '../../src/desktop/runtime/http';
-import { historicActivity, historicInstance, historyQuery } from '../../src/desktop/runtime/history-decode';
+import { historicActivity, historicInstance, historicVariable, historyQuery } from '../../src/desktop/runtime/history-decode';
 
 const servers: ReturnType<typeof createServer>[] = [];
 afterEach(async () => { await Promise.all(servers.splice(0).map(server => new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())))); });
@@ -78,4 +78,12 @@ it('проверяет даты, типы, отрицательную длите
   expect(() => historicActivity({ ...activity(0), durationInMillis: -1 })).toThrow();
   expect(() => historicActivity({ ...activity(0), startTime: 'garbage' })).toThrow();
   for (const input of [{ finished: 'true' }, { startedAfter: 'garbage' }, { startedAfter: '2026-11-01T00:00:00Z', startedBefore: '2026-10-01T00:00:00Z' }, { size: 1001 }]) expect(() => historyQuery(input)).toThrow();
+});
+
+it('сохраняет область task/execution для одноимённых исторических переменных', () => {
+  const variable = { name: 'note', type: 'string', value: 'local' };
+  expect(historicVariable({ processInstanceId: 'p', executionId: 'p', variable }).scope).toBe('global');
+  expect(historicVariable({ processInstanceId: 'p', executionId: 'e', variable }).scope).toBe('execution:e');
+  expect(historicVariable({ processInstanceId: 'p', taskId: 't', executionId: 'e', variable }).scope).toBe('task:t');
+  expect(historicVariable({ variable }).scope).toBe('unknown');
 });

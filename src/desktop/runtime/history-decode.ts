@@ -1,5 +1,6 @@
 import type { HistoricActivity, HistoricInstance, HistoryQuery } from '../../shared/history';
-import { instance } from './flowable-decode';
+import { instance, variable } from './flowable-decode';
+import type { Variable } from '../../shared/runtime';
 import { identifier, object, pageQuery } from './validation';
 
 function text(data: Record<string, unknown>, key: string): string {
@@ -30,6 +31,12 @@ export function historicActivity(value: unknown): HistoricActivity {
     processInstanceId: identifier(data.processInstanceId), processDefinitionId: identifier(data.processDefinitionId), executionId: text(data, 'executionId'),
     taskId: text(data, 'taskId'), calledProcessInstanceId: text(data, 'calledProcessInstanceId'), assignee: text(data, 'assignee'),
     startTime: date(data, 'startTime'), endTime: date(data, 'endTime'), durationInMillis: duration(data) };
+}
+export function historicVariable(value: unknown): Variable {
+  const data = object(value); const decoded = variable(data.variable ?? data);
+  if (!data.variable) return decoded;
+  const task = text(data, 'taskId'); const execution = text(data, 'executionId'); const process = text(data, 'processInstanceId');
+  return { ...decoded, scope: task ? `task:${task}` : execution && execution !== process ? `execution:${execution}` : decoded.scope || (process ? 'global' : 'unknown') };
 }
 export function historyQuery(value: unknown): HistoryQuery {
   const data = object(value); const query: HistoryQuery = pageQuery(value);
