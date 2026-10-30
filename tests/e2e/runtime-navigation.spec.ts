@@ -27,10 +27,10 @@ for (const native of [false, true]) test(`назад/вперёд ${native ? 'ч
     await move('back'); await expect(page.locator('.runtime-instance > code')).toHaveText('p1'); await move('forward');
     await expect(page.locator('.history-details .runtime-instance > code')).toHaveText('p2');
     await move('back'); await expect(page.locator('.runtime-instance > code')).toHaveText('p1');
-    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Processes', exact: true }).click(); await page.locator('.runtime-catalog .runtime-row').first().locator('button').first().click();
+    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Definitions', exact: true }).click(); await page.locator('.runtime-catalog .runtime-row').first().click();
     await expect(page.locator('.runtime-instance-panel')).toHaveCount(0); await expect(forward).toBeDisabled(); await expect(back).toBeEnabled();
     await move('back'); await expect(page.locator('.runtime-instance > code')).toHaveText('p1'); await forward.hover();
-    await expect(page.getByRole('tooltip')).toContainText('Process version'); await expect(page.getByRole('tooltip')).toContainText('v1');
+    await expect(page.getByRole('tooltip')).toContainText('Definition version'); await expect(page.getByRole('tooltip')).toContainText('v1');
     expect(page.url()).toBe(url); expect(await page.evaluate(() => !!window.desktop)).toBe(true);
     await page.screenshot({ path: `test-results/runtime-navigation-${native ? 'mouse' : 'toolbar'}.png` });
   } finally { try { await close(app, directory); } finally { await api.stop(); } }

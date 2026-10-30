@@ -7,7 +7,7 @@ export function NavigationButtons({ navigation }: { navigation?: MonitorControls
   const { t } = useI18n();
   return <nav className="monitor-navigation" aria-label={t('Переходы монитора')}>{(['back', 'forward'] as const).map(direction => {
     const target = navigation?.[direction]; const label = t(direction === 'back' ? 'Назад' : 'Вперёд');
-    return <Tooltip key={direction} content={target ? <div className="navigation-destination"><small>{label} · {t(target.kind === 'instance' ? 'Экземпляр' : target.kind === 'job' ? 'Dead-letter jobs' : 'Версия схемы')}</small>
+    return <Tooltip key={direction} content={target ? <div className="navigation-destination"><small>{label} · {t(target.kind === 'instance' ? 'Экземпляр' : target.kind === 'job' ? 'Dead-letter jobs' : 'Версия определения')}</small>
       <strong>{target.name || t('Название схемы недоступно')}{target.version !== undefined && ` · v${target.version}`}</strong>
       {target.businessKey && <span>{target.businessKey}</span>}<code>{target.id}</code>
     </div> : t(direction === 'back' ? 'Нет предыдущих переходов' : 'Нет следующих переходов')}>

@@ -10,7 +10,7 @@ import { RuntimeLegend } from './legend';
 import { SummaryNotice } from './summary-notice';
 import type { HistorySnapshot } from '../../shared/history';
 
-export function RuntimeDiagram({ dark, selected, diagram, snapshot, history, summary, active, summaryEnabled, select, viewer, onReady }: { dark: boolean; selected: string; diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
+export function RuntimeDiagram({ instances, definition, dark, selected, diagram, snapshot, history, summary, active, summaryEnabled, select, viewer, onReady }: { instances: () => void; definition?: () => void; dark: boolean; selected: string; diagram: DeployedDiagram; snapshot?: InstanceSnapshot; history?: HistorySnapshot;
   summary: ReturnType<typeof useSummary>; active: boolean; summaryEnabled: boolean;
   select: (id: string) => void; viewer: React.RefObject<RuntimeViewer | undefined>; onReady: (value: boolean) => void }) {
   const { t, language, text } = useI18n(); const container = useRef<HTMLDivElement>(null); const currentLanguage = useRef(language); currentLanguage.current = language;
@@ -25,6 +25,7 @@ export function RuntimeDiagram({ dark, selected, diagram, snapshot, history, sum
   }, [diagram.xml, select, viewer, onReady]);
   useEffect(() => { if (ready) setMissing(viewer.current?.state(snapshot, summaryEnabled ? summary.data : undefined, history) ?? []); }, [snapshot, history, ready, viewer, summaryEnabled, summary.data]);
   return <section className="runtime-diagram"><div className="runtime-diagram-heading"><strong>{diagram.definition.name || diagram.definition.key}</strong><span>v{diagram.definition.version}</span>
+    <button className="runtime-link diagram-context-link" onClick={definition ?? instances}>{t(definition ? 'Определение' : 'Экземпляры')}</button>
     <span className="toolbar-spacer" />{summaryEnabled && <>
       <button className="button small runtime-summary-button" disabled={!ready || summary.busy || !active} title={t('Два запроса, до 100 записей каждого вида, не дольше 8 секунд.')} onClick={() => void summary.read()}>
         {summary.busy ? <LoaderCircle size={15} className="spinning" /> : <Activity size={15} />}{t(summary.data ? 'Обновить сводку' : 'Сводка версии')}</button>

@@ -9,7 +9,7 @@ const surface = (page: Page) => page.locator('.workspace-surface:not([hidden])')
 async function openHistory(page: Page, id: string) {
   await surface(page).locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
   await selectOption(surface(page).getByRole('combobox', { name: 'Instance view', exact: true }), 'completed');
-  await surface(page).getByLabel('Instance ID', { exact: true }).fill(id);
+  await selectOption(surface(page).getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await surface(page).getByLabel('Instance ID', { exact: true }).fill(id);
   await surface(page).getByRole('button', { name: 'Open instance', exact: true }).click();
   await expect(surface(page).locator('.history-details .runtime-instance > code')).toHaveText(id);
 }

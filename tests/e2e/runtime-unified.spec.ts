@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { expect, test } from '@playwright/test';
 import { close, launch, openInstance } from './runtime-fixture';
 import { historyServer } from './history-server';
@@ -59,7 +60,7 @@ test('история остаётся доступной при запрете r
   try {
     const catalog = page.locator('.runtime-catalog');
     await catalog.locator('.runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
-    await catalog.getByLabel('Instance ID', { exact: true }).fill('p1'); await catalog.getByRole('button', { name: 'Open instance', exact: true }).click();
+    await selectOption(catalog.getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await catalog.getByLabel('Instance ID', { exact: true }).fill('p1'); await catalog.getByRole('button', { name: 'Open instance', exact: true }).click();
     await expect(page.locator('.runtime-center [role=alert]')).toContainText('403');
     const element = page.locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]');
     await expect(element).toHaveClass(/runtime-unfinished/); await expect(element).not.toHaveClass(/runtime-active/);

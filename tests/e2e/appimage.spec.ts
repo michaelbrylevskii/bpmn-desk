@@ -91,7 +91,7 @@ test('AppImage читает историю через production IPC и связ
     await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
     await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
     await selectOption(page.getByRole('combobox', { name: 'Instance view', exact: true }), 'completed');
-    await page.getByLabel('Instance ID', { exact: true }).fill('p1'); await page.getByRole('button', { name: 'Open instance', exact: true }).click();
+    await selectOption(page.getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await page.getByLabel('Instance ID', { exact: true }).fill('p1'); await page.getByRole('button', { name: 'Open instance', exact: true }).click();
     await expect(page.locator('.history-activity')).toHaveCount(2);
     await page.locator('.history-activity').last().getByRole('button').click();
     await expect(page.locator('.runtime-canvas .djs-element[data-element-id="HistoryReview"]')).toHaveClass(/selected/);

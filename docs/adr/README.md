@@ -34,3 +34,4 @@
 - [0030 — История выполнения Flowable](0030-flowable-instance-history.md)
 - [0031 — Общая схема runtime и истории](0031-unified-instance-monitor.md)
 - [0032 — Переходы назад и вперёд в мониторе](0032-monitor-navigation.md)
+- [0033 — Единые каталоги, поиск и терминология монитора](0033-monitor-catalog-search.md)

@@ -69,7 +69,7 @@ test('ошибка обновления сохраняет страницу, н�
     await catalog.getByLabel('Business key (exact match)', { exact: true }).fill('slow-filter');
     await catalog.locator('.runtime-query').getByTitle('Search', { exact: true }).click();
     await expect.poll(() => api.state.requests.length).toBe(4);
-    await tabs.getByRole('button', { name: 'Processes', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Definitions', exact: true }).click();
     await expect(catalog.locator('.runtime-row')).toContainText('Example process');
     // Дождёмся завершения оставленного запроса; его ошибка не должна попасть в другой список.
     await expect.poll(() => api.state.closed, { timeout: 7000 }).toBe(4);

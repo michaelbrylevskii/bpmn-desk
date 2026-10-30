@@ -15,7 +15,7 @@ export interface ConnectionInput {
 }
 export interface Connections { items: Connection[]; secureStorage: boolean }
 export interface PageQuery {
-  start?: number; size?: number; search?: string; definitionId?: string; tenantId?: string;
+  start?: number; size?: number; search?: string; instanceName?: string; businessKeyLike?: string; definitionId?: string; tenantId?: string;
   instanceId?: string; definitionKey?: string; executionId?: string; elementId?: string; suspended?: boolean;
   sort?: string; order?: 'asc' | 'desc'; latest?: boolean;
 }

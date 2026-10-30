@@ -33,3 +33,27 @@ it('использует GET, дочитывает страницы executions �
     expect(requests.some(request => request.includes('start=100'))).toBe(true);
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
 });
+
+it('поиск использует серверные критерии и разные имена параметров runtime и history', async () => {
+  const requests: URL[] = [];
+  const server = createServer((request, response) => {
+    requests.push(new URL(request.url!, 'http://localhost'));
+    response.setHeader('content-type', 'application/json'); response.end('{"data":[],"total":0,"start":0}');
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address(); if (!address || typeof address === 'string') throw new Error('Нет порта');
+  const profile: Connection = { id: 'c', name: 'test', engine: 'flowable', baseUrl: `http://127.0.0.1:${address.port}/process-api/`, authentication: 'none', username: '', hasSecret: false, secretStored: false };
+  try {
+    const reader = new FlowableReader(new RuntimeHttp(profile, ''));
+    await reader.definitions({ latest: true, definitionKey: 'order', search: 'Review' });
+    await reader.instances({ businessKeyLike: 'ORDER:42', instanceName: 'Buyer', start: 25, size: 25 });
+    await reader.historicInstances({ businessKeyLike: 'ORDER:42', instanceName: 'Buyer', finished: true });
+    await reader.instances({ search: 'EXACT', instanceId: 'p1' });
+    expect(Object.fromEntries(requests[0]!.searchParams)).toMatchObject({ latest: 'true', key: 'order', nameLike: '%Review%' });
+    expect(Object.fromEntries(requests[1]!.searchParams)).toMatchObject({ businessKeyLikeIgnoreCase: '%ORDER:42%', nameLikeIgnoreCase: '%Buyer%', start: '25', size: '25' });
+    expect(requests[1]!.searchParams.has('businessKey')).toBe(false);
+    expect(Object.fromEntries(requests[2]!.searchParams)).toMatchObject({ businessKeyLikeIgnoreCase: '%ORDER:42%', processInstanceNameLikeIgnoreCase: '%Buyer%', finished: 'true' });
+    expect(requests[2]!.searchParams.has('nameLikeIgnoreCase')).toBe(false);
+    expect(Object.fromEntries(requests[3]!.searchParams)).toMatchObject({ businessKey: 'EXACT', id: 'p1' });
+  } finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); }
+});

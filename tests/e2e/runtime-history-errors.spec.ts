@@ -7,7 +7,7 @@ async function openHistory(page: Page, id = 'p1') {
   const catalog = page.locator('.runtime-catalog');
   await catalog.locator('.runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
   await selectOption(catalog.getByRole('combobox', { name: 'Instance view', exact: true }), 'completed');
-  await catalog.getByLabel('Instance ID', { exact: true }).fill(id); await catalog.getByRole('button', { name: 'Open instance', exact: true }).click();
+  await selectOption(catalog.getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await catalog.getByLabel('Instance ID', { exact: true }).fill(id); await catalog.getByRole('button', { name: 'Open instance', exact: true }).click();
 }
 
 test('недоступная история и недоступные шаги показываются без ложного пустого успешного результата', async () => {
@@ -59,7 +59,7 @@ test('поздний ответ другого экземпляра не пер�
   try {
     await openHistory(page);
     await expect.poll(() => api.state.requests.some(url => url.pathname.endsWith('/historic-process-instances/p1'))).toBe(true);
-    const catalog = page.locator('.runtime-catalog'); await catalog.getByLabel('Instance ID', { exact: true }).fill('p2');
+    const catalog = page.locator('.runtime-catalog'); await selectOption(catalog.getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await catalog.getByLabel('Instance ID', { exact: true }).fill('p2');
     await catalog.getByRole('button', { name: 'Open instance', exact: true }).click();
     await expect(page.locator('.history-details .runtime-instance > code')).toHaveText('p2');
     await expect.poll(() => api.state.deliveredFirst).toBe(1);
@@ -80,7 +80,7 @@ test('даты и сортировка истории не переносятс�
     const filters = page.locator('.catalog-filters'); await filters.locator('summary').click();
     await filters.getByLabel('Started after', { exact: true }).fill('2026-10-01T00:00');
     await filters.getByLabel('Started before', { exact: true }).fill('2026-10-30T00:00');
-    await filters.getByLabel('Process key', { exact: true }).fill('deskHistory');
+    await filters.getByLabel('Definition key', { exact: true }).fill('deskHistory');
     await selectOption(filters.getByRole('combobox', { name: 'Sort by', exact: true }), 'duration');
     await filters.getByRole('button', { name: 'Apply filters', exact: true }).click();
     await expect.poll(() => api.state.requests.some(url => url.searchParams.get('sort') === 'duration' && url.searchParams.has('startedAfter') && url.searchParams.get('finished') === 'true')).toBe(true);
@@ -91,7 +91,7 @@ test('даты и сортировка истории не переносятс�
     await selectOption(page.getByRole('combobox', { name: 'Instance view', exact: true }), 'all');
     await page.locator('.catalog-filters > summary').click();
     await expect(page.getByRole('combobox', { name: 'Order', exact: true })).toHaveAttribute('data-value', 'desc');
-    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Processes', exact: true }).click();
+    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Definitions', exact: true }).click();
     await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
     await page.locator('.catalog-filters > summary').click();
     await expect(page.getByRole('combobox', { name: 'Order', exact: true })).toHaveAttribute('data-value', 'desc');

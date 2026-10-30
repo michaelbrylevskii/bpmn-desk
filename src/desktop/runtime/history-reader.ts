@@ -15,6 +15,7 @@ export class HistoryReader {
     return page(await this.http.get('history/historic-process-instances', {
       start: query.start ?? 0, size: query.size ?? 25, sort: query.sort || 'startTime', order: query.order ?? 'desc',
       processInstanceId: query.instanceId, processDefinitionId: query.definitionId, processDefinitionKey: query.definitionKey,
+      processInstanceNameLikeIgnoreCase: query.instanceName ? `%${query.instanceName}%` : undefined, businessKeyLikeIgnoreCase: query.businessKeyLike ? `%${query.businessKeyLike}%` : undefined,
       businessKey: query.search || undefined, tenantId: query.tenantId, finished: query.finished === undefined ? undefined : String(query.finished),
       startedAfter: query.startedAfter, startedBefore: query.startedBefore, finishedAfter: query.finishedAfter, finishedBefore: query.finishedBefore,
     }), historicInstance);

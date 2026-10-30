@@ -30,7 +30,7 @@ export async function launch(baseUrl?: string): Promise<{ app: ElectronApplicati
 }
 export async function openInstance(page: Page, id: string) {
   await page.locator('.workspace-surface:not([hidden]) .runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Instances', exact: true }).click();
-  await page.locator('.workspace-surface:not([hidden])').getByLabel('Instance ID', { exact: true }).fill(id); await page.locator('.workspace-surface:not([hidden])').getByRole('button', { name: 'Open instance', exact: true }).click();
+  await selectOption(page.locator('.workspace-surface:not([hidden])').getByRole('combobox', { name: 'Search by', exact: true }), 'instanceId'); await page.locator('.workspace-surface:not([hidden])').getByLabel('Instance ID', { exact: true }).fill(id); await page.locator('.workspace-surface:not([hidden])').getByRole('button', { name: 'Open instance', exact: true }).click();
   await expect(page.locator('.workspace-surface:not([hidden]) .runtime-instance > code')).toHaveText(id);
 }
 export async function close(app: ElectronApplication, directory: string) { await app.close(); await rm(directory, { recursive: true, force: true }); }

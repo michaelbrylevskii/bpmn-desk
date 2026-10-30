@@ -1,3 +1,4 @@
+import { selectOption } from './select';
 import { test, expect, type Page } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -6,10 +7,10 @@ import { fixture, launch, openInstance, close, useRuntimeFixture } from './runti
 useRuntimeFixture();
 
 async function definition(page: Page, key: string, version?: number) {
-  await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Processes', exact: true }).click();
+  await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Definitions', exact: true }).click();
   let row = page.locator('.runtime-catalog .runtime-row').filter({ hasText: key });
   if (version) row = row.filter({ hasText: `· v${version}` });
-  await row.first().locator('button').first().click();
+  await row.first().click();
   await expect(page.locator('.runtime-diagram-heading')).toContainText(key);
 }
 
@@ -40,16 +41,15 @@ test('сводка точной версии: multi-instance считается 
     await page.locator('.runtime-summary-details').getByRole('button', { name: `Open instance: ${fixture.failedInstanceId}`, exact: true }).click();
     await expect(page.locator('.runtime-details .runtime-job summary')).toBeVisible();
     await expect(page.locator('.runtime-instance > code')).toHaveText(fixture.failedInstanceId);
-    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Processes', exact: true }).click();
+    await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'Definitions', exact: true }).click();
     const filters = page.locator('.catalog-filters'); await filters.locator('summary').click();
     await filters.getByLabel('Latest versions only', { exact: true }).check();
-    await filters.getByLabel('Process key', { exact: true }).fill('deskReview');
     await filters.getByRole('button', { name: 'Apply filters', exact: true }).click();
-    await expect(page.locator('.runtime-catalog .runtime-row')).toHaveCount(1);
-    await expect(page.locator('.runtime-catalog .runtime-row')).toContainText('· v2');
-    await page.getByLabel('Process name', { exact: true }).fill('deskReview');
+    await selectOption(page.getByRole('combobox', { name: 'Search by', exact: true }), 'key');
+    await page.getByLabel('Definition key', { exact: true }).fill('deskReview');
     await page.locator('.runtime-query').getByTitle('Search', { exact: true }).click();
     await expect(page.locator('.runtime-catalog .runtime-row')).toHaveCount(1);
+    await expect(page.locator('.runtime-catalog .runtime-row')).toContainText('· v2');
     await openInstance(page, fixture.reviewInstanceId); await expect(page.locator('.runtime-diagram-heading')).toContainText('v1');
     await expect(page.locator('.runtime-summary-notice')).toHaveCount(0);
     await expect(page.locator('.runtime-badge[data-activity-id="Review"]')).toHaveText('● 1');

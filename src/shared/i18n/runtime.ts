@@ -1,4 +1,10 @@
 export const runtimeMessages = {
+  'Версия определения': 'Definition version', 'Определения': 'Definitions', 'Определение': 'Definition', 'Имя определения': 'Definition name', 'Ключ определения': 'Definition key',
+  'Все определения': 'All definitions', 'Все версии': 'All versions', 'Выбери определение или экземпляр.': 'Select a definition or instance.',
+  'Искать по': 'Search by', 'Business key (содержит)': 'Business key (contains)', 'Имя экземпляра': 'Instance name',
+  'Открыть по ID без изменения списка': 'Open by ID without changing the list', 'По части строки · % и _ — шаблоны': 'Contains · % and _ are wildcards', 'Точное совпадение': 'Exact match',
+  'Условия поиска': 'Search conditions', 'Фильтры ({count})': 'Filters ({count})',
+
   'Таймаут запроса, секунды': 'Request timeout, seconds',
   'Таймаут запроса должен быть целым числом от 5 до 120 секунд.': 'Request timeout must be a whole number from 5 to 120 seconds.',
   'Сервер считает общее количество вместе со страницей. Сузь фильтры или увеличь таймаут в настройках подключения.': 'The server counts the total while loading the page. Narrow the filters or increase the timeout in connection settings.',

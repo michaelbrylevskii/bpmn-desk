@@ -19,6 +19,7 @@ export class FlowableReader {
   }
   instances(query: PageQuery) {
     return this.paged('runtime/process-instances', decode.instance, { ...this.pagination(query, ['id', 'processDefinitionId', 'processDefinitionKey', 'tenantId'], 'id'), processDefinitionId: query.definitionId, businessKey: query.search || undefined, tenantId: query.tenantId,
+      nameLikeIgnoreCase: query.instanceName ? `%${query.instanceName}%` : undefined, businessKeyLikeIgnoreCase: query.businessKeyLike ? `%${query.businessKeyLike}%` : undefined,
       id: query.instanceId, processDefinitionKey: query.definitionKey, suspended: query.suspended === undefined ? undefined : String(query.suspended) });
   }
   deadLetters(query: PageQuery) {

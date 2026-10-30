@@ -40,6 +40,7 @@ export function RuntimeMonitor({ dark, id, connection, revision, active, copy, p
   const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
   const desiredDefinition = instanceDefinition ?? definitionId;
   const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && !!desiredDefinition);
+  const [instancesOf, setInstancesOf] = useState<{ definition: Definition }>();
   const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
   const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
   const diagramError = loaded?.key === diagramKey ? loaded.error : undefined;
@@ -87,7 +88,7 @@ export function RuntimeMonitor({ dark, id, connection, revision, active, copy, p
   useEffect(() => { publish(id, controls); }, [id, publish, controls]);
   useEffect(() => () => publish(id, undefined), [id, publish]);
   return <div className="runtime-monitor">
-    <div className="runtime-body"><MonitorPanel side="left" hidden={catalogHidden} toggle={() => setCatalogHidden(value => !value)}><RuntimeCatalog connection={connection} revision={revision} selectedInstance={instanceId} selectedDefinition={definitionId}
+    <div className="runtime-body"><MonitorPanel side="left" hidden={catalogHidden} toggle={() => setCatalogHidden(value => !value)}><RuntimeCatalog connection={connection} revision={revision} selectedInstance={instanceId} selectedDefinition={definitionId} instancesOf={instancesOf}
       definition={openDefinition} instance={openInstance} job={openJob} /></MonitorPanel>
       <div className="runtime-center">
         {snapshot.error && <p role="alert" className="runtime-error">{t('Текущее состояние')}: {text(snapshot.error)} {currentData && t('Последний снимок устарел.')}</p>}
@@ -95,7 +96,7 @@ export function RuntimeMonitor({ dark, id, connection, revision, active, copy, p
 
         {currentData?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
-        {diagram ? <RuntimeDiagram dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
+        {diagram ? <RuntimeDiagram instances={() => { if (diagram) { setInstancesOf({ definition: diagram.definition }); setCatalogHidden(false); } }} definition={instanceId ? () => openDefinition(diagram.definition) : undefined} dark={dark} selected={selected} diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери определение или экземпляр.')}</p>}
         <RuntimeFreshness runtime={currentData?.capturedAt} history={historyData?.capturedAt} />
 
       </div>
