@@ -37,11 +37,11 @@ export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeo
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
   const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
   const desiredDefinition = instanceDefinition ?? definitionId;
-  const [loaded, setLoaded] = useState<{ key: string; diagram?: DeployedDiagram; error?: string }>();
-  const diagramKey = `${connection}\n${desiredDefinition}\n${revision}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
-  const diagramError = loaded?.key === diagramKey ? loaded.error : undefined;
+  const [loaded, setLoaded] = useState<{ key: string; revision: number; diagram?: DeployedDiagram; error?: string }>();
+  const diagramKey = `${connection}\n${desiredDefinition}`; const diagram = loaded?.key === diagramKey ? loaded.diagram : undefined;
+  const diagramError = loaded?.key === diagramKey && loaded.revision === revision ? loaded.error : undefined;
   const [displayedDiagram, setDisplayedDiagram] = useState<DeployedDiagram>();
-  const diagramDisplayed = !!diagram && displayedDiagram === diagram;
+  const diagramDisplayed = !!diagram && displayedDiagram === diagram && loaded?.revision === revision && !diagramError;
   const summary = useSummary(connection, desiredDefinition, revision, !instanceId && active && summaryEnabled && !!desiredDefinition, auto, diagramDisplayed);
   const busy = snapshot.busy || history.busy || summary.busy;
   const readSummary = summary.read;
@@ -65,8 +65,8 @@ export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeo
   useEffect(() => {
     if (!connection || !desiredDefinition) return;
     let disposed = false;
-    void runtimeBridge().diagram(connection, desiredDefinition).then(diagram => { if (!disposed) setLoaded({ key: diagramKey, diagram }); })
-      .catch(error => { if (!disposed) setLoaded(previous => ({ key: diagramKey, diagram: previous?.key === diagramKey ? previous.diagram : undefined, error: errorMessage(error) })); });
+    void runtimeBridge().diagram(connection, desiredDefinition).then(diagram => { if (!disposed) setLoaded({ key: diagramKey, revision, diagram }); })
+      .catch(error => { if (!disposed) setLoaded(previous => ({ key: diagramKey, revision, diagram: previous?.key === diagramKey ? previous.diagram : undefined, error: errorMessage(error) })); });
     return () => { disposed = true; };
   }, [connection, desiredDefinition, diagramKey, revision]);
   const openJob = (job: DeadLetterJob) => {
