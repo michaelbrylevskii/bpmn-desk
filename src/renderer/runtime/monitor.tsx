@@ -63,7 +63,7 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
     return () => { disposed = true; };
   }, [connection, desiredDefinition, diagramKey, revision]);
   const openJob = (job: DeadLetterJob) => {
-    visit({ instanceId: job.processInstanceId, definitionId: job.processDefinitionId, history: false, job,
+    visit({ instanceId: job.processInstanceId, definitionId: job.processDefinitionId, history: false, job: { ...job },
       destination: { kind: 'job', id: job.id, name: '' } });
     setSelected(job.elementId);
   };
