@@ -23,14 +23,14 @@
 .runtime-diagram-heading strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.runtime-diagram-heading > span:not(.toolbar-spacer) { font-size: 11px; color: var(--muted); }
 .runtime-canvas { flex: 1; min-height: 160px; background-color: var(--diagram-bg); background-image: radial-gradient(var(--diagram-grid) 1px, transparent 1px); background-size: 20px 20px; }
 .runtime-canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.runtime-legend { display: flex; gap: 18px; padding: 8px 14px; font-size: 10px; color: var(--muted); background: var(--surface); }
-.runtime-legend span::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--green); }.runtime-legend .failed::before { background: var(--danger); }
+.runtime-legend { display: flex; flex-wrap: nowrap; align-items: center; gap: 14px; padding: 5px 14px; min-height: 27px; flex-shrink: 0; overflow-x: auto; font-size: 10px; color: var(--muted); background: var(--surface); }
+.runtime-legend-item::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--green); }.runtime-legend .failed::before { background: var(--danger); }
 .runtime-canvas .runtime-active .djs-visual > :first-child { stroke: var(--green) !important; stroke-width: 3px !important; }
 .runtime-canvas .runtime-failed .djs-visual > :first-child { stroke: var(--danger) !important; stroke-width: 3px !important; }
 .runtime-badge { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 22px; min-width: 22px; padding: 0 6px; border-radius: 6px; background: var(--green); color: #fff; font-size: 11px; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; border: 1px solid var(--diagram-bg); box-shadow: 0 2px 5px #0002; white-space: nowrap; }.runtime-badge.failed { background: var(--danger); }
 .runtime-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .runtime-xml { flex: 0 1 220px; min-height: 100px; resize: none; border-radius: 0; font: 11px/1.5 ui-monospace, monospace; white-space: pre; }
-.runtime-freshness { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); }
+.runtime-freshness { display: flex; align-items: center; padding: 5px 12px; min-height: 29px; flex-shrink: 0; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); }
 .runtime-details { width: clamp(330px, 30vw, 430px); flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0; min-width: 0; }
 .runtime-instance { padding: 16px; border-bottom: 1px solid var(--border); font-size: 12px; }.runtime-instance > strong { overflow-wrap: anywhere; display: block; font-size: 15px; margin-bottom: 8px; }.runtime-instance > code { display: block; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
 .runtime-instance dl, .runtime-job dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 11px; margin: 15px 0; }.runtime-instance dt, .runtime-job dt { color: var(--muted); }.runtime-instance dd, .runtime-job dd { margin: 0; overflow-wrap: anywhere; }
@@ -75,7 +75,7 @@
 .instance-relationships h4 { color: var(--muted); font-size: 11px; font-weight: 500; margin: 9px 0 5px; }
 .related-instance { display: flex; align-items: flex-start; gap: 7px; width: 100%; text-align: left; padding: 9px; margin: 5px 0; border: 1px solid var(--border); border-radius: 7px; color: var(--accent); background: var(--input); }
 .related-instance:hover { background: var(--accent-soft); }.related-instance svg { flex-shrink: 0; }
-.related-instance span { min-width: 0; display: grid; gap: 5px; }.related-instance strong { font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }.related-instance code { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+.related-instance > span { min-width: 0; display: grid; gap: 5px; }.related-instance strong { font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }.related-instance code { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
 .runtime-detail-body, .runtime-instance, .runtime-variable, .runtime-job, .runtime-execution { min-width: 0; }
 .connection-fields { display: grid; gap: 14px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .connection-form .runtime-actions { align-items: center; flex-wrap: wrap; }.connection-delete { margin-left: auto; }
@@ -92,3 +92,8 @@
 .runtime-summary-details .runtime-instance p { color: var(--muted); font-size: 11px; line-height: 1.5; }.runtime-summary-details .related-instance.failed { border-left: 3px solid var(--danger); }.runtime-summary-details .related-instance.failed strong { color: var(--danger); }
 
 .related-instance small { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+
+.runtime-legend-item { white-space: nowrap; }
+.runtime-snapshot-times { display: inline-flex; align-items: center; gap: 14px; white-space: nowrap; }
+.runtime-freshness > .tooltip-anchor { overflow: hidden; }
+.instance-card { padding: 7px 9px; }.instance-card > span { gap: 3px; }.instance-card .related-role { color: var(--muted); font-weight: 400; margin-right: 4px; }

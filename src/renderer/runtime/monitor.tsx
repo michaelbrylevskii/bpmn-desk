@@ -17,6 +17,7 @@ import { useSummary } from './use-summary';
 import { SummaryDetails } from './summary-details';
 import { useHistory } from './use-history';
 import { InstancePanel } from './instance-panel';
+import { RuntimeFreshness } from './freshness';
 import { MonitorPanel } from './monitor-panel';
 
 export function RuntimeMonitor({ id, connection, revision, active, copy, publish }: { id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
@@ -84,10 +85,7 @@ export function RuntimeMonitor({ id, connection, revision, active, copy, publish
         {currentData?.warnings.map(warning => <p className="runtime-warning" key={warning}>{text(warning)}</p>)}
         {diagramError && <p role="alert" className="runtime-error">{text(diagramError)}</p>}
         {diagram ? <RuntimeDiagram diagram={diagram} snapshot={currentData} history={historyData} summary={summary} active={active} summaryEnabled={!instanceId} select={select} viewer={viewer} onReady={setReady} /> : !snapshot.error && !history.error && !diagramError && <p className="runtime-empty">{desiredDefinition || busy ? t('Загрузка состояния…') : t('Выбери процесс или экземпляр.')}</p>}
-        {(currentData || historyData) && <div className="runtime-freshness">
-          {currentData && <time data-source="runtime" dateTime={currentData.capturedAt}>{t('Текущее состояние')}: {new Date(currentData.capturedAt).toLocaleTimeString()}</time>}
-          {historyData && <time data-source="history" dateTime={historyData.capturedAt}>{t('История выполнения')}: {new Date(historyData.capturedAt).toLocaleTimeString()}</time>}
-          <span>{t('Снимок собирается несколькими запросами и может измениться во время чтения.')}</span></div>}
+        <RuntimeFreshness runtime={currentData?.capturedAt} history={historyData?.capturedAt} />
 
       </div>
       {(!!instanceId || !!selectedJob || !!selected && !!summary.data) && <MonitorPanel side="right" hidden={detailsHidden} toggle={() => setDetailsHidden(value => !value)} changed={`${instanceId}:${selected}`}>

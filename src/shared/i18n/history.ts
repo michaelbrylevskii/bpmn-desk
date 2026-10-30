@@ -1,4 +1,7 @@
 export const historyMessages = {
+  'Текущие': 'Current', 'Окончены': 'Ended', 'Без окончания': 'No end', 'Легенда': 'Legend', 'История': 'History',
+  'Родитель': 'Parent', 'Дочерний': 'Child',
+  'Разные экземпляры у элемента, а не executions.': 'Distinct instances at the element, rather than executions.',
   'Показать подробности': 'Show details', 'Скрыть подробности': 'Hide details',
   'Выбран другой элемент. Данные панели обновлены.': 'Another element is selected. Panel details have changed.',
   'Дочерний экземпляр': 'Child instance', 'Название схемы недоступно': 'Diagram name unavailable',

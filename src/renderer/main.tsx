@@ -12,6 +12,7 @@ import './styles/xml-search.css';
 import './styles/runtime.css';
 import './styles/history.css';
 import './styles/select.css';
+import './styles/tooltip.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Не найден root приложения.');

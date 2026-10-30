@@ -1,0 +1,20 @@
+import { useI18n } from '../i18n/provider';
+import { Tooltip } from '../ui/tooltip';
+
+export function RuntimeLegend({ runtime, history, summary }: { runtime: boolean; history: boolean; summary: boolean }) {
+  const { t } = useI18n();
+  if (!runtime && !history && !summary) return null;
+  const items = [
+    ...runtime || summary ? [
+      { style: 'active', label: runtime ? t('Текущие') : t('Экземпляры у элементов'), description: t(runtime ? '✓ — окончание зафиксировано; ● — текущие executions; ! — dead-letter jobs.' : 'Разные экземпляры у элемента, а не executions.') },
+      { style: 'failed', label: 'Dead-letter', description: t(runtime ? 'Задания с ошибкой' : 'Экземпляры с dead-letter') },
+    ] : [],
+    ...history ? [
+      { style: 'visited', label: t('Окончены'), description: `${t('Окончание зафиксировано')}. ${t('Метки истории не подтверждают успех или текущее состояние шага.')}` },
+      { style: 'unfinished', label: t('Без окончания'), description: `${t('Окончание не зафиксировано')}. ${t('Метки истории не подтверждают успех или текущее состояние шага.')}` },
+    ] : [],
+  ];
+  return <div className="runtime-legend" aria-label={t('Легенда')}>{items.map(item => <Tooltip key={item.style} content={item.description}>
+    <span tabIndex={0} className={`runtime-legend-item ${item.style}`}>{item.label}</span>
+  </Tooltip>)}</div>;
+}

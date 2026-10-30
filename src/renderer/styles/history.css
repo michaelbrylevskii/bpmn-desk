@@ -29,7 +29,6 @@
 .history-group > summary { padding: 10px; background: var(--input); cursor: pointer; font-size: 11px; overflow-wrap: anywhere; }
 .history-group > summary code { display: block; color: var(--muted); font-size: 10px; margin: 5px 0 0 12px; }
 .history-group .history-activity:last-child { border-bottom: 0; }
-.history-legend { flex-wrap: wrap; gap: 8px 16px; align-items: center; }.history-legend small { font-size: 10px; }
 .runtime-legend .visited::before { background: #527bac; }.runtime-legend .unfinished::before { background: #b67b22; }
 .runtime-canvas .runtime-visited .djs-visual > :first-child { stroke: #527bac !important; stroke-width: 3px !important; }
 .runtime-canvas .runtime-unfinished .djs-visual > :first-child { stroke: #b67b22 !important; stroke-width: 3px !important; }
