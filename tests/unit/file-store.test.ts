@@ -74,7 +74,12 @@ describe('FileStore', () => {
     const opened = await store.open(path);
     const image = join(directory, 'diagram.png');
     const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 255, 128]);
-    expect((await store.saveExport(bytes, image)).token).toBe('');
+    const exported = await store.saveExport(bytes, image);
+    expect(exported.token).toBe('');
+    expect(store.exportPathFor(exported.revealToken!)).toBe(image);
+    expect(() => store.exportPathFor(opened.token)).toThrow();
+    expect(() => new FileStore().exportPathFor(exported.revealToken!)).toThrow();
+    expect(() => store.pathFor(exported.revealToken!)).toThrow();
     expect(await readFile(image)).toEqual(Buffer.from(bytes));
     expect(await readdir(directory)).toEqual(['diagram.png', 'process.bpmn']);
     expect(() => store.pathFor('')).toThrow('не был открыт');

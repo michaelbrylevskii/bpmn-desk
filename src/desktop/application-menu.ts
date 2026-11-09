@@ -17,7 +17,8 @@ export function applicationMenu(window: BrowserWindow, language: Language, zoom:
       { id: 'reveal', label: t('Показать файл в папке'), click: action('reveal') },
       { type: 'separator' },
       { id: 'export', label: t('Экспорт SVG'), click: action('export') },
-      { id: 'export-png', label: t('Экспорт PNG'), click: action('export-png') },
+      { id: 'export-png', label: t('Экспорт PNG с белым фоном…'), click: action('export-png') },
+      { id: 'export-png-transparent', label: t('Экспорт PNG с прозрачным фоном…'), click: action('export-png-transparent') },
       { type: 'separator' }, { label: t('Подключения…'), click: action('connections') },
       { type: 'separator' }, { role: 'quit', label: t('Выход') },
     ] },
@@ -56,7 +57,7 @@ export function updateApplicationMenu(state: MenuState): void {
     save: state.document, 'save-as': state.document, reload: state.localFile, reveal: state.localFile,
     duplicate: state.document, 'close-tab': state.tabs, 'close-all': state.tabs,
     undo: state.canUndo, redo: state.canRedo,
-    export: state.canExport, 'export-png': state.canExport, fit: state.document || state.monitor,
+    export: state.canExport, 'export-png': state.canExport, 'export-png-transparent': state.canExport, fit: state.document || state.monitor,
     'browser-backward': state.monitor && state.back, 'browser-forward': state.monitor && state.forward,
     refresh: state.monitor && state.canRefresh, 'auto-refresh': state.monitor, summary: state.monitor,
   };

@@ -6,7 +6,7 @@ import type { ReportNotice, FailureContext } from '../notifications/types';
 import type { DocumentProfile } from '../engines/contracts';
 import type { EditorSnapshot } from '../bpmn/editor';
 import { diagramTemplate } from '../bpmn/template';
-import { pngFromSvg } from '../bpmn/image-export';
+import { saveDiagramExport } from './diagram-export';
 import { useI18n } from '../i18n/provider';
 import { bridge } from '../platform/bridge';
 import { clearRecovery, readRecovery, writeRecovery } from './recovery';
@@ -154,8 +154,7 @@ export function useDocuments(report: ReportNotice) {
     if (!editor) return;
     const svg = await editor.svg();
     const name = target.name.replace(/\.(bpmn20\.xml|bpmn|xml)$/i, '');
-    if (format === 'svg') await bridge.saveFile({ name: `${name}.svg`, content: svg, format: 'svg' });
-    else await bridge.saveFile({ name: `${name}.png`, content: await pngFromSvg(svg, format === 'png-white'), format: 'png' });
+    return saveDiagramExport(svg, name, format);
   }, [active]);
 
   const restore = useCallback(() => {

@@ -105,12 +105,33 @@ test('native создание выбирает профиль, PNG проход�
     await page.getByTitle('Формат экспорта', { exact: true }).click();
     await page.getByRole('menuitem', { name: 'PNG · белый фон', exact: true }).click();
     await expect(async () => { expect(Array.from((await readFile(png)).subarray(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]); }).toPass({ timeout: 5000 });
+    const revealed = await app.evaluateHandle(({ shell }) => {
+      const paths: string[] = []; shell.showItemInFolder = path => { paths.push(path); }; return paths;
+    });
+    await expect(page.locator('.toast')).toContainText('Экспортировано: diagram.png');
+    await page.getByRole('button', { name: 'Показать в папке', exact: true }).click();
+    expect(await revealed.jsonValue()).toEqual([png]);
+    await page.getByTitle('Закрыть уведомление', { exact: true }).click();
+    await expect.poll(() => app.evaluate(({ Menu }) => ['export-png', 'export-png-transparent'].map(id => {
+      const item = Menu.getApplicationMenu()!.getMenuItemById(id)!; return { enabled: item.enabled, label: item.label };
+    }))).toEqual([{ enabled: true, label: 'Экспорт PNG с белым фоном…' }, { enabled: true, label: 'Экспорт PNG с прозрачным фоном…' }]);
+    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('export-png-transparent')!.click());
+    await expect(page.locator('.toast')).toContainText('Экспортировано: diagram.png');
+    const pixels = await page.evaluate(async bytes => {
+      const bitmap = await createImageBitmap(new Blob([new Uint8Array(bytes)], { type: 'image/png' }));
+      const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height;
+      const context = canvas.getContext('2d')!; context.drawImage(bitmap, 0, 0); bitmap.close();
+      return Array.from(context.getImageData(0, 0, 1, 1).data);
+    }, Array.from(await readFile(png)));
+    expect(pixels).toEqual([0, 0, 0, 0]);
+    await page.getByTitle('Закрыть уведомление', { exact: true }).click();
     expect(await page.evaluate(() => window.desktop!.recentFiles())).toEqual([]);
     await expect(page.locator('.dirty-dot')).toHaveCount(0);
     // Отмена native диалога не создаёт файл и не изменяет документ.
     await app.evaluate(({ dialog }) => { dialog.showSaveDialog = async () => ({ canceled: true, filePath: '' }); });
     await page.getByTitle('PNG · белый фон', { exact: true }).click();
     await expect(page.locator('.dirty-dot')).toHaveCount(0);
+    await expect(page.locator('.toast[data-severity=success]')).toHaveCount(0);
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 

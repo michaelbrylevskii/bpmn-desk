@@ -25,6 +25,7 @@ export interface SavedFile {
   token: string;
   name: string;
   path: string;
+  revealToken?: string;
 }
 
 export interface DesktopBridge {
@@ -49,6 +50,7 @@ export interface DesktopBridge {
   fileStatuses(tokens: string[]): Promise<FileStatus[]>;
   reloadFile(token: string): Promise<OpenedFile>;
   revealFile(token: string): Promise<void>;
+  revealExport(token: string): Promise<void>;
   examples(): Promise<string[]>;
   openExample(name: string): Promise<OpenedFile>;
   saveFile(request: SaveRequest): Promise<SavedFile | null>;
@@ -61,6 +63,7 @@ export interface DesktopBridge {
 
 export const channels = {
   sessionPin: 'sessions:pin',
+  revealExport: 'exports:reveal',
   workspaceChanged: 'workspace:changed', initialSession: 'sessions:initial', sessions: 'sessions:list', saveSession: 'sessions:save', restoreSession: 'sessions:restore', dismissSession: 'sessions:dismiss', deleteSession: 'sessions:delete',
   language: 'settings:language', setLanguage: 'settings:set-language', languageChanged: 'settings:language-changed',
   statuses: 'documents:statuses', reload: 'documents:reload', reveal: 'documents:reveal', removeRecent: 'documents:remove-recent',

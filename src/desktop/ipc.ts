@@ -3,7 +3,7 @@ import { SessionStore } from './session-store';
 import { validSession } from '../shared/session-validation';
 import { app, dialog, shell, type BrowserWindow, type IpcMainInvokeEvent } from 'electron';
 import { join, basename, dirname, resolve } from 'node:path';
-import { readdir, readFile, realpath } from 'node:fs/promises';
+import { readdir, readFile, realpath, stat } from 'node:fs/promises';
 import { channels, type SaveRequest, type WorkspaceChange } from '../shared/contracts';
 import { FileStore } from './file-store';
 import { RecentFiles } from './recent-files';
@@ -104,6 +104,15 @@ export async function registerIpc(window: BrowserWindow, setDirty: (value: boole
     const path = store.pathFor(token);
     if ((await store.status(token)).state === 'missing') { const error = await shell.openPath(dirname(path)); if (error) throw new Error(error); }
     else shell.showItemInFolder(path);
+  });
+  ipc.handle(channels.revealExport, async (event, token: unknown) => {
+    validate(event); if (typeof token !== 'string') throw new Error('Экспортированный файл недоступен в этом окне.');
+    const path = store.exportPathFor(token);
+    try { await stat(path); shell.showItemInFolder(path); }
+    catch (error) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+      const message = await shell.openPath(dirname(path)); if (message) throw new Error(message);
+    }
   });
   ipc.handle(channels.recent, event => { validate(event); return recent.list(); });
   ipc.handle(channels.openRecent, (event, path: unknown) => {

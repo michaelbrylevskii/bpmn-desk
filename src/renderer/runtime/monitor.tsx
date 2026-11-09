@@ -2,8 +2,7 @@ import type { SessionMonitor } from '../../shared/sessions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MonitorControls } from './controls';
 import type { DiagramExport } from '../../shared/contracts';
-import { bridge } from '../platform/bridge';
-import { pngFromSvg } from '../bpmn/image-export';
+import { saveDiagramExport } from '../documents/diagram-export';
 import type { DeadLetterJob, DeployedDiagram, Definition, Instance } from '../../shared/runtime';
 import { errorMessage } from '../../shared/errors';
 import { runtimeBridge } from '../platform/runtime';
@@ -87,8 +86,7 @@ export function RuntimeMonitor({ initial, summaryEnabled, setSummaryEnabled, req
   const exportDiagram = useCallback(async (format: DiagramExport) => {
     if (!viewer.current || !diagram || !ready) return;
     const svg = await viewer.current.svg(); const name = `${diagram.definition.key}-runtime`;
-    if (format === 'svg') await bridge.saveFile({ name: `${name}.svg`, format: 'svg', content: svg });
-    else await bridge.saveFile({ name: `${name}.png`, format: 'png', content: await pngFromSvg(svg, format === 'png-white') });
+    return saveDiagramExport(svg, name, format);
   }, [diagram, ready]);
   const controls = useMemo<MonitorControls>(() => {
     const value: MonitorControls = { session: { jobId: selectedJob?.id, historyFilter, title: diagram?.definition.name || diagram?.definition.key || '', definitionId, instanceId, history: historyMode, selected, catalog: catalogState, catalogHidden, detailsHidden, auto }, navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId || !!desiredDefinition && summaryEnabled && diagramDisplayed,

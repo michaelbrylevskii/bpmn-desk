@@ -34,6 +34,7 @@ const bridge: DesktopBridge = {
   fileStatuses: tokens => ipcRenderer.invoke(channels.statuses, tokens),
   reloadFile: token => ipcRenderer.invoke(channels.reload, token),
   revealFile: token => ipcRenderer.invoke(channels.reveal, token),
+  revealExport: token => ipcRenderer.invoke(channels.revealExport, token),
   recentFiles: () => ipcRenderer.invoke(channels.recent),
   examples: () => ipcRenderer.invoke(channels.examples),
   openExample: name => ipcRenderer.invoke(channels.example, name),

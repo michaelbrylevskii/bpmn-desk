@@ -59,7 +59,11 @@ export function App() {
   const { documentOpened, activate: activateTab } = tabs; const runDocument = docs.run;
   const finishOpening = useCallback((ids: string | string[]) => { const opened = typeof ids === 'string' ? [ids] : ids; if (opened.length) { documentOpened(opened[0]!, sourceHome); activateTab(opened.at(-1)!); } }, [documentOpened, activateTab, sourceHome]);
   const openContent = useCallback((operation: () => Promise<string | string[]>) => runDocument(async () => { finishOpening(await operation()); }), [runDocument, finishOpening]);
-  const exportDiagram = useCallback((format: DiagramExport) => docs.run(() => monitoring ? controls?.exportDiagram(format) : docs.exportDiagram(format, active?.id)), [docs, monitoring, controls, active?.id]);
+  const exportDiagram = useCallback((format: DiagramExport) => docs.run(async () => {
+    const saved = await (monitoring ? controls?.exportDiagram(format) : docs.exportDiagram(format, active?.id));
+    if (saved) report({ severity: 'success', message: t('Экспортировано: {name}', { name: saved.name }),
+      action: saved.revealToken ? { label: t('Показать в папке'), run: () => bridge.revealExport(saved.revealToken!) } : undefined });
+  }), [docs, monitoring, controls, active?.id, report, t]);
   const closeTabs = useCallback((targets: WorkspaceTab[]) => {
     if (!docs.closeMany(targets.filter(tab => tab.kind === 'document').map(tab => tab.id))) return;
     tabs.closeMany(targets.map(tab => tab.id));
@@ -103,6 +107,7 @@ export function App() {
       case 'save-as': docs.run(() => docs.save(true, active?.id)); break;
       case 'export': exportDiagram('svg'); break;
       case 'export-png': exportDiagram('png-white'); break;
+      case 'export-png-transparent': exportDiagram('png-transparent'); break;
       case 'reload': if (active) docs.run(() => docs.reload(active.id)); break;
       case 'duplicate': if (active) docs.run(async () => { const id = await docs.duplicate(active.id); if (id) tabs.documentOpened(id); }); break;
       case 'reveal': if (active?.token) docs.run(() => bridge.revealFile(active.token!)); break;

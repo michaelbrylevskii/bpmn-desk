@@ -3,6 +3,7 @@ export interface Notice {
   title?: string;
   message: string;
   details?: string;
+  action?: { label: string; run: () => void | Promise<void> };
 }
 
 export interface FailureContext { title: string; message?: string }

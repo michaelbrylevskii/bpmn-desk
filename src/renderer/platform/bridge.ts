@@ -36,6 +36,7 @@ const browserBridge: DesktopBridge = {
   fileStatuses: () => Promise.resolve([]),
   reloadFile: () => Promise.reject(new Error('Недавние локальные файлы доступны в desktop-приложении.')),
   revealFile: () => Promise.resolve(),
+  revealExport: () => Promise.resolve(),
   recentFiles: () => Promise.resolve([]),
   examples: () => Promise.resolve(Object.keys(bundledExamples).map(key => key.split('/').pop() ?? key)),
   openExample: name => {

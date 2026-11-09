@@ -25,6 +25,7 @@ test('история, runtime и ошибки сохраняют отдельн�
     const filePath = resolve(directory, 'sections.svg');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, filePath);
     await page.getByTitle('Export SVG', { exact: true }).click();
+    await expect(page.locator('.toast').filter({ hasText: 'Exported: sections.svg' }).getByRole('button', { name: 'Show in folder', exact: true })).toBeVisible();
     await expect(async () => {
       const svg = await readFile(filePath, 'utf8'); expect(svg).toContain('<title>◷ 2+ · ● 3+ · ! 1</title>');
       for (const color of ['#626b79', '#207f67', '#b4233a']) expect(svg).toContain(`fill="${color}"`);
@@ -33,6 +34,7 @@ test('история, runtime и ошибки сохраняют отдельн�
     const pngPath = resolve(directory, 'sections.png');
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, pngPath);
     await page.getByTitle('Export format', { exact: true }).click(); await page.getByRole('menuitem', { name: 'PNG · white background', exact: true }).click();
+    await expect(page.locator('.toast').filter({ hasText: 'Exported: sections.png' }).getByRole('button', { name: 'Show in folder', exact: true })).toBeVisible();
     await expect(async () => { expect((await readFile(pngPath)).subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a'); }).toPass();
     const colors = await page.evaluate(async base64 => {
       const image = new Image(); image.src = `data:image/png;base64,${base64}`; await image.decode();

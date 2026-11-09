@@ -8,6 +8,7 @@ const hash = (text: string) => createHash('sha256').update(text).digest('hex');
 
 /** Хранит разрешённые пользователем файлы и обнаруживает внешние изменения. */
 export class FileStore {
+  private readonly exports = new Map<string, string>();
   private readonly files = new Map<string, { path: string; revision: string }>();
 
   async open(path: string): Promise<OpenedFile> {
@@ -93,7 +94,11 @@ export class FileStore {
   async saveExport(content: string | Uint8Array, path: string): Promise<SavedFile> {
     if (Buffer.byteLength(content) > MAX_FILE_SIZE) throw new Error('Файл превышает 20 МБ.');
     await atomicWrite(path, content);
-    return { token: '', path, name: basename(path) };
+    const revealToken = randomUUID(); this.exports.set(revealToken, path);
+    return { token: '', revealToken, path, name: basename(path) };
+  }
+  exportPathFor(token: string): string {
+    const path = this.exports.get(token); if (!path) throw new Error('Экспортированный файл недоступен в этом окне.'); return path;
   }
 }
 
