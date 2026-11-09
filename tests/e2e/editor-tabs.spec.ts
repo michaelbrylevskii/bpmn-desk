@@ -1,6 +1,27 @@
 import { test, expect } from './russian-fixture';
 import { createDiagram } from './create-diagram';
 
+test('переполненные вкладки прокручиваются стрелками, плюс остаётся доступным, активная вкладка видна', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 900 }); await page.goto('/');
+  for (let index = 0; index < 5; index++) {
+    if (index) await page.locator('.new-tab').click();
+    await createDiagram(page, 'Flowable');
+  }
+  const strip = page.locator('.tab-strip');
+  await expect(strip.getByRole('button', { name: 'Прокрутить вкладки влево' })).toBeVisible();
+  await expect(strip.getByRole('button', { name: 'Прокрутить вкладки вправо' })).toBeHidden();
+  await expect(page.locator('.new-tab')).toBeInViewport();
+  for (let index = 0; index < 5; index++) {
+    const left = strip.getByRole('button', { name: 'Прокрутить вкладки влево' });
+    if (await left.isVisible()) await left.click();
+  }
+  await expect(strip.getByRole('button', { name: 'Прокрутить вкладки вправо' })).toBeVisible();
+  await page.getByRole('tab').first().click(); await page.keyboard.press('End');
+  await expect(page.getByRole('tab').last()).toBeFocused();
+  await expect(page.getByRole('tab').last()).toBeInViewport();
+  expect(await page.locator('.document-tabs').evaluate(element => getComputedStyle(element).scrollbarWidth)).toBe('none');
+});
+
 test('перетаскивание и клавиатурная перестановка сохраняют активную вкладку, модель и undo', async ({ page }) => {
   await page.goto('/'); await createDiagram(page, 'Flowable');
   await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();

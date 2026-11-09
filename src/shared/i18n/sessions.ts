@@ -1,4 +1,6 @@
 export const sessionMessages = {
+  'Прокрутить вкладки влево': 'Scroll tabs left',
+  'Прокрутить вкладки вправо': 'Scroll tabs right',
   'Сессия уже открыта в другом окне.': 'This session is already open in another window.',
   'Сессия открыта в другом окне. Закрой её перед удалением.': 'This session is open in another window. Close it before deleting.',
   'Закрыть окно и сохранить сессию?': 'Close this window and save the session?',

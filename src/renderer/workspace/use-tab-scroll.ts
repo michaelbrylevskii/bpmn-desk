@@ -1,0 +1,23 @@
+import { useLayoutEffect, useState, type RefObject } from 'react';
+
+export function useTabScroll(ref: RefObject<HTMLElement | null>, activeId: string, order: string) {
+  const [edges, setEdges] = useState({ left: false, right: false });
+  useLayoutEffect(() => {
+    const element = ref.current; if (!element) return;
+    const update = () => {
+      const next = { left: element.scrollLeft > 1, right: element.scrollLeft + element.clientWidth < element.scrollWidth - 1 };
+      setEdges(previous => previous.left === next.left && previous.right === next.right ? previous : next);
+    };
+    const selected = Array.from(element.querySelectorAll<HTMLElement>('[data-tab-id]')).find(tab => tab.dataset.tabId === activeId);
+    if (selected) {
+      const box = selected.closest('.document-tab')!.getBoundingClientRect(); const viewport = element.getBoundingClientRect();
+      if (box.left < viewport.left) element.scrollLeft -= viewport.left - box.left;
+      else if (box.right > viewport.right) element.scrollLeft += box.right - viewport.right;
+    }
+    update(); const observer = new ResizeObserver(update); observer.observe(element);
+    for (const child of element.children) observer.observe(child);
+    element.addEventListener('scroll', update, { passive: true });
+    return () => { observer.disconnect(); element.removeEventListener('scroll', update); };
+  }, [ref, activeId, order]);
+  return { ...edges, scroll: (direction: number) => { const element = ref.current; if (element) element.scrollBy({ left: direction * Math.max(180, element.clientWidth * .65), behavior: 'smooth' }); } };
+}
