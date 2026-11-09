@@ -4,6 +4,7 @@ import { createServer } from 'vite';
 process.env.PLAYWRIGHT_BROWSERS_PATH = '0';
 const { chromium, expect } = await import('@playwright/test');
 const { captureHero, openExample, prepareEditor, viewport } = await import('./lib/screenshots/editor.mjs');
+const { captureStart } = await import('./lib/screenshots/start.mjs');
 const server = await createServer({ configFile: 'vite.web.config.ts', server: { host: '127.0.0.1', port: 5174, strictPort: true } });
 const darkServer = await createServer({ configFile: 'vite.web.config.ts', server: { host: '127.0.0.1', port: 5175, strictPort: true } });
 await server.listen();
@@ -26,17 +27,7 @@ try {
     await page.close();
     const home = await browser.newPage({ viewport });
     home.setDefaultTimeout(15000);
-    await home.goto(origin); await home.getByTitle('Light theme', { exact: true }).click();
-    await openExample(home, 'flowable-showcase');
-    await home.locator('.new-tab').click(); await openExample(home, 'camunda7-showcase');
-    await home.reload();
-    await home.getByRole('button', { name: 'Pin session', exact: true }).click();
-    await home.getByRole('textbox', { name: 'Session name', exact: true }).fill('Document review');
-    await home.getByRole('button', { name: 'Save name and pin', exact: true }).click();
-    await expect(home.getByRole('button', { name: 'Create diagram', exact: true })).toBeVisible();
-    await home.evaluate(() => globalThis.document.fonts.ready);
-    await home.mouse.move(1590, 990);
-    await home.screenshot({ path: 'docs/images/start.png' });
+    await home.goto(origin);
     await home.getByTitle('Dark theme', { exact: true }).click();
     await openExample(home, 'camunda7-showcase');
     await home.getByRole('textbox', { name: 'Find element', exact: true }).fill('ArchiveOrder');
@@ -47,4 +38,5 @@ try {
     await expect(home.locator('.engine-properties[data-engine="camunda7"]')).toBeVisible();
     await home.screenshot({ path: 'docs/images/camunda.png' });
   } finally { await browser.close(); }
+  await captureStart();
 } finally { await darkServer.close(); await server.close(); }
