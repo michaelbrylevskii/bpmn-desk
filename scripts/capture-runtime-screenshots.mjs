@@ -1,0 +1,54 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import process from 'node:process';
+
+process.env.PLAYWRIGHT_BROWSERS_PATH = '0';
+const { _electron: electron, expect } = await import('@playwright/test');
+const { viewport } = await import('./lib/screenshots/editor.mjs');
+const source = process.argv[2];
+if (!source) throw new Error('Укажи ready.json локального Flowable-стенда.');
+const fixture = JSON.parse(await readFile(source, 'utf8'));
+const directory = await mkdtemp(join(tmpdir(), 'bpmn-desk-docs-'));
+let app;
+try {
+  app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
+  const page = await app.firstWindow(); page.setDefaultTimeout(20000); await page.setViewportSize(viewport);
+  await page.getByTitle('Light theme', { exact: true }).click();
+  await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'New connection', exact: true }).click();
+  await page.getByLabel('Connection name', { exact: true }).fill('Flowable demo');
+  await page.getByLabel('REST API URL', { exact: true }).fill(fixture.baseUrl);
+  await page.getByLabel('Username', { exact: true }).fill('desk-reader');
+  await page.getByLabel('Password or token', { exact: true }).fill('fixture-password');
+  await page.getByRole('button', { name: 'Save connection', exact: true }).click();
+  await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Flowable demo', exact: true }).click();
+  const surface = page.locator('.workspace-surface:not([hidden])');
+  const catalog = surface.locator('.runtime-catalog');
+  await catalog.locator('> .runtime-tabs').getByRole('button', { name: 'Dead-letter jobs', exact: true }).click();
+  await catalog.locator('.runtime-row').filter({ hasText: 'Send document' }).click();
+  await surface.locator('.runtime-job summary').click();
+  await expect(surface.locator('.runtime-job pre')).toContainText('Fixture failure: remote system is unavailable');
+  await surface.getByTitle('Fit diagram', { exact: true }).click();
+  await surface.locator('.runtime-canvas').hover();
+  await page.keyboard.down('Control'); await page.mouse.wheel(0, -250); await page.keyboard.up('Control');
+  await page.evaluate(() => globalThis.document.fonts.ready); await page.mouse.move(1590, 990);
+  await page.screenshot({ path: 'docs/images/monitor.png' });
+  await catalog.locator('> .runtime-tabs').getByRole('button', { name: 'History', exact: true }).click();
+  const filters = catalog.locator('.catalog-filters');
+  if (await filters.getAttribute('open') === null) await filters.locator('summary').click();
+  await filters.getByLabel('Instance ID', { exact: true }).fill(fixture.historyInstanceId);
+  await filters.getByRole('button', { name: 'Open instance', exact: true }).click();
+  await filters.locator('summary').click();
+  const review = surface.locator('.history-activity[data-element-id="HistoryReview"]');
+  await review.last().getByRole('button').click();
+  await surface.locator('.history-activity-details').waitFor({ state: 'visible' });
+  await surface.getByTitle('Fit diagram', { exact: true }).click();
+  await surface.locator('.runtime-instance-panel').evaluate(element => { element.scrollTop = 0; });
+  await page.mouse.move(1590, 990);
+  await page.screenshot({ path: 'docs/images/history.png' });
+  process.stdout.write('Скриншоты монитора и истории сохранены.\n');
+} finally {
+  await app?.close(); await rm(directory, { recursive: true, force: true });
+}
