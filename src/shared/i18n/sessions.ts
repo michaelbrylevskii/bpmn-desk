@@ -1,4 +1,5 @@
 export const sessionMessages = {
+  'Экспорт SVG…': 'Export SVG…',
   'Сессии': 'Sessions',
   'Сессия {date}': 'Session {date}',
   'Имя сессии': 'Session name',

@@ -16,7 +16,7 @@ export function applicationMenu(window: BrowserWindow, language: Language, zoom:
       { id: 'reload', label: t('Перезагрузить с диска'), click: action('reload') },
       { id: 'reveal', label: t('Показать файл в папке'), click: action('reveal') },
       { type: 'separator' },
-      { id: 'export', label: t('Экспорт SVG'), click: action('export') },
+      { id: 'export', label: t('Экспорт SVG…'), click: action('export') },
       { id: 'export-png', label: t('Экспорт PNG с белым фоном…'), click: action('export-png') },
       { id: 'export-png-transparent', label: t('Экспорт PNG с прозрачным фоном…'), click: action('export-png-transparent') },
       { type: 'separator' }, { label: t('Подключения…'), click: action('connections') },
