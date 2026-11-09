@@ -28,7 +28,7 @@ export const sessionMessages = {
   'Недопустимая сессия.': 'Invalid session.',
   'Недавние сессии': 'Recent sessions',
   'Сессии появятся здесь после открытия вкладок.': 'Sessions appear here after opening tabs.',
-  'Предыдущая сессия: {tabs} вкладок · {dirty} с изменениями': 'Previous session: {tabs} tabs · {dirty} with changes',
+  'Предыдущая сессия': 'Previous session',
   '{tabs} вкладок · {dirty} с изменениями': '{tabs} tabs · {dirty} with changes',
   'Скрыть предложение восстановления': 'Dismiss restoration offer',
   'Удалить сессию': 'Delete session',
