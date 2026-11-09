@@ -102,10 +102,10 @@ test('подключения: несколько профилей, выбор, �
   const reopened = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
   try {
     const page = await reopened.firstWindow(); await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
-    await page.getByLabel('Select a connection').click();
-    await expect(page.getByRole('option')).toHaveCount(3); await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await expect(page.getByRole('menuitem')).toHaveCount(3); await expect(page.getByRole('menuitem', { name: 'Fixture engine', exact: true })).toBeVisible(); await expect(page.getByRole('menuitem', { name: 'No credentials', exact: true })).toBeVisible(); await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: 'Open monitor', exact: true })).toBeEnabled();
-    await openMonitor(page);
+    await openMonitor(page, 'No credentials');
     await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('401');
     await selectOption(page.getByLabel('Select a connection'), { label: 'Fixture engine' });
     await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('Enter the connection password or token');
