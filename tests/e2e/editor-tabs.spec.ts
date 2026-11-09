@@ -1,6 +1,49 @@
 import { test, expect } from './russian-fixture';
 import { createDiagram } from './create-diagram';
 
+test('колёсико прокручивает вкладки без Shift, стрелки не меняют геометрию у краёв', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 900 }); await page.goto('/');
+  for (let index = 0; index < 5; index++) {
+    if (index) await page.locator('.new-tab').click();
+    await createDiagram(page, 'Flowable');
+  }
+  const scroller = page.locator('.document-tabs'); const plus = page.locator('.new-tab');
+  const width = await scroller.evaluate(element => element.clientWidth); const plusX = (await plus.boundingBox())!.x;
+  const offset = () => scroller.evaluate(element => element.scrollLeft);
+  const left = page.getByRole('button', { name: 'Прокрутить вкладки влево' });
+  const right = page.getByRole('button', { name: 'Прокрутить вкладки вправо' });
+  await scroller.hover(); await page.mouse.wheel(0, -1000); await expect.poll(offset).toBe(0);
+  await expect(left).toBeHidden(); await expect(right).toBeVisible();
+  expect(await scroller.evaluate(element => element.clientWidth)).toBe(width);
+  expect((await plus.boundingBox())!.x).toBe(plusX);
+  await page.mouse.wheel(0, 90); await expect.poll(offset).toBeGreaterThan(0);
+  await right.hover(); await page.mouse.wheel(0, 1000); await expect(right).toBeHidden();
+  expect(await scroller.evaluate(element => element.clientWidth)).toBe(width);
+  expect((await plus.boundingBox())!.x).toBe(plusX);
+  await scroller.hover(); await page.mouse.wheel(-1000, 0); await expect.poll(offset).toBe(0);
+  await page.keyboard.down('Shift'); await page.mouse.wheel(0, 90); await page.keyboard.up('Shift');
+  await expect.poll(offset).toBeGreaterThan(0);
+  await page.setViewportSize({ width: 1800, height: 900 });
+  await expect(left).toBeHidden(); await expect(right).toBeHidden();
+  const last = (await page.locator('.document-tab').last().boundingBox())!;
+  expect(Math.abs((await plus.boundingBox())!.x - last.x - last.width)).toBeLessThan(2);
+});
+
+test('средняя кнопка закрывает вкладку с обычным подтверждением несохранённых изменений', async ({ page }) => {
+  await page.goto('/'); await createDiagram(page, 'Flowable');
+  await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
+  await page.getByLabel('Название', { exact: true }).fill('Несохранённый процесс');
+  await page.getByLabel('Название', { exact: true }).blur(); await page.locator('.new-tab').click();
+  const document = page.locator('.document-tab[data-kind="document"]');
+  page.once('dialog', dialog => { expect(dialog.message()).toContain('несохранённые изменения'); void dialog.dismiss(); });
+  await document.click({ button: 'middle' }); await expect(page.getByRole('tab')).toHaveCount(2);
+  page.once('dialog', dialog => { void dialog.accept(); });
+  await document.click({ button: 'middle' }); await expect(document).toHaveCount(0);
+  await expect(page.getByRole('tab')).toHaveCount(1); await expect(page.locator('.welcome')).toBeVisible();
+  await page.getByRole('tab').click({ button: 'middle' }); await expect(page.getByRole('tab')).toHaveCount(0);
+  await expect(page.locator('.welcome')).toBeVisible();
+});
+
 test('переполненные вкладки прокручиваются стрелками, плюс остаётся доступным, активная вкладка видна', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 900 }); await page.goto('/');
   for (let index = 0; index < 5; index++) {

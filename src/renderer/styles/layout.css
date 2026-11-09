@@ -95,15 +95,16 @@
 
 .tab-strip { display: flex; align-items: stretch; height: 40px; flex-shrink: 0; min-width: 0; background: var(--bg); border-bottom: 1px solid var(--border); }
 .tab-scroll-region { flex: 0 1 auto; min-width: 0; position: relative; }
-.tab-scroll-region .document-tabs { height: 100%; border-bottom: 0; scrollbar-width: none; }
+.tab-scroll-region .document-tabs { height: 100%; border-bottom: 0; scrollbar-width: none; scroll-padding-inline: 26px; }
 .tab-scroll-region .document-tabs::-webkit-scrollbar { display: none; }
-.tab-scroll-region::before, .tab-scroll-region::after { content: ''; position: absolute; top: 0; bottom: 0; width: 22px; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 150ms; }
-.tab-scroll-region::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
-.tab-scroll-region::after { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+.tab-scroll-region::before, .tab-scroll-region::after { content: ''; position: absolute; top: 0; bottom: 0; width: 48px; pointer-events: none; z-index: 2; opacity: 0; transition: opacity 150ms; }
+.tab-scroll-region::before { left: 0; background: linear-gradient(to right, var(--bg) 26px, transparent); }
+.tab-scroll-region::after { right: 0; background: linear-gradient(to left, var(--bg) 26px, transparent); }
 .tab-scroll-region.has-left::before, .tab-scroll-region.has-right::after { opacity: 1; }
-.tab-scroll { width: 26px; flex-shrink: 0; display: grid; place-items: center; color: var(--muted); }
+.tab-scroll { position: absolute; top: 0; bottom: 0; width: 26px; padding: 0; z-index: 3; display: grid; place-items: center; color: var(--muted); background: var(--bg); }
+.tab-scroll-left { left: 0; }.tab-scroll-right { right: 0; }
 .tab-scroll:hover { color: var(--accent); background: var(--accent-soft); }
-.tab-scroll:disabled { width: 0; padding: 0; overflow: hidden; visibility: hidden; }
+.tab-scroll:disabled { visibility: hidden; }
 .tab-strip > .new-tab { flex-shrink: 0; border-left: 1px solid var(--border); }
 .session-entry[data-pinned=true] .welcome-file > svg { color: var(--accent); }
 .session-entry[data-pinned=true] + .session-entry[data-pinned=false] { border-top: 1px solid var(--border); margin-top: 5px; padding-top: 5px; }

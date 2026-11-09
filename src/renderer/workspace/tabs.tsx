@@ -21,8 +21,7 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
   const [drop, setDrop] = useState<{ id: string; after: boolean }>();
   const scroller = useRef<HTMLElement>(null); const scroll = useTabScroll(scroller, activeId, tabs.map(tab => tab.id).join(','));
   if (!tabs.length) return null;
-  return <><div className="tab-strip"><button className="tab-scroll" aria-label={t('Прокрутить вкладки влево')} title={t('Прокрутить вкладки влево')} disabled={!scroll.left} onClick={() => scroll.scroll(-1)}><ChevronLeft size={16} /></button>
-    <div className={`tab-scroll-region ${scroll.left ? 'has-left' : ''} ${scroll.right ? 'has-right' : ''}`}><nav ref={scroller} className="document-tabs" role="tablist" aria-label={t('Открытые вкладки')} onDragOver={event => {
+  return <><div className="tab-strip"><div className={`tab-scroll-region ${scroll.left ? 'has-left' : ''} ${scroll.right ? 'has-right' : ''}`}><nav ref={scroller} className="document-tabs" role="tablist" aria-label={t('Открытые вкладки')} onDragOver={event => {
       if (!dragged.current) return;
       const element = event.currentTarget; const box = element.getBoundingClientRect();
       if (event.clientX < box.left + 35) element.scrollLeft -= 28;
@@ -45,6 +44,8 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
     const state = external ? dirty ? 'conflict' : 'external' : dirty ? 'local' : '';
     const detail = <div className="tab-tooltip"><strong>{title}</strong>{document?.path && <div className="file-path">{document.path}</div>}{dirty && <div>{t('Есть несохранённые изменения')}</div>}{document?.draft !== undefined && document.draft !== document.xml && <div>{t('Неприменённые изменения XML')}</div>}{external && <div>{t(document.fileState === 'missing' ? 'Файл удалён с диска.' : document.fileState === 'unavailable' ? 'Не удалось проверить файл на диске.' : 'Файл изменён на диске.')}</div>}{document?.fileError && <div>{document.fileError}</div>}</div>;
     return <Tooltip key={tab.id} content={detail}><div className={`document-tab ${tab.id === activeId ? 'active' : ''} ${drop?.id === tab.id ? drop.after ? 'drop-after' : 'drop-before' : ''}`} data-kind={tab.kind} onContextMenu={event => { event.preventDefault(); setContext({ tab, x: event.clientX, y: event.clientY }); }}
+      onMouseDown={event => { if (event.button === 1) event.preventDefault(); }}
+      onAuxClick={event => { if (event.button === 1) { event.preventDefault(); close(tab); } }}
       onDragOver={event => {
         if (!dragged.current || dragged.current === tab.id) return;
         event.preventDefault(); event.dataTransfer.dropEffect = 'move';
@@ -64,5 +65,5 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
         {tab.kind === 'home' ? <House size={14} /> : tab.kind === 'monitor' ? <Server size={14} /> : <Workflow size={14} />}<span>{title}</span>{state && <i className={`dirty-dot ${state}`} aria-label={t(external ? document.fileState === 'missing' ? 'Файл удалён с диска.' : 'Файл изменён на диске.' : 'Несохранённые изменения')} />}</button>
       <button title={t('Закрыть {name}', { name: title })} onClick={() => close(tab)}><X size={13} /></button>
     </div></Tooltip>;
-  })}</nav></div><button className="tab-scroll" aria-label={t('Прокрутить вкладки вправо')} title={t('Прокрутить вкладки вправо')} disabled={!scroll.right} onClick={() => scroll.scroll(1)}><ChevronRight size={16} /></button><button className="new-tab" title={t('Новая вкладка')} onClick={create}>+</button></div>{context && <CommandMenu items={menu(context.tab)} x={context.x} y={context.y} owner={owner} close={() => setContext(undefined)} />}</>;
+  })}</nav><button className="tab-scroll tab-scroll-left" aria-label={t('Прокрутить вкладки влево')} title={t('Прокрутить вкладки влево')} disabled={!scroll.left} onClick={() => scroll.scroll(-1)}><ChevronLeft size={16} /></button><button className="tab-scroll tab-scroll-right" aria-label={t('Прокрутить вкладки вправо')} title={t('Прокрутить вкладки вправо')} disabled={!scroll.right} onClick={() => scroll.scroll(1)}><ChevronRight size={16} /></button></div><button className="new-tab" title={t('Новая вкладка')} onClick={create}>+</button></div>{context && <CommandMenu items={menu(context.tab)} x={context.x} y={context.y} owner={owner} close={() => setContext(undefined)} />}</>;
 }
