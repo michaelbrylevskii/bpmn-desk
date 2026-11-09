@@ -11,12 +11,14 @@ test('переполненные вкладки прокручиваются с�
   await expect(strip.getByRole('button', { name: 'Прокрутить вкладки влево' })).toBeVisible();
   await expect(strip.getByRole('button', { name: 'Прокрутить вкладки вправо' })).toBeHidden();
   await expect(page.locator('.new-tab')).toBeInViewport();
-  for (let index = 0; index < 5; index++) {
-    const left = strip.getByRole('button', { name: 'Прокрутить вкладки влево' });
-    if (await left.isVisible()) await left.click();
-  }
-  await expect(strip.getByRole('button', { name: 'Прокрутить вкладки вправо' })).toBeVisible();
-  await page.getByRole('tab').first().click(); await page.keyboard.press('End');
+  const left = strip.getByRole('button', { name: 'Прокрутить вкладки влево' });
+  const right = strip.getByRole('button', { name: 'Прокрутить вкладки вправо' });
+  const scroller = page.locator('.document-tabs'); const initial = await scroller.evaluate(element => element.scrollLeft);
+  await left.click(); await expect.poll(() => scroller.evaluate(element => element.scrollLeft)).toBeLessThan(initial);
+  await expect(right).toBeVisible(); await right.click(); await expect(right).toBeHidden();
+  await page.getByRole('tab').last().focus(); await page.keyboard.press('Home');
+  await expect(page.getByRole('tab').first()).toBeFocused(); await expect(page.getByRole('tab').first()).toBeInViewport();
+  await expect(left).toBeHidden(); await page.keyboard.press('End');
   await expect(page.getByRole('tab').last()).toBeFocused();
   await expect(page.getByRole('tab').last()).toBeInViewport();
   expect(await page.locator('.document-tabs').evaluate(element => getComputedStyle(element).scrollbarWidth)).toBe('none');
