@@ -407,7 +407,8 @@ test('конфликт сохранения предлагает отмену, �
     await expect(page.locator('.document-tab')).toContainText('copy.bpmn'); expect(await readFile(path, 'utf8')).toBe('<broken>'); expect(await readFile(copy, 'utf8')).toContain('${localEdit}');
     await writeFile(copy, '<external>'); await app.evaluate(({ dialog }) => { dialog.showMessageBox = async () => ({ response: 2, checkboxChecked: false }); });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await expect(page.locator('.dirty-dot')).toHaveCount(0); expect(await readFile(copy, 'utf8')).toContain('${localEdit}');
+    await expect.poll(() => readFile(copy, 'utf8')).toContain('${localEdit}');
+    await expect(page.locator('.dirty-dot')).toHaveCount(0);
   } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
@@ -442,7 +443,7 @@ test('восстановление в занятом окне открывает
     await first.evaluate(async path => {
       const file = await window.desktop!.openRecent(path);
       await window.desktop!.saveFile({ token: file.token, name: file.name, content: file.xml.replace('name="Vacation request"', 'name="Updated from another window"') });
-    }, path);
+    }, await realpath(path));
     await expect(second.locator('.dirty-dot.external')).toBeVisible({ timeout: 6000 });
     const secondWindow = await app.browserWindow(second); const secondId = await secondWindow.evaluate(window => window.id);
     await second.bringToFront(); await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getFocusedWindow()?.id)).toBe(secondId);

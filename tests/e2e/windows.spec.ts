@@ -43,7 +43,7 @@ test('готовое Windows-приложение открывает, измен
       expect(await readFile(path, 'utf8')).toContain('${windowsEdited}');
       // Наличие копий примеров проверяется через реальный packaged IPC.
       await page.getByRole('button', { name: 'Закрыть Документ.bpmn20.xml', exact: true }).click();
-      await expect(page.getByRole('button', { name: 'flowable-showcase', exact: true })).toBeVisible();
+      expect(await page.evaluate(() => window.desktop!.examples())).toContain('flowable-showcase.bpmn20.xml');
       await openExample(page, 'flowable-showcase');
       await expect(page.locator('.document-tab').last()).toContainText('flowable-showcase');
       await page.screenshot({ path: 'test-results/windows-editor.png' });
