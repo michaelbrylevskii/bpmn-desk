@@ -25,6 +25,7 @@ export function validDocument(value: unknown): value is SessionDocument {
 export function validSession(value: unknown): value is WorkspaceSession {
   if (!object(value) || typeof value.id !== 'string' || !/^[\w-]{1,80}$/.test(value.id) || typeof value.updatedAt !== 'string' || !Number.isFinite(Date.parse(value.updatedAt)) || typeof value.dismissed !== 'boolean' || typeof value.activeId !== 'string') return false;
   if (!Array.isArray(value.documents) || !value.documents.every(validDocument) || !Array.isArray(value.tabs)) return false;
+  if (value.name !== undefined && (typeof value.name !== 'string' || !value.name.trim() || value.name.length > 80) || value.pinned !== undefined && typeof value.pinned !== 'boolean' || value.pinned === true && !value.name) return false;
   const ids = new Set<string>();
   const documents: SessionDocument[] = value.documents;
   return value.tabs.every(tab => {
@@ -34,8 +35,8 @@ export function validSession(value: unknown): value is WorkspaceSession {
   }) && new Set(documents.map(document => document.id)).size === documents.length;
 }
 export function sessionOverview(session: WorkspaceSession): SessionOverview {
-  return { id: session.id, updatedAt: session.updatedAt, dismissed: session.dismissed, tabs: session.tabs.filter(tab => tab.kind !== 'home').map(tab => {
+  return { id: session.id, name: session.name, pinned: session.pinned, updatedAt: session.updatedAt, dismissed: session.dismissed, tabs: session.tabs.filter(tab => tab.kind !== 'home').map(tab => {
     const document = session.documents.find(document => document.id === tab.id);
-    return { name: document?.name ?? (tab.kind === 'monitor' ? tab.monitor?.title || tab.monitor?.instanceId || tab.monitor?.definitionId || tab.connectionId : ''), connectionId: tab.kind === 'monitor' ? tab.connectionId : undefined, kind: tab.kind, dirty: !!document && documentChanged(document) };
+    return { name: document?.name ?? '', context: tab.kind === 'monitor' ? tab.monitor?.title : undefined, connectionId: tab.kind === 'monitor' ? tab.connectionId : undefined, kind: tab.kind, dirty: !!document && documentChanged(document) };
   }) };
 }

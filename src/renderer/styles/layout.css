@@ -104,3 +104,13 @@
 .tab-scroll:hover { color: var(--accent); background: var(--accent-soft); }
 .tab-scroll:disabled { visibility: hidden; }
 .tab-strip > .new-tab { flex-shrink: 0; border-left: 1px solid var(--border); }
+.session-entry[data-pinned=true] .welcome-file > svg { color: var(--accent); }
+.session-entry[data-pinned=true] + .session-entry[data-pinned=false] { border-top: 1px solid var(--border); margin-top: 5px; padding-top: 5px; }
+.session-name-form { display: flex; flex: 1; gap: 3px; min-width: 0; align-items: center; padding: 4px 0; }
+.session-name-form input { flex: 1; min-width: 0; padding: 7px 8px; border: 1px solid var(--accent); border-radius: 5px; background: var(--input); color: var(--text); }
+.session-name-error { color: var(--danger); font-size: 11px; margin: 4px 0; }
+.session-tooltip-row { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; }
+.session-tooltip-row > svg { flex-shrink: 0; margin-top: 3px; color: var(--muted); }
+.session-tooltip-row > div { min-width: 0; display: grid; gap: 4px; }
+.session-tooltip-row small { color: var(--muted); }
+.session-unsaved { justify-self: start; border-radius: 4px; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; font-size: 11px; font-weight: 600; }

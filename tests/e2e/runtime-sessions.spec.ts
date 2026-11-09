@@ -21,7 +21,10 @@ test('мониторы восстанавливают место просмот�
     }).toBe(2);
     await app.close(); const previous = api.state.requests.length;
     app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
-    page = await app.firstWindow(); await page.getByRole('button', { name: 'Restore', exact: true }).click();
+    page = await app.firstWindow();
+    await page.getByRole('region', { name: 'Sessions', exact: true }).locator('.welcome-file').hover();
+    await expect(page.getByRole('tooltip').getByText('Flowable monitor · Fixture engine', { exact: true })).toHaveCount(2);
+    await page.getByRole('button', { name: 'Restore', exact: true }).click();
     await expect(page.locator('.document-tab[data-kind=monitor]')).toHaveCount(2);
     await expect(page.locator('.workspace-surface:not([hidden]) .runtime-tabs.catalog-tabs').getByRole('button', { name: 'History', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.workspace-surface:not([hidden]) .catalog-conditions')).toContainText('Historical order');

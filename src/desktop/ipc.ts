@@ -56,6 +56,11 @@ export async function registerIpc(window: BrowserWindow, setDirty: (value: boole
     if (owners.has(id)) throw new Error('Сессия открыта в другом окне. Закрой её перед удалением.');
     await sessions.remove(id); changed('sessions');
   });
+  ipc.handle(channels.sessionPin, async (event, id: unknown, name: unknown) => {
+    validate(event);
+    if (typeof id !== 'string' || !sessions.list().some(entry => entry.id === id) || name !== null && typeof name !== 'string') throw new Error('Недопустимая сессия.');
+    await sessions.setPin(id, name); changed('sessions');
+  });
   const open = async (path: string) => {
     const file = await store.open(path);
     await recent.add(file.path); changed('recent');

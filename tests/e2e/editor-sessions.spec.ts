@@ -12,11 +12,46 @@ test('сессия сохраняет чистые вкладки, порядо�
   await page.locator('.document-tab').nth(1).getByRole('tab').click(); await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
 });
 
+test('закрепление и переименование вводятся inline, рабочий набор обновляется после восстановления', async ({ page }) => {
+  await page.goto('/'); await createDiagram(page, 'Flowable'); await page.reload();
+  const region = page.getByRole('region', { name: 'Sessions', exact: true });
+  await region.getByRole('button', { name: 'Pin session', exact: true }).click();
+  const name = region.getByRole('textbox', { name: 'Session name', exact: true });
+  await expect(name).toBeFocused(); await name.fill('Cancelled'); await name.press('Escape');
+  await expect(region.locator('[data-pinned=true]')).toHaveCount(0);
+  await region.getByRole('button', { name: 'Pin session', exact: true }).click();
+  await name.fill('Invoice work'); await name.press('Enter');
+  await expect(region.locator('[data-pinned=true]')).toHaveCount(1);
+  await region.getByRole('button', { name: 'Rename session', exact: true }).click();
+  await name.fill('Pinned invoices'); await region.getByRole('button', { name: 'Save name and pin', exact: true }).click();
+  await page.reload(); await expect(region.locator('.welcome-file')).toContainText('Pinned invoices');
+  await region.locator('.welcome-file').click();
+  await expect(page.locator('.recovery-banner')).toHaveCount(0);
+  await page.locator('.new-tab').click(); await createDiagram(page, 'Camunda 7');
+  await page.reload(); await expect(region.locator('[data-pinned=true]')).toHaveCount(1);
+  await expect(region.locator('.welcome-file')).toContainText('2 tabs');
+  await region.getByRole('button', { name: 'Unpin session', exact: true }).click();
+  await expect(region.locator('[data-pinned=true]')).toHaveCount(0);
+  await expect(region.locator('.welcome-file')).toContainText('Pinned invoices');
+  await page.reload(); await expect(region.locator('.welcome-file')).toContainText('Pinned invoices');
+});
+
+test('подсказка выделяет изменения, а предложение восстановления остаётся только на главной', async ({ page }) => {
+  await page.goto('/'); await createDiagram(page, 'Flowable');
+  await page.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Changed'); await page.getByLabel('Name', { exact: true }).blur();
+  await page.reload(); await expect(page.locator('.recovery-banner')).toBeVisible();
+  await page.getByRole('region', { name: 'Sessions', exact: true }).locator('.welcome-file').hover();
+  await expect(page.getByRole('tooltip').locator('.session-unsaved')).toHaveText('Unsaved changes');
+  await createDiagram(page, 'Camunda 7'); await expect(page.locator('.recovery-banner')).toHaveCount(0);
+  await page.locator('.new-tab').click(); await expect(page.locator('.recovery-banner')).toBeVisible();
+});
+
 test('скрытие предложения переживает запуск, запись остаётся и восстановление снова разрешает предложение', async ({ page }) => {
   await page.goto('/'); await createDiagram(page, 'Flowable'); await page.reload();
   await page.getByRole('button', { name: 'Dismiss restoration offer' }).click(); await page.reload();
   await expect(page.locator('.recovery-banner')).toHaveCount(0);
-  const sessions = page.getByRole('region', { name: 'Recent sessions', exact: true });
+  const sessions = page.getByRole('region', { name: 'Sessions', exact: true });
   await expect(sessions.locator('.recent-entry')).toHaveCount(1);
   await sessions.getByRole('button').first().click(); await expect(page.locator('.engine-badge')).toHaveText('Flowable');
   await page.reload(); await expect(page.locator('.recovery-banner')).toBeVisible();
@@ -26,7 +61,7 @@ test('скрытие предложения переживает запуск, �
 test('игнорирование сессии сохраняет её рядом с новой; восстановление открывает отдельное окно', async ({ page, context }) => {
   await page.goto('/'); await createDiagram(page, 'Flowable'); await page.reload();
   await page.getByRole('button', { name: 'Dismiss restoration offer' }).click(); await createDiagram(page, 'Camunda 7');
-  await page.reload(); const sessions = page.getByRole('region', { name: 'Recent sessions', exact: true });
+  await page.reload(); const sessions = page.getByRole('region', { name: 'Sessions', exact: true });
   await expect(sessions.locator('.recent-entry')).toHaveCount(2);
   await page.getByRole('button', { name: 'Restore', exact: true }).click(); await page.locator('.new-tab').click();
   const opened = context.waitForEvent('page'); await sessions.getByRole('button').first().click();
@@ -53,19 +88,19 @@ test('меню вкладки дублирует неприменённый XML 
 
 test('удаление сессии удаляет снимок, а список ограничен 15 записями', async ({ page }) => {
   await page.goto('/'); await createDiagram(page, 'Flowable'); await page.reload();
-  await expect(page.getByRole('region', { name: 'Recent sessions', exact: true }).locator('.recent-entry')).toHaveCount(1);
+  await expect(page.getByRole('region', { name: 'Sessions', exact: true }).locator('.recent-entry')).toHaveCount(1);
   await page.getByRole('button', { name: 'Delete session' }).click(); await page.reload();
   await expect(page.locator('.recent-entry')).toHaveCount(0);
   const snapshot = { id: 'test', updatedAt: new Date().toISOString(), dismissed: false, tabs: [{ kind: 'monitor', id: 'monitor', connectionId: 'missing' }], activeId: 'monitor', documents: [] };
   await page.evaluate(record => localStorage.setItem('bpmn-desk:sessions:v1', JSON.stringify(Array.from({ length: 15 }, (_, index) => ({ ...record, id: `old-${index}` })))), snapshot);
   await page.reload(); await createDiagram(page, 'Flowable'); await page.reload();
-  await expect(page.getByRole('region', { name: 'Recent sessions', exact: true }).locator('.recent-entry')).toHaveCount(15);
+  await expect(page.getByRole('region', { name: 'Sessions', exact: true }).locator('.recent-entry')).toHaveCount(15);
 });
 
 test('черновики прежнего формата переносятся в сессию вместе с неприменённым XML', async ({ page }) => {
   const { emptyDiagram } = await import('../../src/renderer/bpmn/template');
   await page.goto('/'); await page.evaluate(xml => localStorage.setItem('bpmn-desk:recovery:v1', JSON.stringify([{ name: 'Legacy.bpmn', xml, savedXml: '', draft: '<unfinished' }])), emptyDiagram);
-  await page.reload(); await expect(page.getByRole('region', { name: 'Recent sessions', exact: true }).locator('.recent-entry')).toHaveCount(1);
+  await page.reload(); await expect(page.getByRole('region', { name: 'Sessions', exact: true }).locator('.recent-entry')).toHaveCount(1);
   await page.getByRole('button', { name: 'Restore', exact: true }).click(); await expect(page.locator('.document-tab')).toContainText('Legacy.bpmn');
   await page.getByRole('button', { name: 'XML', exact: true }).click(); await expect(page.getByLabel('Diagram XML', { exact: true })).toContainText('<unfinished');
   expect(await page.evaluate(() => localStorage.getItem('bpmn-desk:recovery:v1'))).toBeNull();

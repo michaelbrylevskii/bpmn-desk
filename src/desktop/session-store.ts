@@ -1,7 +1,7 @@
 import { mkdir, readFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { atomicWrite } from './file-store';
-import { sessionLimit, type SessionOverview, type WorkspaceSession } from '../shared/sessions';
+import { retainSessions, type SessionOverview, type WorkspaceSession } from '../shared/sessions';
 import { sessionOverview, validSession } from '../shared/session-validation';
 
 /** Каждый снимок записывается отдельно, чтобы не переписывать XML остальных сессий. */
@@ -22,7 +22,7 @@ export class SessionStore {
     catch (error) { if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) this.failed = true; return; }
     if (!Array.isArray(ids) || !ids.every((id): id is string => typeof id === 'string' && /^[\w-]{1,80}$/.test(id))) { this.failed = true; return; }
     this.entries = [];
-    try { for (const id of ids.slice(0, sessionLimit)) this.entries.push(sessionOverview(await this.read(id))); } catch { this.failed = true; }
+    try { for (const id of ids) this.entries.push(sessionOverview(await this.read(id))); } catch { this.failed = true; }
   }
   private check(): void { if (this.failed) throw new Error('Не удалось прочитать сессии. Сохранённые данные не изменены.'); }
   list(): SessionOverview[] { this.check(); return structuredClone(this.entries); }
@@ -39,12 +39,23 @@ export class SessionStore {
   put(session: WorkspaceSession): Promise<void> {
     return this.enqueue(async () => {
       if (!validSession(session)) throw new Error('Недопустимая сессия.');
-      if (!session.tabs.some(tab => tab.kind !== 'home')) { await this.removeNow(session.id); return; }
-      const safe = { ...session, documents: session.documents.map(document => { const copy = { ...document }; delete copy.token; return copy; }) };
-      await atomicWrite(this.path(session.id), JSON.stringify(safe));
-      const all = [sessionOverview(safe), ...this.entries.filter(entry => entry.id !== safe.id)];
-      this.entries = all.slice(0, sessionLimit); await this.index();
-      for (const entry of all.slice(sessionLimit)) await unlink(this.path(entry.id)).catch(() => undefined);
+      const existing = this.entries.find(entry => entry.id === session.id);
+      if (!session.tabs.some(tab => tab.kind !== 'home') && !existing?.pinned) { await this.removeNow(session.id); return; }
+      const safe = { ...session, ...existing ? { name: existing.name, pinned: existing.pinned } : {}, documents: session.documents.map(document => { const copy = { ...document }; delete copy.token; return copy; }) };
+      await this.store(safe);
+    });
+  }
+  private async store(session: WorkspaceSession): Promise<void> {
+    await atomicWrite(this.path(session.id), JSON.stringify(session));
+    const all = [sessionOverview(session), ...this.entries.filter(entry => entry.id !== session.id)];
+    this.entries = retainSessions(all); await this.index();
+    for (const entry of all.filter(entry => !this.entries.some(kept => kept.id === entry.id))) await unlink(this.path(entry.id)).catch(() => undefined);
+  }
+  setPin(id: string, name: string | null): Promise<void> {
+    return this.enqueue(async () => {
+      if (name !== null && (!name.trim() || name.trim().length > 80)) throw new Error('Укажи имя сессии длиной от 1 до 80 символов.');
+      const session = await this.read(id);
+      await this.store({ ...session, name: name === null ? session.name : name.trim(), pinned: name !== null });
     });
   }
   dismiss(id: string): Promise<void> {

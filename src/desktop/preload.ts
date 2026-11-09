@@ -13,6 +13,7 @@ const bridge: DesktopBridge = {
   restoreSession: (id, newWindow) => ipcRenderer.invoke(channels.restoreSession, id, newWindow),
   dismissSession: id => ipcRenderer.invoke(channels.dismissSession, id),
   deleteSession: id => ipcRenderer.invoke(channels.deleteSession, id),
+  setSessionPin: (id, name) => ipcRenderer.invoke(channels.sessionPin, id, name),
   language: () => ipcRenderer.invoke(channels.language),
   setLanguage: language => ipcRenderer.invoke(channels.setLanguage, language),
   onLanguage: callback => {

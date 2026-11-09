@@ -148,12 +148,11 @@ export function App() {
       runtimeTools={monitoring ? <RuntimeToolbar connectionId={activeTab.connectionId} connections={profiles.data.items} controls={controls} choose={id => { tabs.changeConnection(activeTab.id, id); profiles.remember(id); }} manage={setManaging} /> : undefined} />
     <Tabs tabs={tabs.tabs} activeId={tabs.activeId} documents={docs.documents} connections={profiles.data.items} controls={handles.controls} activate={tabs.activate} move={tabs.move} menu={tabMenu}
       close={tab => tab.kind === 'document' ? docs.close(tab.id) : tabs.closeTab(tab.id)} create={requestNew} />
-    {!home && sessions.offered && <SessionOffer compact session={sessions.offered} busy={sessions.restoring} restore={() => docs.run(() => sessions.restore(sessions.offered!.id))} dismiss={() => docs.run(() => sessions.dismiss(sessions.offered!.id))} />}
     <div className="workspaces">{docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={record.id === tabs.activeId}
       editors={docs.editors.current} clipboard={clipboard} dark={dark} view={docs.view} reload={docs.reload} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
       {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace initial={tab.monitor} summaryEnabled={summaryPreference.enabled} setSummaryEnabled={summaryPreference.setEnabled} dark={dark} id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}
       {home && <Welcome key={sourceHome ?? 'initial'} create={profile => docs.run(() => { tabs.documentOpened(docs.create(profile), sourceHome); })} open={() => openContent(docs.open)}
-        examples={examples} recent={recent} sessions={sessions.items} restoreSession={id => docs.run(() => sessions.restore(id, sourceHome))} removeSession={id => docs.run(() => sessions.remove(id))}
+        examples={examples} recent={recent} sessions={sessions.items} restoreSession={id => docs.run(() => sessions.restore(id, sourceHome))} removeSession={id => docs.run(() => sessions.remove(id))} setSessionPin={sessions.setPin}
         removeRecent={path => docs.run(async () => setRecent(await bridge.removeRecent(path)))} openExample={name => openContent(() => docs.openExample(name))} openRecent={path => openContent(() => docs.openRecent(path))}
         connections={profiles.data.items} savedId={profiles.preferredId} connectionError={profiles.error} manage={() => setManaging('')}
         monitor={id => { tabs.createMonitor(id, sourceHome); profiles.remember(id); }}

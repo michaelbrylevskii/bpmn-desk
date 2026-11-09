@@ -35,6 +35,7 @@ export interface DesktopBridge {
   restoreSession(id: string, newWindow?: boolean): Promise<WorkspaceSession | null>;
   dismissSession(id: string): Promise<void>;
   deleteSession(id: string): Promise<void>;
+  setSessionPin(id: string, name: string | null): Promise<void>;
   language(): Promise<Language>;
   setLanguage(language: Language): Promise<void>;
   onLanguage(callback: (language: Language) => void): () => void;
@@ -59,6 +60,7 @@ export interface DesktopBridge {
 }
 
 export const channels = {
+  sessionPin: 'sessions:pin',
   workspaceChanged: 'workspace:changed', initialSession: 'sessions:initial', sessions: 'sessions:list', saveSession: 'sessions:save', restoreSession: 'sessions:restore', dismissSession: 'sessions:dismiss', deleteSession: 'sessions:delete',
   language: 'settings:language', setLanguage: 'settings:set-language', languageChanged: 'settings:language-changed',
   statuses: 'documents:statuses', reload: 'documents:reload', reveal: 'documents:reveal', removeRecent: 'documents:remove-recent',

@@ -36,7 +36,7 @@ export function useSessions({ documents, tabs, activeId, controls, restoreDocume
       }
       const items = await bridge.sessions(); const initial = await bridge.initialSession();
       if (!disposed) { setStartup(initial); }
-      if (!disposed) { setItems(items); setOfferedId(items[0]?.id ?? ''); setReady(true); }
+      if (!disposed) { setItems(items); setOfferedId([...items].filter(item => !item.open).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0]?.id ?? ''); setReady(true); }
     })().catch(error => report(errorNotice(error)));
     return () => { disposed = true; };
   }, [clearRecovery, recovery, report]);
@@ -91,11 +91,12 @@ export function useSessions({ documents, tabs, activeId, controls, restoreDocume
   }, [startup, ready, restoring, restore, report]);
   useEffect(() => bridge.onWorkspaceChanged(kind => { if (kind === 'sessions') void refresh().catch(error => report(errorNotice(error))); }), [refresh, report]);
   const dismiss = useCallback(async (id: string) => { await bridge.dismissSession(id); await refresh(); }, [refresh]);
+  const setPin = useCallback(async (id: string, name: string | null) => { await bridge.setSessionPin(id, name); await refresh(); }, [refresh]);
   const remove = useCallback(async (id: string) => {
     const session = items.find(item => item.id === id);
     if (session?.tabs.some(tab => tab.dirty) && !window.confirm(t('Удалить сессию и её несохранённые изменения?'))) return;
     await bridge.deleteSession(id); await refresh();
   }, [items, refresh, t]);
   const recent = items.filter(item => item.id !== identity.current);
-  return { items: recent, offered: recent.find(item => item.id === offeredId && !item.dismissed && !item.open), restore, dismiss, remove, flush, restoring };
+  return { items: recent, offered: recent.find(item => item.id === offeredId && !item.dismissed && !item.open), restore, dismiss, remove, setPin, flush, restoring };
 }

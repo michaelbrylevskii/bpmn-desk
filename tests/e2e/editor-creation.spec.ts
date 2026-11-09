@@ -32,7 +32,7 @@ test('стартовая вкладка сохраняет черновик и �
   for (const theme of ['Light theme', 'Dark theme']) {
     await page.getByTitle(theme, { exact: true }).click(); await page.locator('.new-tab').click();
     const home = page.locator('.welcome');
-    await expect(home.getByRole('heading', { name: 'Recent sessions', exact: true })).toBeVisible();
+    await expect(home.getByRole('heading', { name: 'Sessions', exact: true })).toBeVisible();
     await expect(home.getByRole('heading', { name: 'Recent files', exact: true })).toBeVisible();
     await expect(home.getByRole('button', { name: 'Create diagram', exact: true })).toBeInViewport();
     expect(await home.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);

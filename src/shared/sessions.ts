@@ -11,10 +11,12 @@ export interface SessionMonitor {
   catalogHidden?: boolean; detailsHidden?: boolean; auto?: boolean;
 }
 export type SessionTab = { kind: 'document'; id: string } | { kind: 'monitor'; id: string; connectionId: string; monitor?: SessionMonitor } | { kind: 'home'; id: string };
-export interface WorkspaceSession {
+export interface SessionLabel { name?: string; pinned?: boolean }
+export interface WorkspaceSession extends SessionLabel {
   id: string; updatedAt: string; dismissed: boolean; tabs: SessionTab[]; activeId: string; documents: SessionDocument[];
 }
-export interface SessionOverview { open?: boolean; id: string; updatedAt: string; dismissed: boolean; tabs: { name: string; kind: SessionTab['kind']; dirty: boolean; connectionId?: string }[] }
+export interface SessionOverview extends SessionLabel { open?: boolean; id: string; updatedAt: string; dismissed: boolean; tabs: { name: string; kind: SessionTab['kind']; dirty: boolean; connectionId?: string; context?: string }[] }
 export const sessionLimit = 15;
+export const retainSessions = <T extends SessionLabel>(records: T[]): T[] => [...records.filter(record => record.pinned), ...records.filter(record => !record.pinned).slice(0, sessionLimit)];
 export const documentChanged = (document: Pick<SessionDocument, 'xml' | 'savedXml' | 'draft'>): boolean =>
   document.savedXml !== null && document.xml !== document.savedXml || document.draft !== undefined && document.draft !== document.xml;
