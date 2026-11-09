@@ -1,3 +1,4 @@
+import type { DiagramView } from '../../shared/sessions';
 import { Braces, Check, AlertTriangle, Minus, Plus, Maximize, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { errorMessage } from '../../shared/errors';
@@ -12,11 +13,12 @@ import { PropertiesPanel } from '../properties/properties-panel';
 import { CodeEditor } from '../ui/code-editor';
 import { DiagnosticsPanel } from './diagnostics-panel';
 import { Outline } from './outline';
-export function DocumentWorkspace({ record, active, editors, clipboard, dark, sync, draft, importFailed, report, run }: {
+export function DocumentWorkspace({ record, active, editors, clipboard, dark, sync, view, reload, draft, importFailed, report, run }: {
   record: DocumentRecord; active: boolean; editors: EditorRegistry; dark: boolean;
   clipboard: DiagramClipboard;
   sync: (id: string, snapshot: EditorSnapshot) => void; draft: (id: string, value: string | undefined) => void;
   importFailed: (id: string) => void;
+  view: (id: string, view: DiagramView) => void; reload: (id: string) => Promise<void>;
   report: ReportNotice; run: RunOperation;
 }) {
   const { t, text, language } = useI18n();
@@ -27,16 +29,17 @@ export function DocumentWorkspace({ record, active, editors, clipboard, dark, sy
   const [error, setError] = useState('');
   const [panel, setPanel] = useState<'xml' | 'diagnostics' | null>(null);
   const [definitions, setDefinitions] = useState(false);
-  const source = useRef(record.sourceXml);
+  const source = useRef(record.sourceXml); const guardSource = useRef(record.guardXml); const initialView = useRef(record.view);
+  const viewRef = useRef(view); viewRef.current = view;
   const syncRef = useRef(sync); syncRef.current = sync;
 
   useEffect(() => {
     if (!container.current) return;
-    const instance = new BpmnEditor(container.current, value => { setSnapshot(value); syncRef.current(record.id, value); }, () => languageRef.current, clipboard);
+    const instance = new BpmnEditor(container.current, value => { setSnapshot(value); syncRef.current(record.id, value); }, () => languageRef.current, clipboard, value => viewRef.current(record.id, value));
     const resizeObserver = new ResizeObserver(() => instance.resize());
     resizeObserver.observe(container.current);
     editors.set(record.id, instance); setEditor(instance);
-    instance.import(source.current).catch(problem => { setError(errorMessage(problem)); importFailed(record.id); });
+    instance.import(source.current, guardSource.current).then(() => { if (initialView.current) instance.restoreView(initialView.current); }).catch(problem => { setError(errorMessage(problem)); importFailed(record.id); });
     return () => { resizeObserver.disconnect(); editors.delete(record.id); instance.destroy(); };
   }, [record.id, editors, importFailed, clipboard]);
 
@@ -45,8 +48,9 @@ export function DocumentWorkspace({ record, active, editors, clipboard, dark, sy
   }, [active, editor, panel]);
 
   useEffect(() => { editor?.languageChanged(); }, [language, editor]);
+  useEffect(() => { setError(''); }, [record.sourceXml]);
   const ready = !!snapshot;
-  useEffect(() => { if (ready && editor) { editor.resize(); editor.fit(); } }, [ready, editor]);
+  useEffect(() => { if (ready && editor) { editor.resize(); if (initialView.current) editor.restoreView(initialView.current); else editor.fit(); } }, [ready, editor]);
 
   const applyXml = async () => {
     if (!editor) return;
@@ -58,6 +62,7 @@ export function DocumentWorkspace({ record, active, editors, clipboard, dark, sy
     {editor && snapshot && <Outline snapshot={snapshot} editor={editor} />}
     <div className="center-workspace">
       <div className="canvas-heading"><span><i />{error ? t("Ошибка импорта") : `BPMN 2.0${snapshot?.engines.map(id => ` · ${engineProfiles[id].title}`).join('') ?? ''}`}</span><span className="canvas-hint">{t("Пробел + перетаскивание · Ctrl + колесо")}</span>{snapshot && <button className="button small ghost" onClick={() => setDefinitions(true)}>{t("Определения")}</button>}</div>
+      {record.fileState && record.fileState !== 'unchanged' && <div className="file-state-banner" role="status"><span>{t(record.fileState === 'missing' ? 'Файл удалён с диска.' : record.fileState === 'unavailable' ? 'Не удалось проверить файл на диске.' : 'Файл изменён на диске.')}</span>{record.fileState === 'changed' && <button className="button small ghost" onClick={() => run(() => reload(record.id))}>{t('Перезагрузить')}</button>}</div>}
       <div className="canvas-area"><div className="bpmn-container" ref={container} />
         {error && <div className="import-error"><AlertTriangle size={24} /><h3>{t("Не удалось открыть диаграмму")}</h3><pre>{text(error)}</pre><button className="button" onClick={() => setPanel('xml')}>{t("Открыть XML")}</button></div>}
         <div className="zoom-controls"><button title={t("Уменьшить")} onClick={() => editor?.zoom(0.8)}><Minus size={16} /></button><button title={t("Вписать схему")} onClick={() => editor?.fit()}><Maximize size={16} /></button><button title={t("Увеличить")} onClick={() => editor?.zoom(1.25)}><Plus size={16} /></button></div>

@@ -1,21 +1,25 @@
+import { CommandMenu, type MenuCommand } from '../ui/command-menu';
+import { Tooltip } from '../ui/tooltip';
 import { House, Server, Workflow, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { Connection } from '../../shared/runtime';
 import type { DocumentRecord } from '../documents/types';
 import { isDirty } from '../documents/types';
 import { useI18n } from '../i18n/provider';
 import type { MonitorControls } from '../runtime/controls';
 import type { WorkspaceTab } from './use-tabs';
-export function Tabs({ tabs, activeId, documents, connections, controls, activate, move, close, create }: {
+export function Tabs({ tabs, activeId, documents, connections, controls, activate, move, close, create, menu }: {
   tabs: WorkspaceTab[]; activeId: string; documents: DocumentRecord[]; connections: Connection[]; controls: Record<string, MonitorControls>;
   activate: (id: string) => void; close: (tab: WorkspaceTab) => void; create: () => void;
+  menu: (tab: WorkspaceTab) => MenuCommand[];
   move: (id: string, targetId: string, after: boolean) => void;
 }) {
   const { t } = useI18n();
+  const owner = useId(); const [context, setContext] = useState<{ tab: WorkspaceTab; x: number; y: number }>();
   const dragged = useRef<string | undefined>(undefined);
   const [drop, setDrop] = useState<{ id: string; after: boolean }>();
   if (!tabs.length) return null;
-  return <nav className="document-tabs" role="tablist" aria-label={t('Открытые вкладки')} onKeyDown={event => {
+  return <><nav className="document-tabs" role="tablist" aria-label={t('Открытые вкладки')} onKeyDown={event => {
     if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key) || !(event.target instanceof HTMLElement) || event.target.getAttribute('role') !== 'tab') return;
     event.preventDefault(); const index = tabs.findIndex(tab => tab.id === activeId);
     if (event.ctrlKey && event.shiftKey && ['ArrowRight', 'ArrowLeft'].includes(event.key)) {
@@ -27,8 +31,12 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
     const target = tabs[next]; if (target) { activate(target.id); event.currentTarget.querySelector<HTMLButtonElement>(`[data-tab-id="${target.id}"]`)?.focus(); }
   }}>{tabs.map(tab => {
     const document = documents.find(item => item.id === tab.id); const connection = tab.kind === 'monitor' ? connections.find(item => item.id === tab.connectionId) : undefined;
-    const title = tab.kind === 'home' ? t('Новая вкладка') : tab.kind === 'document' ? document?.name ?? '' : `${controls[tab.id]?.title || t('Состояние процессов')} · ${connection?.name || t('Выбери подключение')}`;
-    return <div key={tab.id} className={`document-tab ${tab.id === activeId ? 'active' : ''} ${drop?.id === tab.id ? drop.after ? 'drop-after' : 'drop-before' : ''}`} data-kind={tab.kind}
+    const title = tab.kind === 'home' ? t('Новая вкладка') : tab.kind === 'document' ? document?.name ?? '' : `${controls[tab.id]?.title || tab.monitor?.title || t('Состояние процессов')} · ${connection?.name || t('Выбери подключение')}`;
+    const external = document?.fileState && document.fileState !== 'unchanged';
+    const dirty = document && isDirty(document);
+    const state = external ? dirty ? 'conflict' : 'external' : dirty ? 'local' : '';
+    const detail = <div className="tab-tooltip"><strong>{title}</strong>{document?.path && <div className="file-path">{document.path}</div>}{dirty && <div>{t('Есть несохранённые изменения')}</div>}{document?.draft !== undefined && document.draft !== document.xml && <div>{t('Неприменённые изменения XML')}</div>}{external && <div>{t(document.fileState === 'missing' ? 'Файл удалён с диска.' : document.fileState === 'unavailable' ? 'Не удалось проверить файл на диске.' : 'Файл изменён на диске.')}</div>}{document?.fileError && <div>{document.fileError}</div>}</div>;
+    return <Tooltip key={tab.id} content={detail}><div className={`document-tab ${tab.id === activeId ? 'active' : ''} ${drop?.id === tab.id ? drop.after ? 'drop-after' : 'drop-before' : ''}`} data-kind={tab.kind} onContextMenu={event => { event.preventDefault(); setContext({ tab, x: event.clientX, y: event.clientY }); }}
       onDragOver={event => {
         if (!dragged.current || dragged.current === tab.id) return;
         event.preventDefault(); event.dataTransfer.dropEffect = 'move';
@@ -42,11 +50,11 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
         move(dragged.current, tab.id, event.clientX > bounds.left + bounds.width / 2);
         dragged.current = undefined; setDrop(undefined);
       }}>
-      <button role="tab" draggable data-tab-id={tab.id} aria-selected={tab.id === activeId} title={document?.path || title} onClick={() => activate(tab.id)} tabIndex={tab.id === activeId ? 0 : -1}
+      <button role="tab" draggable data-tab-id={tab.id} aria-selected={tab.id === activeId} onClick={() => activate(tab.id)} tabIndex={tab.id === activeId ? 0 : -1}
         onDragStart={event => { dragged.current = tab.id; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-bpmn-desk-tab', tab.id); }}
         onDragEnd={() => { dragged.current = undefined; setDrop(undefined); }}>
-        {tab.kind === 'home' ? <House size={14} /> : tab.kind === 'monitor' ? <Server size={14} /> : <Workflow size={14} />}<span>{title}</span>{document && isDirty(document) && <i className="dirty-dot" aria-label={t('Несохранённые изменения')} />}</button>
+        {tab.kind === 'home' ? <House size={14} /> : tab.kind === 'monitor' ? <Server size={14} /> : <Workflow size={14} />}<span>{title}</span>{state && <i className={`dirty-dot ${state}`} aria-label={t(external ? document.fileState === 'missing' ? 'Файл удалён с диска.' : 'Файл изменён на диске.' : 'Несохранённые изменения')} />}</button>
       <button title={t('Закрыть {name}', { name: title })} onClick={() => close(tab)}><X size={13} /></button>
-    </div>;
-  })}<button className="new-tab" title={t('Новая вкладка')} onClick={create}>+</button></nav>;
+    </div></Tooltip>;
+  })}<button className="new-tab" title={t('Новая вкладка')} onClick={create}>+</button></nav>{context && <CommandMenu items={menu(context.tab)} x={context.x} y={context.y} owner={owner} close={() => setContext(undefined)} />}</>;
 }

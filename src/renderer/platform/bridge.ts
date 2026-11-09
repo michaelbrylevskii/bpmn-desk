@@ -1,3 +1,4 @@
+import { browserSessions } from './browser-sessions';
 import type { DesktopBridge, OpenedFile } from '../../shared/contracts';
 import { defaultLanguage, isLanguage, languageKey, type Language } from '../../shared/i18n';
 declare global { interface Window { desktop?: DesktopBridge } }
@@ -11,6 +12,12 @@ async function browserFiles(files: File[]): Promise<OpenedFile[]> {
 /** Браузерный адаптер предназначен для preview и E2E; desktop использует preload. */
 const languageListeners = new Set<(value: Language) => void>();
 const browserBridge: DesktopBridge = {
+  ...browserSessions,
+  initialSession: () => Promise.resolve(new URLSearchParams(window.location.search).get('session')),
+  onWorkspaceChanged: callback => {
+    const listener = (event: StorageEvent) => { if (event.key === 'bpmn-desk:sessions:v1') callback('sessions'); };
+    window.addEventListener('storage', listener); return () => window.removeEventListener('storage', listener);
+  },
   language: () => { const stored = localStorage.getItem(languageKey); return Promise.resolve(isLanguage(stored) ? stored : defaultLanguage); },
   setLanguage: async value => { if (!isLanguage(value)) throw new Error('Недопустимый язык интерфейса.'); localStorage.setItem(languageKey, value); for (const listener of languageListeners) listener(value); },
   onLanguage: callback => { languageListeners.add(callback); return () => { languageListeners.delete(callback); }; },
@@ -25,6 +32,10 @@ const browserBridge: DesktopBridge = {
   }),
   openDropped: browserFiles,
   openRecent: () => Promise.reject(new Error('Недавние локальные файлы доступны в desktop-приложении.')),
+  removeRecent: () => Promise.resolve([]),
+  fileStatuses: () => Promise.resolve([]),
+  reloadFile: () => Promise.reject(new Error('Недавние локальные файлы доступны в desktop-приложении.')),
+  revealFile: () => Promise.resolve(),
   recentFiles: () => Promise.resolve([]),
   examples: () => Promise.resolve(Object.keys(bundledExamples).map(key => key.split('/').pop() ?? key)),
   openExample: name => {
@@ -37,6 +48,8 @@ const browserBridge: DesktopBridge = {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     return Promise.resolve({ token: '', path: '', name: request.name });
   },
+  editText: action => { document.execCommand(action); },
+  setMenuState: () => undefined,
   setDirty: () => undefined,
   closeReady: () => undefined,
   onAction: () => () => undefined,

@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { readFileSync } from 'node:fs';
 import { canonicalElement, preservationIssues, requireBpmn } from '../../src/renderer/bpmn/xml';
 import { test, expect } from './russian-fixture';
@@ -9,7 +10,7 @@ for (const scenario of [
   test(`${scenario.sample}: смена типа задачи сохраняет расширения и отменяется`, async ({ page }) => {
     const source = readFileSync(`examples/${scenario.sample}.bpmn20.xml`, 'utf8');
     await page.goto('/');
-    await page.getByRole('button', { name: scenario.sample, exact: true }).click();
+    await openExample(page, scenario.sample);
     await page.getByLabel('Найти элемент').fill(scenario.id);
     await page.locator('.outline-item').first().click();
     await page.locator('.djs-context-pad [data-action="replace"]').click();
@@ -30,7 +31,7 @@ for (const scenario of [
   });
   test(`${scenario.sample}: copy/paste клонирует расширения независимо от оригинала`, async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: scenario.sample, exact: true }).click();
+    await openExample(page, scenario.sample);
     await page.getByLabel('Найти элемент').fill(scenario.id);
     await page.locator('.outline-item').first().click();
     await expect(page.locator(`.djs-shape.selected[data-element-id="${scenario.id}"]`)).toBeVisible();

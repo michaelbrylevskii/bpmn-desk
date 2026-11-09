@@ -15,6 +15,10 @@ export function useTabs(documentIds: string[], openedId: string, revision: numbe
   const closeTab = useCallback((id: string) => setState(previous => closeWorkspace(previous, id)), []);
   const activate = useCallback((activeId: string) => setState(previous => ({ ...previous, activeId })), []);
   const move = useCallback((id: string, targetId: string, after: boolean) => setState(previous => moveWorkspace(previous, id, targetId, after)), []);
-  const changeConnection = useCallback((id: string, connectionId: string) => setState(previous => ({ ...previous, tabs: previous.tabs.map(tab => tab.id === id && tab.kind === 'monitor' ? { ...tab, connectionId } : tab) })), []);
-  return { ...state, activate, move, createHome, documentOpened, createMonitor, closeTab, changeConnection };
+  const changeConnection = useCallback((id: string, connectionId: string) => setState(previous => ({ ...previous, tabs: previous.tabs.map(tab => tab.id === id && tab.kind === 'monitor' ? { ...tab, connectionId, monitor: undefined } : tab) })), []);
+  const merge = useCallback((tabs: import('./tab-state').WorkspaceTab[], activeId: string, sourceHome?: string) => setState(previous => ({
+    tabs: [...previous.tabs.filter(tab => tab.kind !== 'home' && tab.id !== sourceHome), ...tabs.filter(tab => !previous.tabs.some(item => item.id === tab.id))], activeId,
+  })), []);
+  const closeMany = useCallback((ids: string[]) => setState(previous => ids.reduce((state, id) => closeWorkspace(state, id), previous)), []);
+  return { merge, closeMany, ...state, activate, move, createHome, documentOpened, createMonitor, closeTab, changeConnection };
 }

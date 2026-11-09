@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { selectOption } from './select';
 import { readFileSync } from 'node:fs';
 import { requireBpmn } from '../../src/renderer/bpmn/xml';
@@ -5,7 +6,7 @@ import { test, expect } from './russian-fixture';
 
 test('свойства отличают заданное false от значения по умолчанию', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
+  await openExample(page, 'flowable-boundary-events');
   await page.getByRole('textbox', { name: 'Найти элемент' }).fill('Review document');
   await page.locator('.outline-item').filter({ hasText: 'reviewCall' }).click();
   await expect(page.locator('.property-legend, .field-status')).toHaveCount(0);
@@ -25,7 +26,7 @@ test('свойства отличают заданное false от значен
 
 test('поток по умолчанию назначается со стрелки и узла, заменяется и отменяется', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-vacation-approval', exact: true }).click();
+  await openExample(page, 'flowable-vacation-approval');
   const select = async (id: string) => {
     await page.getByLabel('Найти элемент').fill(id); await page.locator('.outline-item').filter({ hasText: id }).click();
   };

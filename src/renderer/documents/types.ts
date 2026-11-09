@@ -1,3 +1,5 @@
+import type { FileState } from '../../shared/contracts';
+import type { DiagramView } from '../../shared/sessions';
 import type { EditorSnapshot, BpmnEditor } from '../bpmn/editor';
 
 export interface DocumentRecord {
@@ -10,6 +12,11 @@ export interface DocumentRecord {
   savedXml: string | null;
   draft?: string;
   snapshot?: EditorSnapshot;
+  guardXml?: string;
+  diskXml?: string;
+  fileState?: FileState;
+  fileError?: string;
+  view?: DiagramView;
 }
 
 export function isDirty(record: DocumentRecord): boolean {

@@ -5,10 +5,12 @@ export interface MonitorVisit { definitionId: string; instanceId: string; histor
 export interface MonitorNavigation { current?: MonitorVisit; past: MonitorVisit[]; future: MonitorVisit[] }
 export type NavigationAction = { type: 'open'; visit: MonitorVisit; leaving?: MonitorDestination }
   | { type: 'move'; direction: 'back' | 'forward'; leaving?: MonitorDestination }
-  | { type: 'mode'; history: boolean };
+  | { type: 'mode'; history: boolean }
+  | { type: 'job'; job: DeadLetterJob };
 const limit = 100;
 const identify = (visit: MonitorVisit) => visit.job ? `job:${visit.job.id}` : visit.instanceId ? `instance:${visit.instanceId}` : `definition:${visit.definitionId}`;
 export function navigateMonitor(state: MonitorNavigation, action: NavigationAction): MonitorNavigation {
+  if (action.type === 'job') return state.current ? { ...state, current: { ...state.current, job: action.job, destination: { kind: 'job', id: action.job.id, name: action.job.elementName || action.job.elementId } } } : state;
   if (action.type === 'mode') return state.current ? { ...state, current: { ...state.current, history: action.history } } : state;
   const current = state.current && { ...state.current, destination: action.leaving ?? state.current.destination };
   if (action.type === 'open') {

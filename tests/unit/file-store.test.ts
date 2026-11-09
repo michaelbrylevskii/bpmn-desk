@@ -81,4 +81,32 @@ describe('FileStore', () => {
     await store.save('<after-export/>', opened.path, opened.token);
     expect(await readFile(path, 'utf8')).toBe('<after-export/>');
   });
+  it('различает внешнее изменение, возврат к основе, удаление и восстановление файла', async () => {
+    const store = new FileStore(); const file = await store.open(path);
+    expect((await store.status(file.token)).state).toBe('unchanged');
+    await writeFile(path, '<external/>'); expect((await store.status(file.token)).state).toBe('changed');
+    await writeFile(path, '<original/>'); expect((await store.status(file.token)).state).toBe('unchanged');
+    await rm(path); expect((await store.status(file.token)).state).toBe('missing');
+    await store.overwrite('<recreated/>', file.token, 'missing');
+    expect((await store.status(file.token)).state).toBe('unchanged');
+    expect(await readFile(path, 'utf8')).toBe('<recreated/>');
+  });
+  it('привязывает прежнюю основу сессии и повторно проверяет подтверждённую ревизию', async () => {
+    const store = new FileStore(); const token = store.attach(path, '<previous/>');
+    const status = await store.status(token); expect(status.state).toBe('changed');
+    await writeFile(path, '<newer/>');
+    await expect(store.overwrite('<overwrite/>', token, status.revision!)).rejects.toThrow('снова изменился');
+    expect(await readFile(path, 'utf8')).toBe('<newer/>');
+    await store.overwrite('<overwrite/>', token, (await store.status(token)).revision!);
+    expect(await readFile(path, 'utf8')).toBe('<overwrite/>');
+  });
+  it('сохранение копии в тот же файл не обновляет основу исходной вкладки', async () => {
+    const store = new FileStore(); const original = await store.open(path); const copy = store.fork(original.token);
+    await store.save('<copy/>', original.path, copy);
+    expect((await store.status(original.token)).state).toBe('changed');
+    expect((await store.status(copy)).state).toBe('unchanged');
+    await expect(store.save('<original/>', original.path, original.token)).rejects.toThrow('изменён другим приложением');
+    expect(await readFile(path, 'utf8')).toBe('<copy/>');
+  });
+
 });

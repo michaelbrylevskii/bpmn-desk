@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { test, expect } from '@playwright/test';
 
 test('системная тема меняется на ходу, ручной выбор фиксирует палитру и не теряет XML-черновик', async ({ page }) => {
@@ -7,7 +8,7 @@ test('системная тема меняется на ходу, ручной �
   const auto = page.getByRole('button', { name: 'System theme', exact: true });
   await expect(auto).toHaveAttribute('aria-pressed', 'true');
   await expect(root).toHaveAttribute('data-theme', 'dark');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   const xml = page.getByLabel('Diagram XML', { exact: true });
   const original = await xml.textContent();

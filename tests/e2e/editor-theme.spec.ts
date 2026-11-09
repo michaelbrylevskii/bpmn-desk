@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { createDiagram } from './create-diagram';
 import { test, expect } from './russian-fixture';
 import { readFileSync } from 'node:fs';
@@ -7,7 +8,7 @@ test.beforeEach(async ({ page }) => { await page.emulateMedia({ colorScheme: 'da
 
 test('фокус холста использует акцент приложения в обеих темах', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   const canvas = page.locator('.bpmn-container .djs-container > svg');
   await expect(canvas).toBeVisible();
   for (const theme of ['light', 'dark']) {

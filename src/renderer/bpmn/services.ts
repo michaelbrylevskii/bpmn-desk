@@ -6,6 +6,8 @@ export interface Modeling {
   updateModdleProperties(element: DiagramElement, target: ModdleElement, properties: Record<string, unknown>): void;
 }
 export interface Canvas {
+  viewbox(): { x: number; y: number; width: number; height: number };
+  viewbox(value: { x: number; y: number; width: number; height: number }): void;
   zoom(value?: number | 'fit-viewport', center?: 'auto'): number;
   resized(): void;
   scrollToElement(element: DiagramElement): void;

@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { test, expect } from './russian-fixture';
@@ -8,7 +9,7 @@ import { emptyDiagram } from '../../src/renderer/bpmn/template';
 
 test('редактирование Flowable, undo/redo и сохранение демонстрационной схемы', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await expect(page.locator('.djs-container svg').first()).toBeVisible();
   const search = page.getByRole('textbox', { name: 'Найти элемент' });
   await search.fill('prepareDocument');
@@ -39,7 +40,7 @@ test('все встроенные схемы отображаются и сох�
   const names = provenance.filter(record => record.engine === 'flowable').map(record => record.file.replace('.bpmn20.xml', ''));
   for (const name of names) {
     await page.goto('/');
-    await page.getByRole('button', { name, exact: true }).click();
+    await openExample(page, name);
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await expect(page.locator('.import-error')).toHaveCount(0);
     await selectOption(page.getByRole('combobox', { name: 'Язык', exact: true }), 'en');
@@ -94,6 +95,8 @@ test('вкладки независимы, локальное восстанов
   await expect(page.locator('.document-tab')).toHaveCount(2);
   await page.reload();
   await page.getByRole('button', { name: 'Восстановить', exact: true }).click();
+  await expect(page.locator('.document-tab')).toHaveCount(2);
+  await page.locator('.document-tab').first().getByRole('tab').click();
   await expect(page.locator('.outline-item').filter({ hasText: 'Восстановленный старт' })).toBeVisible();
   await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
 });
@@ -138,7 +141,7 @@ test('listeners, поля и определения редактируются �
 
 test('развёрнутые подпроцессы отображают дочерние элементы на общей plane', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await expect(page.locator('.djs-element[data-element-id="reviewDocument"]')).toBeVisible();
 });
 

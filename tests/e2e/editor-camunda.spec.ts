@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { readFileSync } from 'node:fs';
@@ -48,7 +49,7 @@ test('новые профили, автоматическое определен
 
 test('пример Camunda 7 сохраняет семантику и редактирует external task через undo/redo', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+  await openExample(page, 'camunda7-showcase');
   await expect(page.locator('.djs-element[data-element-id="ArchiveOrder"]')).toBeVisible();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
@@ -70,7 +71,7 @@ test('пример Camunda 7 сохраняет семантику и редак
 
 test('вложенные параметры, поля listener и formData сохраняют соседние расширения', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+  await openExample(page, 'camunda7-showcase');
   await select(page, 'ArchiveOrder');
   const parameters = page.locator('[data-extension-kind="inputOutput"]');
   await parameters.locator('summary').click();
@@ -102,7 +103,7 @@ test('вложенные параметры, поля listener и formData со�
 
 test('параметр переключается между текстом, map, list и script одной отменяемой командой', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+  await openExample(page, 'camunda7-showcase');
   await select(page, 'ArchiveOrder');
   const parameters = page.locator('[data-extension-kind="inputOutput"]');
   await parameters.locator('summary').click();

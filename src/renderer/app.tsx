@@ -1,3 +1,7 @@
+import { useSessions } from './workspace/use-sessions';
+import { SessionOffer } from './ui/session-offer';
+import type { WorkspaceTab } from './workspace/use-tabs';
+import type { MenuCommand } from './ui/command-menu';
 import { undo, redo } from '@codemirror/commands';
 import { EditorView } from '@codemirror/view';
 import { Workflow, CircleCheck } from 'lucide-react';
@@ -38,6 +42,8 @@ export function App() {
   const createHome = tabs.createHome;
   const requestNew = useCallback(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); createHome(); }, [createHome]);
   const profiles = useConnections(home || managing !== undefined || !!monitors.length); const handles = useMonitorControls(); const controls = handles.controls[tabs.activeId];
+  const sessions = useSessions({ documents: docs.documents, tabs: tabs.tabs, activeId: tabs.activeId, controls: handles.controls,
+    restoreDocument: docs.restoreDocument, merge: tabs.merge, recovery: docs.recovery, clearRecovery: docs.discardRecovery, report });
   const summaryPreference = useSummaryPreference(profiles.data.items, monitoring ? activeTab.connectionId : profiles.preferredId, profiles.ready);
   const { mode: theme, dark, setMode: setTheme } = useTheme(); const [examples, setExamples] = useState<string[]>([]); const [recent, setRecent] = useState<string[]>([]); const [dragging, setDragging] = useState(false);
   const addDocument = docs.add;
@@ -49,11 +55,37 @@ export function App() {
     void bridge.recentFiles().then(items => { if (!disposed) setRecent(items); }).catch(error => { if (!disposed) report(errorNotice(error)); });
     return () => { disposed = true; };
   }, [report, docs.documents.length, tabs.activeId, home]);
+  useEffect(() => bridge.onWorkspaceChanged(kind => { if (kind === 'recent') void bridge.recentFiles().then(setRecent).catch(error => report(errorNotice(error))); }), [report]);
   const { documentOpened, activate: activateTab } = tabs; const runDocument = docs.run;
   const finishOpening = useCallback((ids: string | string[]) => { const opened = typeof ids === 'string' ? [ids] : ids; if (opened.length) { documentOpened(opened[0]!, sourceHome); activateTab(opened.at(-1)!); } }, [documentOpened, activateTab, sourceHome]);
   const openContent = useCallback((operation: () => Promise<string | string[]>) => runDocument(async () => { finishOpening(await operation()); }), [runDocument, finishOpening]);
   const exportDiagram = useCallback((format: DiagramExport) => docs.run(() => monitoring ? controls?.exportDiagram(format) : docs.exportDiagram(format, active?.id)), [docs, monitoring, controls, active?.id]);
+  const closeTabs = useCallback((targets: WorkspaceTab[]) => {
+    if (!docs.closeMany(targets.filter(tab => tab.kind === 'document').map(tab => tab.id))) return;
+    tabs.closeMany(targets.map(tab => tab.id));
+  }, [docs, tabs]);
+  const tabMenu = (tab: WorkspaceTab): MenuCommand[] => {
+    const record = docs.documents.find(record => record.id === tab.id);
+    return [
+      ...record ? [
+        { label: t('Сохранить'), action: () => docs.run(() => docs.save(false, tab.id)), disabled: !record.snapshot },
+        { label: t('Сохранить как…'), action: () => docs.run(() => docs.save(true, tab.id)), disabled: !record.snapshot },
+        { label: t('Дублировать схему'), action: () => docs.run(async () => { const id = await docs.duplicate(tab.id); if (id) tabs.documentOpened(id); }) },
+        { label: t('Перезагрузить с диска'), action: () => docs.run(() => docs.reload(tab.id)), disabled: !record.token || record.fileState === 'missing' || record.fileState === 'unavailable' },
+        { label: t('Показать файл в папке'), action: () => docs.run(() => bridge.revealFile(record.token!)), disabled: !record.token },
+        { label: '', separator: true },
+      ] : [],
+      { label: t('Закрыть'), action: () => closeTabs([tab]) },
+      { label: t('Закрыть другие вкладки'), action: () => closeTabs(tabs.tabs.filter(item => item.id !== tab.id)), disabled: tabs.tabs.length < 2 },
+      { label: t('Закрыть все вкладки'), action: () => closeTabs(tabs.tabs) },
+    ];
+  };
   const onAction = useCallback((action: string) => {
+    if (action === 'cut' || action === 'copy' || action === 'paste' || action === 'selectAll') {
+      if (active && document.activeElement?.closest('.bpmn-container')) docs.editors.current.get(active.id)?.edit(action);
+      else bridge.editText(action);
+      return;
+    }
     if ((action === 'undo' || action === 'redo') && document.activeElement instanceof HTMLElement) {
       const view = EditorView.findFromDOM(document.activeElement);
       if (view) { (action === 'undo' ? undo : redo)(view); return; }
@@ -70,12 +102,32 @@ export function App() {
       case 'save': docs.run(() => docs.save(false, active?.id)); break;
       case 'save-as': docs.run(() => docs.save(true, active?.id)); break;
       case 'export': exportDiagram('svg'); break;
+      case 'export-png': exportDiagram('png-white'); break;
+      case 'reload': if (active) docs.run(() => docs.reload(active.id)); break;
+      case 'duplicate': if (active) docs.run(async () => { const id = await docs.duplicate(active.id); if (id) tabs.documentOpened(id); }); break;
+      case 'reveal': if (active?.token) docs.run(() => bridge.revealFile(active.token!)); break;
+      case 'close-tab': if (activeTab) closeTabs([activeTab]); break;
+      case 'close-all': closeTabs(tabs.tabs); break;
+      case 'connections': setManaging(''); break;
+      case 'refresh': if (monitoring) controls?.refresh(); break;
+      case 'auto-refresh': if (monitoring) controls?.setAuto(!controls.auto); break;
+      case 'summary': if (monitoring) summaryPreference.setEnabled(!summaryPreference.enabled); break;
       case 'undo': editor?.undo(); break;
       case 'redo': editor?.redo(); break;
       case 'fit': if (monitoring) controls?.fit(); else editor?.fit(); break;
-      case 'prepare-close': docs.run(docs.prepareClose); break;
+      case 'prepare-close': docs.run(() => docs.prepareClose(sessions.flush)); break;
     }
-  }, [docs, active, monitoring, home, controls, exportDiagram, requestNew, openContent, managing]);
+  }, [docs, active, monitoring, home, controls, exportDiagram, requestNew, openContent, managing, activeTab, tabs, closeTabs, sessions.flush, summaryPreference]);
+  useEffect(() => {
+    const update = () => {
+      const editing = document.activeElement instanceof HTMLElement && !!document.activeElement.closest('input,textarea,[contenteditable="true"]');
+      bridge.setMenuState({ document: !!active?.snapshot, localFile: !!active?.token, tabs: !!tabs.tabs.length,
+        canUndo: editing || !!active?.snapshot?.canUndo, canRedo: editing || !!active?.snapshot?.canRedo, canExport: monitoring ? !!controls?.canExport : !!active?.snapshot,
+        monitor: monitoring, back: !!controls?.navigation.back, forward: !!controls?.navigation.forward, canRefresh: !!controls?.canRefresh, auto: !!controls?.auto, summary: summaryPreference.enabled });
+    };
+    update(); document.addEventListener('focusin', update); document.addEventListener('focusout', update);
+    return () => { document.removeEventListener('focusin', update); document.removeEventListener('focusout', update); };
+  }, [active, tabs.tabs.length, monitoring, controls, summaryPreference.enabled]);
   useEffect(() => bridge.onAction(onAction), [onAction]);
   useEffect(() => {
     if (window.desktop) return;
@@ -94,17 +146,18 @@ export function App() {
       onLanguage={value => docs.run(() => setLanguage(value))} onExport={exportDiagram} canExport={monitoring ? !!controls?.canExport : !!active?.snapshot}
       onManageConnections={() => setManaging(monitoring ? activeTab.connectionId : profiles.data.items.find(item => item.id === profiles.preferredId)?.id ?? profiles.data.items[0]?.id ?? '')}
       runtimeTools={monitoring ? <RuntimeToolbar connectionId={activeTab.connectionId} connections={profiles.data.items} controls={controls} choose={id => { tabs.changeConnection(activeTab.id, id); profiles.remember(id); }} manage={setManaging} /> : undefined} />
-    <Tabs tabs={tabs.tabs} activeId={tabs.activeId} documents={docs.documents} connections={profiles.data.items} controls={handles.controls} activate={tabs.activate} move={tabs.move}
+    <Tabs tabs={tabs.tabs} activeId={tabs.activeId} documents={docs.documents} connections={profiles.data.items} controls={handles.controls} activate={tabs.activate} move={tabs.move} menu={tabMenu}
       close={tab => tab.kind === 'document' ? docs.close(tab.id) : tabs.closeTab(tab.id)} create={requestNew} />
-    {docs.documents.length > 0 && docs.recovery.length > 0 && <div className="pending-recovery"><span>{t('Остались несохранённые документы предыдущей сессии: {count}', { count: docs.recovery.length })}</span><button className="button small" onClick={docs.restore}>{t('Восстановить')}</button><button className="button small ghost" onClick={docs.discardRecovery}>{t('Отбросить')}</button></div>}
+    {!home && sessions.offered && <SessionOffer compact session={sessions.offered} busy={sessions.restoring} restore={() => docs.run(() => sessions.restore(sessions.offered!.id))} dismiss={() => docs.run(() => sessions.dismiss(sessions.offered!.id))} />}
     <div className="workspaces">{docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={record.id === tabs.activeId}
-      editors={docs.editors.current} clipboard={clipboard} dark={dark} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
-      {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace summaryEnabled={summaryPreference.enabled} setSummaryEnabled={summaryPreference.setEnabled} dark={dark} id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}
+      editors={docs.editors.current} clipboard={clipboard} dark={dark} view={docs.view} reload={docs.reload} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
+      {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace initial={tab.monitor} summaryEnabled={summaryPreference.enabled} setSummaryEnabled={summaryPreference.setEnabled} dark={dark} id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}
       {home && <Welcome key={sourceHome ?? 'initial'} create={profile => docs.run(() => { tabs.documentOpened(docs.create(profile), sourceHome); })} open={() => openContent(docs.open)}
-        examples={examples} recent={recent} openExample={name => openContent(() => docs.openExample(name))} openRecent={path => openContent(() => docs.openRecent(path))}
+        examples={examples} recent={recent} sessions={sessions.items} restoreSession={id => docs.run(() => sessions.restore(id, sourceHome))} removeSession={id => docs.run(() => sessions.remove(id))}
+        removeRecent={path => docs.run(async () => setRecent(await bridge.removeRecent(path)))} openExample={name => openContent(() => docs.openExample(name))} openRecent={path => openContent(() => docs.openRecent(path))}
         connections={profiles.data.items} savedId={profiles.preferredId} connectionError={profiles.error} manage={() => setManaging('')}
         monitor={id => { tabs.createMonitor(id, sourceHome); profiles.remember(id); }}
-        recovery={docs.documents.length ? 0 : docs.recovery.length} restore={() => finishOpening(docs.restore())} discardRecovery={docs.discardRecovery} />}</div>
+        offer={sessions.offered && <SessionOffer session={sessions.offered} busy={sessions.restoring} restore={() => docs.run(() => sessions.restore(sessions.offered!.id, sourceHome))} dismiss={() => docs.run(() => sessions.dismiss(sessions.offered!.id))} />} />}</div>
     <footer className="statusbar"><span><CircleCheck size={13} />{monitoring ? t('Состояние процессов') : active ? t('{count} элементов', { count: active.snapshot?.items.length ?? 0 }) : t('Готово')}</span>
       <span>{active?.snapshot && <span className="engine-badge">{active.snapshot.engines.map(id => engineProfiles[id].title).join(' + ') || 'BPMN 2.0'}</span>}{monitoring ? 'Flowable REST API' : active?.snapshot?.selected?.id ?? 'BPMN 2.0 · Flowable · Camunda 7'}</span><span className="status-spacer" />
       <span>{home ? t('Стартовая страница') : monitoring ? t('Только чтение') : active && isDirty(active) ? t('Есть несохранённые изменения') : active && !active.path ? t('Без файла · сохрани копию') : t('Все изменения сохранены')}</span></footer>

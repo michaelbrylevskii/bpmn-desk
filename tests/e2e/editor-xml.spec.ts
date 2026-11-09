@@ -1,9 +1,10 @@
+import { openExample } from './open-example';
 import { createDiagram } from './create-diagram';
 import { test, expect } from './russian-fixture';
 
 test('XML поиск и переход к выбранному элементу сохраняют текст и историю', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
+  await openExample(page, 'flowable-boundary-events');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   await page.getByRole('textbox', { name: 'Найти элемент' }).fill('Review document');
   await page.locator('.outline-item').filter({ hasText: 'reviewCall' }).click();
@@ -64,7 +65,7 @@ test('компактный поиск выровнен, считает совп�
 
 test('кнопка поиска переключает панель и сохраняет запрос, Ctrl+F и Escape обновляют её состояние', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await page.getByRole('button', { name: 'XML', exact: true }).click();
   const toggle = page.locator('.xml-panel').getByTitle('Поиск в XML (Ctrl+F)', { exact: true });
   const search = page.locator('.xml-panel .cm-search input[name="search"]');

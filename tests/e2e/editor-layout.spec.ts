@@ -1,10 +1,11 @@
+import { openExample } from './open-example';
 import { test, expect } from './russian-fixture';
 import { readFileSync } from 'node:fs';
 import { preservationIssues } from '../../src/renderer/bpmn/xml';
 
 test('размещение граничных событий исправляется одной отменяемой командой', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
+  await openExample(page, 'flowable-boundary-events');
   await page.getByRole('textbox', { name: 'Найти элемент' }).fill('Review document');
   await page.locator('.outline-item').filter({ hasText: 'reviewCall' }).click();
   const event = page.locator('.djs-shape[data-element-id="reviewErrorBoundary"]');

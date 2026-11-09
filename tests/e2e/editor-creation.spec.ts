@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createDiagram } from './create-diagram';
@@ -31,13 +32,13 @@ test('стартовая вкладка сохраняет черновик и �
   for (const theme of ['Light theme', 'Dark theme']) {
     await page.getByTitle(theme, { exact: true }).click(); await page.locator('.new-tab').click();
     const home = page.locator('.welcome');
-    await expect(home.getByRole('heading', { name: 'Sample diagrams', exact: true })).toBeVisible();
+    await expect(home.getByRole('heading', { name: 'Recent sessions', exact: true })).toBeVisible();
     await expect(home.getByRole('heading', { name: 'Recent files', exact: true })).toBeVisible();
     await expect(home.getByRole('button', { name: 'Create diagram', exact: true })).toBeInViewport();
     expect(await home.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: `test-results/start-page-${theme.startsWith('Light') ? 'light' : 'dark'}.png` });
     if (theme.startsWith('Light')) await page.getByTitle('Close New tab', { exact: true }).click();
-    else await home.getByRole('button', { name: 'flowable-vacation-request', exact: true }).click();
+    else await openExample(page, 'flowable-vacation-request');
   }
   await expect(page.locator('.welcome')).toHaveCount(0); await expect(page.locator('.document-tab')).toHaveCount(2);
   await page.locator('.document-tab').first().getByRole('tab').click(); await expect(page.locator('.document-workspace:visible').getByLabel('Name', { exact: true })).toHaveValue('Retained draft');

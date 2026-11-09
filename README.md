@@ -26,7 +26,7 @@ Linux and Windows · local files · open source
 
 - **Visual BPMN editor** with Flowable and Camunda 7 properties and extensions.
 - **XML editor** with syntax highlighting, search and direct access to the diagram source.
-- **Flexible workspace** with reorderable tabs, copying between diagrams, independent undo/redo and draft recovery.
+- **Flexible workspace** with reorderable tabs, copying between diagrams, independent undo/redo, session restoration and file change detection.
 - **Flowable monitor** with current state and execution history linked to the diagram, process summaries, variables and error details.
 - **SVG and PNG export**, including process state and history markers.
 - **English and Russian**, light and dark themes, and adjustable interface and diagram zoom.

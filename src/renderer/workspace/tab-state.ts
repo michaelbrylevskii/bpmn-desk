@@ -1,4 +1,5 @@
-export type WorkspaceTab = { kind: 'document'; id: string } | { kind: 'monitor'; id: string; connectionId: string } | { kind: 'home'; id: string };
+import type { SessionTab } from '../../shared/sessions';
+export type WorkspaceTab = SessionTab;
 export interface TabState { tabs: WorkspaceTab[]; activeId: string }
 export function moveWorkspace(state: TabState, id: string, targetId: string, after: boolean): TabState {
   if (id === targetId) return state;

@@ -1,8 +1,9 @@
+import { openExample } from './open-example';
 import { test, expect } from './russian-fixture';
 
 test('XML расширений имеет собственные отступы и применяется через undo без изменения соседних данных', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await page.getByRole('textbox', { name: 'Найти элемент' }).fill('prepareDocument');
   await page.locator('.outline-item').first().click();
   await page.getByText('XML расширений', { exact: true }).click();

@@ -1,3 +1,4 @@
+import { bridge } from '../platform/bridge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Connections } from '../../shared/runtime';
 import { errorMessage } from '../../shared/errors';
@@ -13,5 +14,8 @@ export function useConnections(enabled: boolean) {
     if (!enabled || loaded.current || !window.runtime) return; loaded.current = true;
     void refresh().catch(error => { loaded.current = false; setError(errorMessage(error)); });
   }, [enabled, refresh]);
+  useEffect(() => bridge.onWorkspaceChanged(kind => {
+    if (kind === 'connections') void refresh().then(() => setRevisions(previous => Object.fromEntries(data.items.map(item => [item.id, (previous[item.id] ?? 0) + 1])))).catch(error => setError(errorMessage(error)));
+  }), [refresh, data.items]);
   return { data, preferredId, revisions, remember, error, refresh, ready };
 }

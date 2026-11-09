@@ -1,3 +1,4 @@
+import type { DiagramView } from '../../shared/sessions';
 import Modeler from 'bpmn-js/lib/Modeler';
 import { errorMessage } from '../../shared/errors';
 import { defaultLanguage, type Language } from '../../shared/i18n';
@@ -27,6 +28,7 @@ import type { DiagramElement, Diagnostic, Moddle, ModdleElement } from './types'
 export interface EditorSnapshot {
   engines: EngineId[];
   xml: string;
+  baselineXml?: string;
   selected?: DiagramElement;
   items: DiagramElement[];
   diagnostics: Diagnostic[];
@@ -45,8 +47,9 @@ export class BpmnEditor {
   private importing = false;
   private destroyed = false;
   private fitPending = false;
+  private pendingView?: DiagramView;
 
-  constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage, clipboard = new DiagramClipboard()) {
+  constructor(private readonly container: HTMLElement, private readonly notify: (snapshot: EditorSnapshot) => void, private readonly language: () => Language = () => defaultLanguage, clipboard = new DiagramClipboard(), viewChanged?: (view: DiagramView) => void) {
     this.modeler = new Modeler({ container, bpmnRenderer: rendererColors, additionalModules: [translationModule(language), { clipboard: ['value', clipboard] }] });
     this.extensions = new ExtensionCommands(this.modeler.get<Moddle>('moddle'), (element, values, target) => this.replaceExtensionValues(element, values, target));
     configureDiagramTheme(this.modeler.get('bpmnRenderer'));
@@ -59,6 +62,7 @@ export class BpmnEditor {
     this.modeler.get<CommandStack>('commandStack').registerHandler('bpmnDesk.boundaryLayout', BoundaryLayoutCommand);
     const events = this.modeler.get<EventBus>('eventBus');
     events.on('commandStack.changed', () => { if (!this.importing) void this.publish(); });
+    events.on('canvas.viewbox.changed', () => { if (!this.importing && viewChanged && this.container.clientWidth && this.container.clientHeight) viewChanged(this.view()); });
     events.on('selection.changed', () => { if (!this.importing) void this.publish(); });
   }
 
@@ -69,7 +73,7 @@ export class BpmnEditor {
     if (selected.length) this.modeler.get<{ open(elements: DiagramElement | DiagramElement[], force: boolean): void }>('contextPad').open(selected.length === 1 ? selected[0]! : selected, true);
   }
 
-  async import(xml: string): Promise<void> {
+  async import(xml: string, baselineXml = xml): Promise<void> {
     const checked = await checkImport(xml);
     // Проверка отдельной модели позволяет оставить текущую диаграмму при ошибке XML.
     if (checked.warnings.length) throw new Error(`Импорт XML отклонён: некорректные или неподдерживаемые BPMN-данные.\n${checked.warnings.join('\n')}`);
@@ -77,8 +81,8 @@ export class BpmnEditor {
     this.importing = true;
     try {
       const result = await this.modeler.importXML(normalizeDiagram(xml));
-      this.baseline = xml;
-      this.guard.reset(xml, this.allModelElements());
+      this.baseline = baselineXml;
+      this.guard.reset(baselineXml, this.allModelElements());
       this.warnings = result.warnings.map(w => ({ severity: 'warning', message: errorMessage(w) }));
       this.fit();
     } catch (error) {
@@ -93,10 +97,30 @@ export class BpmnEditor {
     await this.publish();
   }
 
+  view(): DiagramView {
+    if (this.pendingView) return this.pendingView;
+    const box = this.modeler.get<Canvas>('canvas').viewbox();
+    return { x: box.x, y: box.y, width: box.width, height: box.height, selected: this.modeler.get<Selection>('selection').get()[0]?.id };
+  }
+  restoreView(view?: DiagramView): void {
+    if (!view) return;
+    this.fitPending = false;
+    if (!this.container.clientWidth || !this.container.clientHeight) { this.pendingView = view; return; }
+    this.pendingView = undefined;
+    this.modeler.get<Canvas>('canvas').viewbox(view);
+    const element = view.selected && this.modeler.get<Registry>('elementRegistry').get(view.selected);
+    if (element) this.modeler.get<Selection>('selection').select(element);
+  }
+
   async xml(): Promise<string> {
     const result = await this.modeler.saveXML({ format: true });
     if (!result.xml) throw new Error('Редактор не вернул XML.');
     return result.xml;
+  }
+
+  async xmlState(): Promise<{ xml: string; guardXml: string }> {
+    const xml = await this.xml();
+    return { xml, guardXml: this.guard.issues(xml, this.allModelElements()).length ? this.baseline : xml };
   }
 
   async checkedXml(): Promise<string> {
@@ -109,6 +133,7 @@ export class BpmnEditor {
   }
 
   async svg(): Promise<string> { return standaloneSvg((await this.modeler.saveSVG()).svg); }
+  edit(action: 'cut' | 'copy' | 'paste' | 'selectAll'): void { this.modeler.get<{ trigger(name: string): void }>('editorActions').trigger(action === 'selectAll' ? 'selectElements' : action); }
   undo(): void { this.modeler.get<CommandStack>('commandStack').undo(); }
   redo(): void { this.modeler.get<CommandStack>('commandStack').redo(); }
   fit(): void {
@@ -131,7 +156,7 @@ export class BpmnEditor {
     if (!this.container.clientWidth || !this.container.clientHeight) return;
     this.modeler.get<Canvas>('canvas').resized();
     // Первое вписывание скрытой вкладки выполняется после её открытия.
-    if (this.fitPending) this.fit();
+    if (this.pendingView) this.restoreView(this.pendingView); else if (this.fitPending) this.fit();
   }
   destroy(): void { this.destroyed = true; this.modeler.destroy(); }
   root(): ModdleElement { return this.modeler.getDefinitions() as unknown as ModdleElement; }
@@ -256,7 +281,7 @@ export class BpmnEditor {
     const selected = this.modeler.get<Selection>('selection').get()[0];
     const issues = this.guard.issues(xml, this.allModelElements());
     const engines = detectEngines(xml);
-    this.notify({ xml, engines, selected: selected?.labelTarget ?? selected ?? this.modeler.get<Canvas>('canvas').getRootElement(),
+    this.notify({ xml, baselineXml: issues.length ? this.baseline : xml, engines, selected: selected?.labelTarget ?? selected ?? this.modeler.get<Canvas>('canvas').getRootElement(),
       items: registry.getAll().filter(element => !element.labelTarget),
       diagnostics: [...this.warnings, ...validateModel(this.root(), engines), ...boundaryLayoutIssues(registry.getAll().filter(element => !element.labelTarget)), ...issues.map(message => ({ severity: 'error' as const, message }))],
       canUndo: stack.canUndo(), canRedo: stack.canRedo(),

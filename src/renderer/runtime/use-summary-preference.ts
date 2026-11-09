@@ -17,5 +17,9 @@ export function useSummaryPreference(connections: Connection[], preferred: strin
     const profile = connections.find(item => item.id === preferred) ?? connections[0];
     setEnabled(summaryPreference(localStorage.getItem(summaryPreferenceKey), profile?.autoSummary));
   }, [connections, preferred, ready, enabled, setEnabled]);
+  useEffect(() => {
+    const changed = (event: StorageEvent) => { if (event.key === summaryPreferenceKey) setValue(summaryPreference(event.newValue)); };
+    window.addEventListener('storage', changed); return () => window.removeEventListener('storage', changed);
+  }, []);
   return { enabled: enabled ?? false, setEnabled };
 }

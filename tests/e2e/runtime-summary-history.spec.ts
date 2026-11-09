@@ -1,3 +1,4 @@
+import { openMonitor } from './open-monitor';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { launch, close } from './runtime-fixture';
 import { historyServer } from './history-server';
@@ -64,12 +65,12 @@ test('переключатель общий, работает во время з
     await expect(toggle).toHaveAttribute('aria-pressed', 'false'); await expect(toggle.locator('.summary-status-badge')).toHaveCount(0);
     await expect(page.locator('.runtime-badge')).toHaveCount(0);
     await expect.poll(() => api.state.summaryActive).toBe(0); await expect(toggle).toHaveAttribute('data-summary-state', 'off');
-    await page.locator('.new-tab').click(); await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await page.locator('.new-tab').click(); await openMonitor(page);
     await page.locator('.workspace-surface:not([hidden]) .runtime-row').click();
     await expect(page.locator('.workspace-surface:not([hidden])').getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-pressed', 'false');
     await app.close();
     reopened = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
-    const next = await reopened.firstWindow(); await next.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    const next = await reopened.firstWindow(); await openMonitor(next);
     await next.locator('.runtime-row').click(); await expect(next.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('data-summary-state', 'off');
     expect(await next.evaluate(() => localStorage.getItem('bpmn-desk:summary-enabled'))).toBe('false');
   } finally { await reopened?.close(); try { await close(app, directory); } finally { await api.stop(); } }
@@ -83,7 +84,7 @@ test('старое autoSummary=false мигрирует один раз; оши�
       await window.runtime!.saveConnection({ ...profile, rememberSecret: false, autoSummary: false });
       localStorage.removeItem('bpmn-desk:summary-enabled');
     });
-    await page.reload(); await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await page.reload(); await openMonitor(page);
     await page.locator('.runtime-row').click();
     const toggle = page.getByRole('button', { name: 'Version summary', exact: true });
     await expect(toggle).toHaveAttribute('data-summary-state', 'off');
@@ -96,7 +97,7 @@ test('старое autoSummary=false мигрирует один раз; оши�
     const panel = page.locator('.runtime-summary-details'); await expect(panel.locator('.related-instance')).toHaveCount(1);
     await panel.locator('.summary-source-tabs').getByRole('button', { name: 'History', exact: true }).click();
     await expect(panel.getByRole('alert')).toBeVisible(); await expect(panel).toContainText('State unavailable');
-    await page.reload(); await page.getByRole('button', { name: 'Open monitor', exact: true }).click(); await page.locator('.runtime-row').click();
+    await page.reload(); await openMonitor(page); await page.locator('.runtime-row').click();
     await expect(page.getByRole('button', { name: 'Version summary', exact: true })).toHaveAttribute('aria-pressed', 'true');
   } finally { try { await close(app, directory); } finally { await api.stop(); } }
 });

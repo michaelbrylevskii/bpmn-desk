@@ -1,3 +1,5 @@
+import { openMonitor } from './open-monitor';
+import { openExample } from './open-example';
 import { expect, test } from '@playwright/test';
 import { close, launch, openInstance } from './runtime-fixture';
 import { historyServer } from './history-server';
@@ -46,11 +48,11 @@ test('история отдельна для мониторов; редакто�
     await app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0]!.emit('app-command', {}, 'browser-backward'); });
     await expect(page.locator('.runtime-instance > code')).toHaveText('p2'); await page.getByRole('dialog').getByTitle('Close', { exact: true }).click();
     await page.locator('.new-tab').click(); await expect(page.locator('.monitor-navigation')).toHaveCount(0);
-    await page.locator('.welcome').getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
+    await openExample(page, 'flowable-boundary-events');
     await expect(page.locator('.monitor-navigation')).toHaveCount(0);
     await app.evaluate(({ BrowserWindow }) => { BrowserWindow.getAllWindows()[0]!.emit('app-command', {}, 'browser-backward'); });
     await expect(page.locator('.document-workspace:visible')).toBeVisible();
-    await page.locator('.new-tab').click(); await page.getByRole('button', { name: 'Open monitor', exact: true }).click(); await openInstance(page, 'p1');
+    await page.locator('.new-tab').click(); await openMonitor(page); await openInstance(page, 'p1');
     await expect(page.locator('.monitor-navigation').getByRole('button', { name: 'Back', exact: true })).toBeDisabled();
     await first.click(); await expect(page.locator('.workspace-surface:not([hidden]) .runtime-instance > code')).toHaveText('p2');
     await page.locator('.monitor-navigation').getByRole('button', { name: 'Back', exact: true }).click();

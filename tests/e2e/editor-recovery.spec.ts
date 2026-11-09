@@ -20,6 +20,7 @@ test('после перезапуска восстанавливаются вс�
   for (const index of [0, 20]) {
     await page.locator('.document-tab > button:first-child').nth(index).click();
     const workspace = page.locator('.document-workspace:visible');
+    await expect(workspace.locator('.djs-element[data-element-id="StartEvent_1"]')).toBeVisible();
     await expect(workspace.locator('.outline-item').filter({ hasText: `Recovered process ${index}` })).toBeVisible();
   }
 });

@@ -1,3 +1,4 @@
+import type { SessionMonitor } from '../../shared/sessions';
 import { useEffect, useMemo, useState, type SetStateAction } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DeadLetterJob, Definition, Instance, RuntimePage } from '../../shared/runtime';
@@ -9,10 +10,11 @@ import type { HistoricInstance, HistoryQuery } from '../../shared/history';
 import { defaultCatalogQuery, resetContextPages, type DefinitionContext, type CatalogKind } from './catalog-query';
 
 type CatalogPage = { kind: 'definitions'; page: RuntimePage<Definition> } | { kind: 'runtime' | 'history'; page: RuntimePage<Instance | HistoricInstance> } | { kind: 'jobs'; page: RuntimePage<DeadLetterJob> };
-export function RuntimeCatalog({ connection, revision: profileRevision, selectedInstance, selectedDefinition, instancesOf, definition, instance, job }: { connection: string; revision: number; selectedInstance: string; selectedDefinition: string; instancesOf?: { definition: Definition }; definition: (item: Definition) => void; instance: (id: string, history?: boolean, preview?: Instance) => void; job: (item: DeadLetterJob) => void }) {
-  const { t, text } = useI18n(); const [kind, setKind] = useState<CatalogKind>('definitions');
-  const [scope, setScope] = useState<DefinitionContext>();
-  const [queries, setQueries] = useState<Partial<Record<CatalogKind, HistoryQuery>>>({});
+export function RuntimeCatalog({ initial, changed, connection, revision: profileRevision, selectedInstance, selectedDefinition, instancesOf, definition, instance, job }: { initial?: SessionMonitor['catalog']; changed: (state: NonNullable<SessionMonitor['catalog']>) => void; connection: string; revision: number; selectedInstance: string; selectedDefinition: string; instancesOf?: { definition: Definition }; definition: (item: Definition) => void; instance: (id: string, history?: boolean, preview?: Instance) => void; job: (item: DeadLetterJob) => void }) {
+  const { t, text } = useI18n(); const [kind, setKind] = useState<CatalogKind>(initial?.kind ?? 'definitions');
+  const [scope, setScope] = useState<DefinitionContext | undefined>(initial?.scope);
+  const [queries, setQueries] = useState<Partial<Record<CatalogKind, HistoryQuery>>>(initial?.queries ?? {});
+  useEffect(() => { changed({ kind, scope, queries }); }, [kind, scope, queries, changed]);
   const history = kind === 'history';
   const query = useMemo(() => ({ ...queries[kind] ?? defaultCatalogQuery(kind), ...(kind !== 'definitions' && scope ? { definitionId: scope.id } : {}) }), [queries, kind, scope]);
   const setQuery = (action: SetStateAction<HistoryQuery>) => {

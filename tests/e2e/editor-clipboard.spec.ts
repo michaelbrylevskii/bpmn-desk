@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { requireBpmn, canonicalElement } from '../../src/renderer/bpmn/xml';
@@ -16,7 +17,7 @@ for (const scenario of [
   { sample: 'camunda7-showcase', id: 'ArchiveOrder', uri: 'http://camunda.org/schema/1.0/bpmn', attribute: 'topic', value: 'archive-order' },
 ]) test(`${scenario.sample}: общий буфер переживает закрытие источника, повторные вставки независимы и отменяются`, async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: scenario.sample, exact: true }).click();
+  await openExample(page, scenario.sample);
   await page.getByLabel('Найти элемент').fill(scenario.id);
   await page.locator('.outline-item').first().click();
   await page.locator('.bpmn-container .djs-container > svg').focus();
@@ -55,7 +56,7 @@ for (const scenario of [
 for (const sample of ['flowable-boundary-events', 'flowable-showcase']) test(`${sample}: перенос группы сохраняет связи, вложения и отдельную историю команд`, async ({ page }) => {
   const uri = 'http://www.omg.org/spec/BPMN/20100524/MODEL';
   const source = requireBpmn(readFileSync(`examples/${sample}.bpmn20.xml`, 'utf8'));
-  await page.goto('/'); await page.getByRole('button', { name: sample, exact: true }).click();
+  await page.goto('/'); await openExample(page, sample);
   await page.locator('.outline-item[title^="bpmn:Process"]').click();
   await page.getByLabel('Название', { exact: true }).fill('Изменённый источник'); await page.getByLabel('Название', { exact: true }).blur();
   await page.locator('.bpmn-container .djs-container > svg').focus();

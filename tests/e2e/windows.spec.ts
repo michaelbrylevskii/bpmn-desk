@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { selectOption } from './select';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { resolve } from 'node:path';
@@ -43,7 +44,7 @@ test('готовое Windows-приложение открывает, измен
       // Наличие копий примеров проверяется через реальный packaged IPC.
       await page.getByRole('button', { name: 'Закрыть Документ.bpmn20.xml', exact: true }).click();
       await expect(page.getByRole('button', { name: 'flowable-showcase', exact: true })).toBeVisible();
-      await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+      await openExample(page, 'flowable-showcase');
       await expect(page.locator('.document-tab').last()).toContainText('flowable-showcase');
       await page.screenshot({ path: 'test-results/windows-editor.png' });
     } finally {

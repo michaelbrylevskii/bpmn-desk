@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { canonicalElement, requireBpmn } from '../../src/renderer/bpmn/xml';
 import { test, expect } from './russian-fixture';
@@ -10,7 +11,7 @@ for (const scenario of [
 ]) {
   test(`${scenario.sample}: полная отмена ${scenario.kind} возвращает чистое состояние`, async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: scenario.sample, exact: true }).click();
+    await openExample(page, scenario.sample);
     await page.getByLabel('Найти элемент').fill(scenario.id);
     await page.locator('.outline-item').first().click();
     let pending = page.waitForEvent('download');

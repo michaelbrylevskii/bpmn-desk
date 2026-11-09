@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { preservationIssues } from '../../src/renderer/bpmn/xml';
@@ -16,7 +17,7 @@ async function download(page: Page) {
 test('connector, multi-instance, ошибки и message definitions редактируются в правильном target', async ({ page }) => {
   const source = readFileSync('examples/camunda7-integration.bpmn20.xml', 'utf8');
   await page.goto('/');
-  await page.getByRole('button', { name: 'camunda7-integration', exact: true }).click();
+  await openExample(page, 'camunda7-integration');
   const baseline = await download(page);
   await baseline.saveAs('.cache/camunda-exports/camunda7-integration.bpmn20.xml');
   expect(preservationIssues(source, readFileSync((await baseline.path())!, 'utf8'))).toEqual([]);

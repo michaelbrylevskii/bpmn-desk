@@ -1,9 +1,10 @@
+import { openExample } from './open-example';
 import { readFileSync } from 'node:fs';
 import { test, expect } from './russian-fixture';
 
 test('экспорт PNG поддерживает белый и прозрачный фон, не меняет XML и dirty state', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await page.getByLabel('Найти элемент').fill('prepareDocument');
   await page.locator('.outline-item').first().click();
   await page.getByLabel('Выражение делегата', { exact: true }).fill('${exportedDelegate}');

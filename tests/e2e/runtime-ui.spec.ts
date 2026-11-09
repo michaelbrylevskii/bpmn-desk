@@ -1,3 +1,5 @@
+import { openMonitor } from './open-monitor';
+import { openExample } from './open-example';
 import { createDiagram } from './create-diagram';
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -9,7 +11,7 @@ useRuntimeFixture();
 const surface = (page: Page) => page.locator('.workspace-surface:not([hidden])');
 async function newMonitor(page: Page) {
   await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
-  await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+  await openMonitor(page);
   await expect(surface(page).locator('.runtime-catalog .runtime-row').first()).toBeVisible();
 }
 
@@ -53,7 +55,7 @@ test('несколько мониторов сохраняют собствен�
     await page.getByTitle('Manage connections', { exact: true }).click();
     await expect(page.getByRole('dialog').getByLabel('Connection name')).toHaveValue('Fixture engine');
     await page.getByRole('dialog').getByTitle('Close', { exact: true }).click();
-    await page.locator('.welcome').getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+    await openExample(page, 'camunda7-showcase');
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
     await firstTab.click(); await expect(surface(page).locator('.runtime-instance > code')).toHaveText(fixture.parallelInstanceId);
   } finally { await close(app, directory); }

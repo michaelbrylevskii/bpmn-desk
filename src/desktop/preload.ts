@@ -3,6 +3,16 @@ import { channels, type DesktopBridge } from '../shared/contracts';
 import type { Language } from '../shared/i18n';
 import { runtimeBridge } from './runtime/preload';
 const bridge: DesktopBridge = {
+  initialSession: () => ipcRenderer.invoke(channels.initialSession),
+  onWorkspaceChanged: callback => {
+    const listener = (_event: Electron.IpcRendererEvent, kind: import('../shared/contracts').WorkspaceChange) => callback(kind);
+    ipcRenderer.on(channels.workspaceChanged, listener); return () => { ipcRenderer.removeListener(channels.workspaceChanged, listener); };
+  },
+  sessions: () => ipcRenderer.invoke(channels.sessions),
+  saveSession: session => ipcRenderer.invoke(channels.saveSession, session),
+  restoreSession: (id, newWindow) => ipcRenderer.invoke(channels.restoreSession, id, newWindow),
+  dismissSession: id => ipcRenderer.invoke(channels.dismissSession, id),
+  deleteSession: id => ipcRenderer.invoke(channels.deleteSession, id),
   language: () => ipcRenderer.invoke(channels.language),
   setLanguage: language => ipcRenderer.invoke(channels.setLanguage, language),
   onLanguage: callback => {
@@ -19,12 +29,18 @@ const bridge: DesktopBridge = {
   openFiles: () => ipcRenderer.invoke(channels.open),
   openDropped: files => ipcRenderer.invoke(channels.drop, files.map(file => webUtils.getPathForFile(file))),
   openRecent: path => ipcRenderer.invoke(channels.openRecent, path),
+  removeRecent: path => ipcRenderer.invoke(channels.removeRecent, path),
+  fileStatuses: tokens => ipcRenderer.invoke(channels.statuses, tokens),
+  reloadFile: token => ipcRenderer.invoke(channels.reload, token),
+  revealFile: token => ipcRenderer.invoke(channels.reveal, token),
   recentFiles: () => ipcRenderer.invoke(channels.recent),
   examples: () => ipcRenderer.invoke(channels.examples),
   openExample: name => ipcRenderer.invoke(channels.example, name),
   saveFile: request => ipcRenderer.invoke(channels.save, request),
+  editText: action => ipcRenderer.send(channels.editText, action),
+  setMenuState: state => ipcRenderer.send(channels.menuState, state),
   setDirty: dirty => ipcRenderer.send(channels.dirty, dirty),
-  closeReady: dirty => ipcRenderer.send(channels.closeReady, dirty),
+  closeReady: (dirty, sessionSaved = true) => ipcRenderer.send(channels.closeReady, dirty, sessionSaved),
   onAction: callback => {
     const listener = (_event: Electron.IpcRendererEvent, action: string) => callback(action);
     ipcRenderer.on(channels.action, listener);

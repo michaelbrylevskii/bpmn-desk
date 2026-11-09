@@ -1,3 +1,4 @@
+import type { SessionMonitor } from '../../shared/sessions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MonitorControls } from './controls';
 import type { DiagramExport } from '../../shared/contracts';
@@ -21,18 +22,26 @@ import type { MonitorDestination, MonitorVisit } from './navigation-model';
 import { RuntimeFreshness } from './freshness';
 import { MonitorPanel } from './monitor-panel';
 
-export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeout, dark, id, connection, revision, active, copy, publish }: { summaryEnabled: boolean; setSummaryEnabled: (value: boolean) => void; requestTimeout: number; dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
+export function RuntimeMonitor({ initial, summaryEnabled, setSummaryEnabled, requestTimeout, dark, id, connection, revision, active, copy, publish }: { initial?: SessionMonitor; summaryEnabled: boolean; setSummaryEnabled: (value: boolean) => void; requestTimeout: number; dark: boolean; id: string; connection: string; revision: number; active: boolean; copy: (diagram: DeployedDiagram) => void; publish: (id: string, value: MonitorControls | undefined) => void }) {
   const { t, text } = useI18n();
-  const { current: location, past, future, dispatch, setHistoryMode } = useMonitorNavigation();
+  const { current: location, past, future, dispatch, setHistoryMode } = useMonitorNavigation(initial);
   const definitionId = location?.definitionId ?? ''; const instanceId = location?.instanceId ?? '';
   const historyMode = location?.history ?? false; const selectedJob = location?.job;
-  const [historyFilter, setHistoryFilter] = useState('');
+  const [historyFilter, setHistoryFilter] = useState(initial?.historyFilter ?? '');
   const clearHistoryFilter = useCallback(() => setHistoryFilter(''), []);
-  const [auto, setAuto] = useState(false); const [selected, setSelected] = useState(''); const [catalogHidden, setCatalogHidden] = useState(false); const [detailsHidden, setDetailsHidden] = useState(false);
+  const [auto, setAuto] = useState(initial?.auto ?? false); const [selected, setSelected] = useState(initial?.selected ?? ''); const [catalogHidden, setCatalogHidden] = useState(initial?.catalogHidden ?? false); const [detailsHidden, setDetailsHidden] = useState(initial?.detailsHidden ?? false);
+  const [catalogState, setCatalogState] = useState(initial?.catalog);
   const viewer = useRef<RuntimeViewer | undefined>(undefined); const [ready, setReady] = useState(false);
+  const pendingJob = useRef(initial?.jobId);
   const snapshot = useSnapshot(connection, instanceId, auto, active);
   const history = useHistory(connection, instanceId, auto, active, revision);
   const historyData = history.data; const currentData = snapshot.data;
+  useEffect(() => {
+    if (!pendingJob.current || !currentData) return;
+    const job = currentData.deadLetters.find(job => job.id === pendingJob.current);
+    if (job) dispatch({ type: 'job', job });
+    pendingJob.current = undefined;
+  }, [currentData, dispatch]);
   const refreshSnapshot = snapshot.refresh; const refreshHistory = history.refresh;
   useEffect(() => { if (revision) refreshSnapshot(); }, [revision, refreshSnapshot]);
   const instanceDefinition = currentData?.instance.processDefinitionId ?? historyData?.instance.processDefinitionId;
@@ -82,17 +91,17 @@ export function RuntimeMonitor({ summaryEnabled, setSummaryEnabled, requestTimeo
     else await bridge.saveFile({ name: `${name}.png`, format: 'png', content: await pngFromSvg(svg, format === 'png-white') });
   }, [diagram, ready]);
   const controls = useMemo<MonitorControls>(() => {
-    const value: MonitorControls = { navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId || !!desiredDefinition && summaryEnabled && diagramDisplayed,
+    const value: MonitorControls = { session: { jobId: selectedJob?.id, historyFilter, title: diagram?.definition.name || diagram?.definition.key || '', definitionId, instanceId, history: historyMode, selected, catalog: catalogState, catalogHidden, detailsHidden, auto }, navigation: { back: past.at(-1)?.destination, forward: future.at(-1)?.destination, move }, title: diagram?.definition.name || diagram?.definition.key || '', auto, busy, canRefresh: !!instanceId || !!desiredDefinition && summaryEnabled && diagramDisplayed,
       canCopy: !!diagram, canExport: !!diagram && ready, refresh: refreshState,
       // Поле тулбара получает новое checked в том же событии, без ожидания passive effect.
       setAuto: auto => { setAuto(auto); publish(id, { ...value, auto }); },
       copy: () => { if (diagram) copy(diagram); }, fit: () => viewer.current?.fit(), exportDiagram };
     return value;
-  }, [id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move, summaryEnabled, diagramDisplayed]);
+  }, [selectedJob, historyFilter, definitionId, historyMode, selected, catalogState, catalogHidden, detailsHidden, id, publish, diagram, auto, busy, refreshState, instanceId, desiredDefinition, ready, copy, exportDiagram, past, future, move, summaryEnabled, diagramDisplayed]);
   useEffect(() => { publish(id, controls); }, [id, publish, controls]);
   useEffect(() => () => publish(id, undefined), [id, publish]);
   return <div className="runtime-monitor">
-    <div className="runtime-body"><MonitorPanel side="left" hidden={catalogHidden} toggle={() => setCatalogHidden(value => !value)}><RuntimeCatalog connection={connection} revision={revision} selectedInstance={instanceId} selectedDefinition={definitionId} instancesOf={instancesOf}
+    <div className="runtime-body"><MonitorPanel side="left" hidden={catalogHidden} toggle={() => setCatalogHidden(value => !value)}><RuntimeCatalog initial={initial?.catalog} changed={setCatalogState} connection={connection} revision={revision} selectedInstance={instanceId} selectedDefinition={definitionId} instancesOf={instancesOf}
       definition={openDefinition} instance={openInstance} job={openJob} /></MonitorPanel>
       <div className="runtime-center">
         {snapshot.error && <p role="alert" className="runtime-error">{t('Текущее состояние')}: {text(snapshot.error)} {currentData && t('Последний снимок устарел.')}</p>}

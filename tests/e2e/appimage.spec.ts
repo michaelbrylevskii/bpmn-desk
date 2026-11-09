@@ -1,3 +1,5 @@
+import { openMonitor, newConnection } from './open-monitor';
+import { openExample } from './open-example';
 import { selectOption } from './select';
 import { createDiagram } from './create-diagram';
 import { test, expect, _electron as electron } from '@playwright/test';
@@ -60,7 +62,7 @@ test('извлечённая AppImage открывает демонстраци�
     await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
     await expect(page.getByLabel('Diagram XML')).not.toContainText('default="preparedFlow"');
     await page.getByTitle('Close flowable-showcase.bpmn20.xml', { exact: true }).click();
-    await page.getByRole('button', { name: 'camunda7-showcase', exact: true }).click();
+    await openExample(page, 'camunda7-showcase');
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
     await expect(page.locator('.djs-element[data-element-id="ArchiveOrder"]')).toBeVisible();
     await page.getByLabel('Find element').fill('ArchiveOrder');
@@ -83,12 +85,12 @@ test('AppImage читает историю через production IPC и связ
     app = await electron.launch({ executablePath: resolve(directory, 'squashfs-root/bpmn-desk'), chromiumSandbox: true,
       env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' }, timeout: 30000 });
     view = await packagedWindow(app); const { page } = view;
-    await selectOption(page.getByRole('combobox', { name: 'Select a connection', exact: true }), '@new');
+    await newConnection(page);
     await page.getByLabel('Connection name', { exact: true }).fill('History fixture');
     await page.getByLabel('REST API URL', { exact: true }).fill(api.baseUrl);
     await selectOption(page.getByRole('combobox', { name: 'Authentication', exact: true }), 'none');
     await page.getByRole('button', { name: 'Save connection', exact: true }).click();
-    await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await openMonitor(page);
     await page.locator('.runtime-catalog > .runtime-tabs').getByRole('button', { name: 'History', exact: true }).click();
     await page.locator('.catalog-filters > summary').click();
     await page.getByLabel('Instance ID', { exact: true }).fill('p1'); await page.getByRole('button', { name: 'Open instance', exact: true }).click();

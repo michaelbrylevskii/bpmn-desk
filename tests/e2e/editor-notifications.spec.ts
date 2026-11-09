@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { createDiagram } from './create-diagram';
 import { selectOption } from './select';
 import { test, expect } from '@playwright/test';
@@ -52,7 +53,7 @@ for (const kind of ['malformed', 'body-text'] as const) {
 
 test('ошибка XML расширений выделяется в обеих темах и не заменяет модель', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'flowable-showcase', exact: true }).click();
+  await openExample(page, 'flowable-showcase');
   await page.getByRole('textbox', { name: 'Find element' }).fill('prepareDocument');
   await page.locator('.outline-item').first().click();
   await page.getByText('Extension XML', { exact: true }).click();

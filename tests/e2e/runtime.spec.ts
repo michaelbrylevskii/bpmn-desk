@@ -1,3 +1,4 @@
+import { openMonitor } from './open-monitor';
 import { createDiagram } from './create-diagram';
 import { test, expect, _electron as electron } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -103,8 +104,8 @@ test('подключения: несколько профилей, выбор, �
     const page = await reopened.firstWindow(); await page.getByTitle('New tab (Ctrl+N)', { exact: true }).click();
     await page.getByLabel('Select a connection').click();
     await expect(page.getByRole('option')).toHaveCount(3); await page.keyboard.press('Escape');
-    await expect(page.getByRole('combobox', { name: 'Select a connection' })).toContainText('No credentials');
-    await page.getByRole('button', { name: 'Open monitor', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Open monitor', exact: true })).toBeEnabled();
+    await openMonitor(page);
     await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('401');
     await selectOption(page.getByLabel('Select a connection'), { label: 'Fixture engine' });
     await expect(page.locator('.runtime-catalog [role="alert"]')).toContainText('Enter the connection password or token');

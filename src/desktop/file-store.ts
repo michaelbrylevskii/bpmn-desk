@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, writeFile, rename, unlink, stat, realpath } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
-import type { OpenedFile, SavedFile } from '../shared/contracts';
+import type { FileStatus, OpenedFile, SavedFile } from '../shared/contracts';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const hash = (text: string) => createHash('sha256').update(text).digest('hex');
@@ -28,6 +28,49 @@ export class FileStore {
     const file = this.files.get(token);
     if (!file) throw new Error('Файл не был открыт в этой сессии. Используй «Сохранить как».');
     return file.path;
+  }
+
+
+  /** Привязка снимка сессии: основа остаётся прежней, диск проверяется отдельно. */
+  attach(path: string, originalXml: string): string {
+    const token = randomUUID();
+    this.files.set(token, { path, revision: hash(originalXml) });
+    return token;
+  }
+
+  async status(token: string): Promise<FileStatus> {
+    const file = this.files.get(token);
+    if (!file) return { token, state: 'unavailable', error: 'Файл не был открыт в этой сессии. Используй «Сохранить как».' };
+    try {
+      const info = await stat(file.path);
+      if (!info.isFile() || info.size > MAX_FILE_SIZE) throw new Error('Допустим файл размером до 20 МБ.');
+      const revision = hash(await readFile(file.path, 'utf8'));
+      return { token, state: revision === file.revision ? 'unchanged' : 'changed', revision };
+    } catch (error) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return { token, state: 'missing', revision: 'missing' };
+      return { token, state: 'unavailable', error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  async overwrite(content: string, token: string, expected: string): Promise<SavedFile> {
+    const status = await this.status(token);
+    if (status.state === 'unavailable' || status.revision !== expected) throw new Error('Файл снова изменился. Проверь его состояние и повтори сохранение.');
+    if (Buffer.byteLength(content) > MAX_FILE_SIZE) throw new Error('Файл превышает 20 МБ.');
+    const path = this.pathFor(token);
+    await atomicWrite(path, content);
+    const canonical = await realpath(path);
+    this.files.set(token, { path: canonical, revision: hash(content) });
+    return { token, path: canonical, name: basename(canonical) };
+  }
+
+  tokenFor(path: string): string | undefined {
+    return [...this.files].reverse().find(([, file]) => file.path === path)?.[0];
+  }
+
+  /** «Сохранить как» не меняет основу другой вкладки с тем же файлом. */
+  fork(token: string): string {
+    this.pathFor(token);
+    const copy = randomUUID(); this.files.set(copy, { ...this.files.get(token)! }); return copy;
   }
 
   async save(content: string, path: string, token?: string): Promise<SavedFile> {

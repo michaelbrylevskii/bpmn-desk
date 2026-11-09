@@ -1,3 +1,4 @@
+import { openExample } from './open-example';
 import { test, expect } from '@playwright/test';
 
 test('переключатель языка — цельная кнопка с одной рамкой и кликабельной иконкой', async ({ page }) => {
@@ -21,7 +22,7 @@ test('общий listbox поддерживает клавиатуру, кома
   const language = page.getByRole('combobox', { name: 'Language', exact: true });
   await language.focus(); await page.keyboard.press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter');
   await expect(page.getByRole('combobox', { name: 'Язык', exact: true })).toHaveAttribute('data-value', 'ru');
-  await page.getByRole('button', { name: 'flowable-boundary-events', exact: true }).click();
+  await openExample(page, 'flowable-boundary-events');
   await page.getByLabel('Найти элемент').fill('reviewCall'); await page.locator('.outline-item').first().click();
   const compensation = page.getByRole('combobox', { name: 'isForCompensation', exact: true });
   await compensation.focus(); await page.keyboard.press('ArrowDown'); await page.keyboard.press('End'); await page.keyboard.press('Enter');

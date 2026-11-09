@@ -18,6 +18,10 @@ export function useTheme() {
     media.addEventListener('change', changed);
     return () => media.removeEventListener('change', changed);
   }, []);
+  useEffect(() => {
+    const changed = (event: StorageEvent) => { if (event.key === STORAGE_KEY) setMode(event.newValue === 'light' || event.newValue === 'dark' ? event.newValue : 'auto'); };
+    window.addEventListener('storage', changed); return () => window.removeEventListener('storage', changed);
+  }, []);
   const dark = mode === 'dark' || (mode === 'auto' && systemDark);
   useLayoutEffect(() => { document.documentElement.dataset.theme = dark ? 'dark' : 'light'; }, [dark]);
   useEffect(() => { localStorage.setItem(STORAGE_KEY, mode); }, [mode]);
