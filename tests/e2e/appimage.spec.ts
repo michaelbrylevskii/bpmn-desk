@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import packageInfo from '../../package.json' with { type: 'json' };
 import { packagedWindow, type PackagedView } from './packaged-window';
 import { historyServer } from './history-server';
@@ -72,6 +72,14 @@ test('извлечённая AppImage открывает демонстраци�
     await expect(page.getByLabel('Тема внешней задачи', { exact: true })).toHaveValue('archive-order');
     await page.getByRole('button', { name: 'Диагностика', exact: false }).click();
     await expect(page.locator('.diagnostics-panel')).toContainText('Проблем не обнаружено');
+    // Повторный запуск поставляемого executable без файла открывает отдельное окно.
+    const opened = view.browser.contexts()[0]!.waitForEvent('page');
+    const child = spawn(resolve(directory, 'squashfs-root/bpmn-desk'), [], { env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' }, stdio: 'ignore' });
+    const second = await opened; await expect(second.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(await new Promise<number | null>(resolveExit => { if (child.exitCode !== null) resolveExit(child.exitCode); else child.once('exit', resolveExit); })).toBe(0);
+    expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
+    await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await expect(second.locator('.document-tab')).toHaveCount(0);
   } finally { await view?.browser.close(); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 

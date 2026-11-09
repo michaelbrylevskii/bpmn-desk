@@ -135,7 +135,7 @@ test('native создание выбирает профиль, PNG проход�
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
-test('CLI открывает файл и передаёт второй файл в существующее окно', async () => {
+test('повторный запуск с файлом использует активное окно, без файла открывает новое', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-cli-'));
   const first = resolve(directory, 'first.bpmn');
   const second = resolve(directory, 'second.bpmn');
@@ -157,7 +157,54 @@ test('CLI открывает файл и передаёт второй файл 
     });
     expect(exit).toBe(0);
     expect(await app.windows()).toHaveLength(1);
+    const opened = app.waitForEvent('window');
+    const empty = spawn(executable, ['.'], { cwd: process.cwd(), env, stdio: 'ignore' });
+    const secondWindow = await opened;
+    await expect(secondWindow.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(await new Promise<number | null>(resolveExit => { if (empty.exitCode !== null) resolveExit(empty.exitCode); else empty.once('exit', resolveExit); })).toBe(0);
+    await expect(page.locator('.document-tab')).toHaveCount(2);
+    await expect(secondWindow.locator('.document-tab')).toHaveCount(0);
+    expect(app.windows()).toHaveLength(2);
+    const secondNative = await app.browserWindow(secondWindow); const secondId = await secondNative.evaluate(window => window.id);
+    await secondWindow.bringToFront(); await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getFocusedWindow()?.id)).toBe(secondId);
+    const file = spawn(executable, ['.', first], { cwd: process.cwd(), env, stdio: 'ignore' });
+    await expect(secondWindow.locator('.document-tab')).toContainText('first.bpmn');
+    expect(await new Promise<number | null>(resolveExit => { if (file.exitCode !== null) resolveExit(file.exitCode); else file.once('exit', resolveExit); })).toBe(0);
+    expect(app.windows()).toHaveLength(2);
+    await expect(page.locator('.document-tab')).toHaveCount(2);
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
+test('новое окно из меню и Ctrl+Shift+N сохраняет работу исходного окна', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'desk-new-window-'));
+  const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: await russianProfile(directory), ELECTRON_RENDERER_URL: '' } });
+  try {
+    const first = await app.firstWindow(); await createDiagram(first, 'Flowable');
+    await first.locator('.outline-item').filter({ hasText: 'Process_1' }).click();
+    await first.getByLabel('Название', { exact: true }).fill('Работа в первом окне'); await first.getByLabel('Название', { exact: true }).blur();
+    const menu = await app.evaluate(({ Menu }) => {
+      const root = Menu.getApplicationMenu()!;
+      return { label: root.getMenuItemById('new-window')!.label, shortcut: root.getMenuItemById('new-window')!.accelerator,
+        exports: ['export', 'export-png', 'export-png-transparent', 'save-as'].map(id => root.getMenuItemById(id)!.label) };
+    });
+    expect(menu).toEqual({ label: 'Новое окно', shortcut: 'CmdOrCtrl+Shift+N', exports: ['Экспорт SVG…', 'Экспорт PNG с белым фоном…', 'Экспорт PNG с прозрачным фоном…', 'Сохранить как…'] });
+    const secondOpened = app.waitForEvent('window'); await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-window')!.click());
+    const second = await secondOpened; await expect(second.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(second.locator('.document-tab')).toHaveCount(0);
+    await expect(first.getByLabel('Название', { exact: true })).toHaveValue('Работа в первом окне');
+    await expect(first.locator('.dirty-dot')).toHaveCount(1);
+    await second.evaluate(() => window.desktop!.setLanguage('en'));
+    await expect.poll(() => app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-window')!.label)).toBe('New window');
+    const secondNative = await app.browserWindow(second); const secondId = await secondNative.evaluate(window => window.id);
+    await second.bringToFront(); await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getFocusedWindow()?.id)).toBe(secondId);
+    const thirdOpened = app.waitForEvent('window', { timeout: 7000 });
+    await secondNative.evaluate(window => window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'N', modifiers: ['control', 'shift'] }));
+    const third = await thirdOpened; await expect(third.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(app.windows()).toHaveLength(3); await expect(second.locator('.document-tab')).toHaveCount(0);
+    await expect(first.locator('.dirty-dot')).toHaveCount(1);
+    await third.close(); await expect.poll(() => app.windows().length).toBe(2);
+    await expect(first.locator('.dirty-dot')).toHaveCount(1);
+  } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
 test('Electron сохраняет копию и отклоняет внешнее изменение файла', async () => {

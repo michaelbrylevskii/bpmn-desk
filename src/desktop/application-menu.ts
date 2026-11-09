@@ -4,12 +4,13 @@ import { channels } from '../shared/contracts';
 import { translate, type Language, type MessageKey } from '../shared/i18n';
 
 /** Перестроение меню не пересоздаёт окно, модель или обработчики масштаба. */
-export function applicationMenu(window: BrowserWindow, language: Language, zoom: MenuItemConstructorOptions[], changeLanguage: (value: Language) => void): void {
+export function applicationMenu(window: BrowserWindow, language: Language, zoom: MenuItemConstructorOptions[], changeLanguage: (value: Language) => void, newWindow: () => void): void {
   const t = (key: MessageKey) => translate(language, key);
   const action = (name: string) => () => window.webContents.send(channels.action, name);
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: t('Файл'), submenu: [
       { id: 'new-diagram', label: t('Новая вкладка'), accelerator: 'CmdOrCtrl+N', click: action('new') },
+      { id: 'new-window', label: t('Новое окно'), accelerator: 'CmdOrCtrl+Shift+N', click: newWindow },
       { label: t('Открыть…'), accelerator: 'CmdOrCtrl+O', click: action('open') },
       { id: 'save', label: t('Сохранить'), accelerator: 'CmdOrCtrl+S', click: action('save') },
       { id: 'save-as', label: t('Сохранить как…'), accelerator: 'CmdOrCtrl+Shift+S', click: action('save-as') },

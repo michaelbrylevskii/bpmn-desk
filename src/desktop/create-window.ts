@@ -15,9 +15,10 @@ function updateFocusedMenu(fallback: BrowserWindow): void {
   const window = BrowserWindow.getFocusedWindow() ?? fallback; menus.get(window.id)?.();
 }
 
-export async function createWindow({ language, services, paths = [], initialSession = null, focused }: {
+export async function createWindow({ language, services, paths = [], initialSession = null, focused, newWindow }: {
   language: LanguageSettings; services: DocumentServices; paths?: string[]; initialSession?: string | null;
   focused: (window: BrowserWindow, open: (paths: string[]) => Promise<void>) => void;
+  newWindow: () => Promise<void>;
 }): Promise<BrowserWindow> {
   const t = (key: MessageKey) => translate(language.get(), key);
   const window = new BrowserWindow({
@@ -62,7 +63,7 @@ export async function createWindow({ language, services, paths = [], initialSess
   const installMenu = () => {
     applicationMenu(window, language.get(), zoomMenu(), value => {
       void changeLanguage(value).catch(error => { updateFocusedMenu(window); dialog.showErrorBox(t('Не удалось сохранить язык интерфейса.'), String(error)); });
-    }); updateApplicationMenu(menuState);
+    }, () => { void newWindow().catch(error => dialog.showErrorBox(t('Не удалось открыть окно.'), String(error))); }); updateApplicationMenu(menuState);
   };
   menus.set(window.id, installMenu); window.once('closed', () => { menus.delete(window.id); });
   const validSender = (event: IpcMainInvokeEvent) => {

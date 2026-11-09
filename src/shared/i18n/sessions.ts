@@ -1,4 +1,6 @@
 export const sessionMessages = {
+  'Новое окно': 'New window',
+  'Не удалось открыть окно.': 'Could not open a window.',
   'Экспорт SVG…': 'Export SVG…',
   'Сессии': 'Sessions',
   'Сессия {date}': 'Session {date}',
