@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { UpdateChecker, checkInterval, checkTimeout, releasesApi } from '../../src/desktop/updates/checker';
+import { UpdateChecker, checkInterval, checkTimeout, minimumCheckDuration, releasesApi } from '../../src/desktop/updates/checker';
 
 const release = (tag_name = 'v0.8.0', extra: Record<string, unknown> = {}) => Response.json({ tag_name, draft: false, prerelease: false, ...extra });
 let checker: UpdateChecker;
@@ -8,15 +8,42 @@ afterEach(() => { checker?.stop(); vi.useRealTimers(); });
 const flush = () => vi.advanceTimersByTimeAsync(0);
 
 describe('GitHub release checks', () => {
+  it('keeps feedback visible for one second and records the actual response time', async () => {
+    const completedAt = new Date().toISOString();
+    checker = new UpdateChecker('0.7.1', vi.fn<typeof fetch>().mockResolvedValue(release('v0.7.1')));
+    const pending = checker.checkNow(); await flush();
+    expect(checker.status()).toEqual({ availableVersion: null, checking: true, lastCheck: null });
+    await vi.advanceTimersByTimeAsync(minimumCheckDuration - 1);
+    expect(checker.status().checking).toBe(true); expect(checker.checkNow()).toBe(pending);
+    await vi.advanceTimersByTimeAsync(1); await pending;
+    expect(checker.status()).toEqual({ availableVersion: null, checking: false, lastCheck: { completedAt, result: 'success' } });
+  });
+
+  it('does not extend slow requests by an extra second', async () => {
+    checker = new UpdateChecker('0.7.1', () => new Promise(resolve => { setTimeout(() => resolve(release()), 1500); }));
+    const pending = checker.checkNow(); await vi.advanceTimersByTimeAsync(1499);
+    expect(checker.status().checking).toBe(true);
+    await vi.advanceTimersByTimeAsync(1); await pending;
+    expect(checker.status().checking).toBe(false);
+    expect(checker.status().lastCheck).toEqual({ completedAt: new Date().toISOString(), result: 'success' });
+  });
+
+  it('cancels the feedback timer during shutdown', async () => {
+    checker = new UpdateChecker('0.7.1', vi.fn<typeof fetch>().mockResolvedValue(release()));
+    const pending = checker.checkNow(); await flush(); expect(checker.status().checking).toBe(true);
+    checker.stop(); await pending;
+    expect(vi.getTimerCount()).toBe(0); expect(checker.status().lastCheck).toBeNull();
+  });
+
   it('supports a manual check without polling and shares the in-flight request', async () => {
     let complete: ((response: Response) => void) | undefined;
     const transport = vi.fn<typeof fetch>().mockImplementation(() => new Promise(resolve => { complete = resolve; }));
     checker = new UpdateChecker('0.7.1', transport); const changed = vi.fn(); checker.subscribe(changed);
     const first = checker.checkNow(); const second = checker.checkNow(); expect(second).toBe(first);
     await flush(); expect(transport).toHaveBeenCalledTimes(1); expect(checker.status().checking).toBe(true);
-    expect(changed).toHaveBeenCalledWith({ availableVersion: null, checking: true });
-    complete!(release()); await first;
-    expect(checker.status()).toEqual({ availableVersion: '0.8.0', checking: false });
+    expect(changed).toHaveBeenCalledWith(expect.objectContaining({ availableVersion: null, checking: true }));
+    complete!(release()); await vi.advanceTimersByTimeAsync(minimumCheckDuration); await first;
+    expect(checker.status()).toMatchObject({ availableVersion: '0.8.0', checking: false });
     await vi.advanceTimersByTimeAsync(checkInterval); expect(transport).toHaveBeenCalledTimes(1);
     checker.stop(); await checker.checkNow(); expect(transport).toHaveBeenCalledTimes(1);
   });
@@ -27,36 +54,38 @@ describe('GitHub release checks', () => {
     ['v00.8.0', null], ['0.8', null], ['not-a-version', null],
   ])('compares %s with the installed version numerically', async (tag, expected) => {
     checker = new UpdateChecker('0.7.1', vi.fn<typeof fetch>().mockResolvedValue(release(tag)));
-    checker.start(); await flush();
-    expect(checker.status()).toEqual({ availableVersion: expected, checking: false });
+    checker.start(); await vi.advanceTimersByTimeAsync(minimumCheckDuration);
+    expect(checker.status()).toMatchObject({ availableVersion: expected, checking: false });
   });
 
   it.each([{ draft: true }, { prerelease: true }, { tag_name: 12 }, { draft: null }, { prerelease: undefined }])('ignores invalid or unpublished metadata: %j', async extra => {
     checker = new UpdateChecker('0.7.1', vi.fn<typeof fetch>().mockResolvedValue(release('v0.8.0', extra)));
-    checker.start(); await flush(); expect(checker.status().availableVersion).toBeNull();
+    checker.start(); await vi.advanceTimersByTimeAsync(minimumCheckDuration); expect(checker.status().availableVersion).toBeNull();
+    expect(checker.status().lastCheck?.result).toBe('error');
   });
 
   it('checks at startup and every six hours once for all subscribers', async () => {
     const transport = vi.fn<typeof fetch>().mockImplementation(async () => release());
     checker = new UpdateChecker('0.7.1', transport);
     const firstWindow = vi.fn(); const unsubscribe = checker.subscribe(firstWindow);
-    checker.start(); checker.start(); await flush();
+    checker.start(); checker.start(); await vi.advanceTimersByTimeAsync(minimumCheckDuration);
     const secondWindow = vi.fn(); checker.subscribe(secondWindow);
-    expect(checker.status()).toEqual({ availableVersion: '0.8.0', checking: false });
+    expect(checker.status()).toMatchObject({ availableVersion: '0.8.0', checking: false });
     expect(transport).toHaveBeenCalledTimes(1);
     expect(transport).toHaveBeenCalledWith(releasesApi, expect.objectContaining({ credentials: 'omit', cache: 'no-store', redirect: 'error' }));
-    await vi.advanceTimersByTimeAsync(checkInterval - 1); expect(transport).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(checkInterval - minimumCheckDuration - 1); expect(transport).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(1); expect(transport).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(minimumCheckDuration);
     expect(firstWindow).toHaveBeenCalledTimes(4); expect(secondWindow).toHaveBeenCalledTimes(2);
     unsubscribe(); transport.mockImplementation(async () => release('v0.9.0'));
     await vi.advanceTimersByTimeAsync(checkInterval);
-    expect(firstWindow).toHaveBeenCalledTimes(4); expect(secondWindow).toHaveBeenCalledWith({ availableVersion: '0.9.0', checking: false });
+    expect(firstWindow).toHaveBeenCalledTimes(4); expect(secondWindow).toHaveBeenCalledWith(expect.objectContaining({ availableVersion: '0.9.0', checking: false }));
   });
 
   it.each(['network', 'rate-limit', 'server', 'json', 'large-body', 'large-header', 'missing'] as const)('silently clears a previous update after %s failure, then recovers', async failure => {
     const transport = vi.fn<typeof fetch>().mockImplementation(async () => release());
     checker = new UpdateChecker('0.7.1', transport); const changed = vi.fn(); checker.subscribe(changed);
-    checker.start(); await flush(); expect(checker.status().availableVersion).toBe('0.8.0');
+    checker.start(); await vi.advanceTimersByTimeAsync(minimumCheckDuration); expect(checker.status().availableVersion).toBe('0.8.0');
     transport.mockImplementation(async () => {
       if (failure === 'network') throw new Error('offline');
       if (failure === 'rate-limit') return new Response('', { status: 403 });
@@ -67,14 +96,15 @@ describe('GitHub release checks', () => {
       return new Response('', { status: 404 });
     });
     await vi.advanceTimersByTimeAsync(checkInterval);
-    expect(checker.status().availableVersion).toBeNull(); expect(changed).toHaveBeenLastCalledWith({ availableVersion: null, checking: false });
+    expect(checker.status().availableVersion).toBeNull(); expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ availableVersion: null, checking: false }));
+    expect(checker.status().lastCheck?.result).toBe('error');
     transport.mockImplementation(async () => release()); await vi.advanceTimersByTimeAsync(checkInterval);
     expect(checker.status().availableVersion).toBe('0.8.0');
   });
 
   it.each(['headers', 'body'] as const)('times out slow %s without blocking the next scheduled check', async stage => {
     const transport = vi.fn<typeof fetch>().mockImplementation(async () => release());
-    checker = new UpdateChecker('0.7.1', transport); checker.start(); await flush();
+    checker = new UpdateChecker('0.7.1', transport); checker.start(); await vi.advanceTimersByTimeAsync(minimumCheckDuration);
     transport.mockImplementation(async (_url, options) => {
       const signal = options!.signal!;
       if (stage === 'headers') return new Promise<Response>((_resolve, reject) => {
@@ -87,6 +117,7 @@ describe('GitHub release checks', () => {
     });
     await vi.advanceTimersByTimeAsync(checkInterval); expect(checker.status().availableVersion).toBe('0.8.0');
     await vi.advanceTimersByTimeAsync(checkTimeout); expect(checker.status().availableVersion).toBeNull();
+    expect(checker.status().lastCheck?.result).toBe('timeout');
     transport.mockImplementation(async () => release('v0.9.0'));
     await vi.advanceTimersByTimeAsync(checkInterval - checkTimeout); expect(checker.status().availableVersion).toBe('0.9.0');
   });
@@ -100,7 +131,7 @@ describe('GitHub release checks', () => {
     checker = new UpdateChecker('0.7.1', transport); const changed = vi.fn(); checker.subscribe(changed);
     checker.start(); await flush(); checker.stop(); await flush();
     expect(signal?.aborted).toBe(true); expect(changed).toHaveBeenCalledTimes(1);
-    expect(changed).toHaveBeenLastCalledWith({ availableVersion: null, checking: true });
+    expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ availableVersion: null, checking: true }));
     await vi.advanceTimersByTimeAsync(checkInterval * 2); expect(transport).toHaveBeenCalledTimes(1);
     expect(vi.getTimerCount()).toBe(0);
   });

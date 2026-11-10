@@ -1,9 +1,10 @@
-import type { UpdateStatus } from '../../shared/updates';
+import type { UpdateCheck, UpdateStatus } from '../../shared/updates';
 
 export const releasesApi = 'https://api.github.com/repos/michaelbrylevskii/bpmn-desk/releases/latest';
 export const releasesPage = 'https://github.com/michaelbrylevskii/bpmn-desk/releases/latest';
 export const checkInterval = 6 * 60 * 60 * 1000;
 export const checkTimeout = 10_000;
+export const minimumCheckDuration = 1_000;
 const responseLimit = 256 * 1024;
 type ReleaseFetch = (url: string, options: RequestInit) => Promise<Response>;
 
@@ -15,14 +16,23 @@ function versionParts(value: string): bigint[] | null {
 
 function newerRelease(value: unknown, current: string): string | null {
   if (!value || typeof value !== 'object' || !('tag_name' in value) || typeof value.tag_name !== 'string'
-    || !('draft' in value) || value.draft !== false || !('prerelease' in value) || value.prerelease !== false) return null;
+    || !('draft' in value) || value.draft !== false || !('prerelease' in value) || value.prerelease !== false) throw new Error('Invalid release metadata');
   const latest = versionParts(value.tag_name); const installed = versionParts(current);
-  if (!latest || !installed) return null;
+  if (!latest || !installed) throw new Error('Invalid release version');
   for (let index = 0; index < 3; index++) {
     if (latest[index]! > installed[index]!) return value.tag_name.replace(/^v/, '');
     if (latest[index]! < installed[index]!) return null;
   }
   return null;
+}
+
+function waitForFeedback(milliseconds: number, signal: AbortSignal): Promise<void> {
+  if (milliseconds <= 0 || signal.aborted) return Promise.resolve();
+  return new Promise(resolve => {
+    const finish = () => { clearTimeout(timer); signal.removeEventListener('abort', finish); resolve(); };
+    const timer = setTimeout(finish, milliseconds); timer.unref();
+    signal.addEventListener('abort', finish, { once: true });
+  });
 }
 
 async function releaseBody(response: Response): Promise<unknown> {
@@ -42,6 +52,7 @@ async function releaseBody(response: Response): Promise<unknown> {
 /** Один фоновый запрос на приложение; сетевые ошибки не попадают в уведомления UI. */
 export class UpdateChecker {
   private availableVersion: string | null = null;
+  private lastCheck: UpdateCheck | null = null;
   private readonly listeners = new Set<(status: UpdateStatus) => void>();
   private interval: ReturnType<typeof setInterval> | undefined;
   private request: AbortController | undefined;
@@ -51,7 +62,7 @@ export class UpdateChecker {
 
   constructor(private readonly currentVersion: string, private readonly fetchRelease: ReleaseFetch) {}
 
-  status(): UpdateStatus { return { availableVersion: this.availableVersion, checking: !!this.request }; }
+  status(): UpdateStatus { return { availableVersion: this.availableVersion, checking: !!this.request, lastCheck: this.lastCheck }; }
 
   private publish(): void { for (const listener of this.listeners) listener(this.status()); }
 
@@ -80,20 +91,28 @@ export class UpdateChecker {
   private async check(): Promise<void> {
     if (this.stopped) return;
     const controller = new AbortController(); this.request = controller;
+    const started = performance.now(); let timedOut = false;
     this.publish();
-    const timer = setTimeout(() => controller.abort(), checkTimeout); timer.unref();
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, checkTimeout); timer.unref();
     let availableVersion: string | null = null;
+    let result: UpdateCheck['result'] = 'error';
     try {
       const response = await this.fetchRelease(releasesApi, {
         signal: controller.signal, credentials: 'omit', redirect: 'error', cache: 'no-store',
         headers: { Accept: 'application/vnd.github+json', 'User-Agent': `BPMN-Desk/${this.currentVersion}` },
       });
       availableVersion = newerRelease(await releaseBody(response), this.currentVersion);
-      if (controller.signal.aborted) availableVersion = null;
+      result = timedOut ? 'timeout' : 'success';
+      if (timedOut) availableVersion = null;
     } catch { /* Офлайн, таймаут и ограничения GitHub оставляют обычный серый бейдж. */ }
-    finally { clearTimeout(timer); controller.abort(); this.request = undefined; }
+    finally { clearTimeout(timer); }
+    const completedAt = new Date().toISOString();
+    if (timedOut) result = 'timeout';
+    await waitForFeedback(minimumCheckDuration - (performance.now() - started), controller.signal);
+    controller.abort(); this.request = undefined;
     if (this.stopped) return;
     this.availableVersion = availableVersion;
+    this.lastCheck = { completedAt, result };
     this.publish();
   }
 }

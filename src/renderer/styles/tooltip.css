@@ -1,3 +1,8 @@
 .tooltip-anchor { display: inline-flex; min-width: 0; }
 .app-tooltip { position: fixed; z-index: 1200; width: max-content; max-width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow: auto; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; white-space: normal; }
 .app-tooltip p { margin: 4px 0; }.app-tooltip strong { font-weight: 600; }.app-tooltip code { font-size: 10px; color: var(--muted); }
+.version-tooltip { display: grid; gap: 7px; min-width: 220px; }
+.version-tooltip p { margin: 0; }
+.version-check-time { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 12px; color: var(--muted); font-size: 10px; }
+.version-check-time time { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.version-check-action { color: var(--muted); font-size: 10px; }

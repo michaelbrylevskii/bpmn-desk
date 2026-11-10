@@ -1,4 +1,13 @@
 export const interfaceMessages = {
+  'Обновления приложения': 'Application updates',
+  'Новых версий не обнаружено.': 'No new versions found.',
+  'Доступна версия {version}.': 'Version {version} is available.',
+  'Не удалось проверить обновления.': 'Could not check for updates.',
+  'Время ожидания проверки истекло.': 'The update check timed out.',
+  'Последняя проверка': 'Last checked',
+  'Нажмите для проверки.': 'Click to check.',
+  'Нажмите для повторной проверки.': 'Click to check again.',
+  'Нажмите, чтобы открыть релиз на GitHub.': 'Click to open the release on GitHub.',
   'О приложении': 'About',
   'Автор': 'Author',
   'Редактор BPMN и монитор процессов': 'BPMN editor and process monitor',

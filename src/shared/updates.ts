@@ -1,4 +1,5 @@
-export interface UpdateStatus { availableVersion: string | null; checking: boolean }
+export interface UpdateCheck { completedAt: string; result: 'success' | 'error' | 'timeout' }
+export interface UpdateStatus { availableVersion: string | null; checking: boolean; lastCheck: UpdateCheck | null }
 
 export interface UpdatesBridge {
   status(): Promise<UpdateStatus>;
