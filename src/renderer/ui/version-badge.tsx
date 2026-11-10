@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { version } from '../../../package.json';
+import { version as installedVersion } from '../../../package.json';
 import type { UpdatesBridge } from '../../shared/updates';
 import { useI18n } from '../i18n/provider';
 import { Tooltip } from './tooltip';
 
 declare global { interface Window { updates?: UpdatesBridge } }
+
+const versionOverride = import.meta.env.DEV ? import.meta.env.VITE_BPMN_DESK_DEV_VERSION : undefined;
+const version = typeof versionOverride === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(versionOverride) ? versionOverride : installedVersion;
 
 export function VersionBadge() {
   const { t } = useI18n(); const [available, setAvailable] = useState<string | null>(null);

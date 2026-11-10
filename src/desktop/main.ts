@@ -42,7 +42,9 @@ async function start(): Promise<void> {
     return net.fetch(pathToFileURL(path).toString());
   });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-  const updates = new UpdateChecker(app.getVersion(), (url, options) => net.fetch(url, options));
+  const versionOverride = process.env.VITE_BPMN_DESK_DEV_VERSION;
+  const developmentVersion = !app.isPackaged && versionOverride && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(versionOverride) ? versionOverride : undefined;
+  const updates = new UpdateChecker(developmentVersion ?? app.getVersion(), (url, options) => net.fetch(url, options));
   app.once('will-quit', () => updates.stop());
   const sessions = new SessionStore(app.getPath('userData')); const recent = new RecentFiles(app.getPath('userData'));
   await sessions.load(); await recent.load();
@@ -63,8 +65,8 @@ async function start(): Promise<void> {
   });
   openEmptyWindow = async () => { await openWindow([]); };
   await openWindow(pending.splice(0));
-  // В разработке и тестах не обращаемся к публичному API; интерфейс уже загружен.
-  if (app.isPackaged) updates.start();
+  // В разработке публичная проверка включается только явной подменой версии.
+  if (app.isPackaged || developmentVersion) updates.start();
   while (pendingWindows > 0) { pendingWindows--; await openEmptyWindow(); }
 }
 if (ownsInstance) app.whenReady().then(start).catch(error => { console.error(error); app.quit(); });
