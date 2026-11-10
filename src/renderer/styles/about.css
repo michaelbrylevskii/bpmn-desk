@@ -1,0 +1,25 @@
+.about-dialog { width: min(440px, calc(100vw - 40px)); max-height: calc(100vh - 60px); padding: 0; overflow: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.about-dialog::backdrop { background: #0008; }
+.about-dialog .panel-heading { justify-content: space-between; }
+.about-dialog h2 { margin: 0; font-size: 15px; }
+.about-content { padding: 24px; }
+.about-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.about-brand .brand-icon { width: 46px; height: 46px; border-radius: 12px; }
+.about-brand strong { display: block; font-size: 23px; letter-spacing: -.5px; }
+.about-brand small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.about-description { margin-bottom: 22px; font-size: 13px; line-height: 1.5; }
+.about-author { display: flex; align-items: baseline; gap: 12px; font-size: 12px; }
+.about-author > span { color: var(--muted); }
+.about-dialog a { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; }
+.about-dialog a:hover { text-decoration: underline; }
+.about-dialog a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.about-credit { margin: 8px 0 16px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.about-repository { font-size: 12px; }
+.about-technical { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+.about-technical h3 { margin: 0 0 12px; color: var(--muted); font-size: 11px; font-weight: 500; }
+.about-technical dl { display: grid; grid-template-columns: 1fr auto; gap: 7px 16px; margin: 0; font-size: 11px; }
+.about-technical dt { color: var(--muted); }
+.about-technical dd { margin: 0; font-variant-numeric: tabular-nums; }
+.about-error { margin: 16px 0 0; color: var(--danger); font-size: 12px; }
+button.brand-icon { padding: 0; flex-shrink: 0; }
+button.brand-icon:hover { border-color: var(--accent); }

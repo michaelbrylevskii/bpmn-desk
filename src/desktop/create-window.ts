@@ -11,6 +11,7 @@ import { registerRuntimeIpc } from './runtime/ipc';
 import { windowIpc } from './window-ipc';
 import { registerUpdateIpc } from './updates/ipc';
 import type { UpdateChecker } from './updates/checker';
+import { registerApplicationInfo } from './application-info';
 
 const menus = new Map<number, () => void>();
 function updateFocusedMenu(fallback: BrowserWindow): void {
@@ -80,7 +81,7 @@ export async function createWindow({ language, services, updates, paths = [], in
     if (!state || typeof state !== 'object' || !Object.keys(menuState).every(key => key in state && typeof Reflect.get(state, key) === 'boolean')) return;
     menuState = state as MenuState; if (window.isFocused()) updateApplicationMenu(menuState);
   });
-  installMenu(); registerRuntimeIpc(window, services.changed); registerUpdateIpc(window, updates);
+  installMenu(); registerRuntimeIpc(window, services.changed); registerUpdateIpc(window, updates); registerApplicationInfo(window);
   const open = await registerIpc(window, value => { dirty = value; }, paths, completeClose, value => translateText(language.get(), value), services, initialSession);
   window.on('focus', () => { installMenu(); focused(window, open); });
   focused(window, open);

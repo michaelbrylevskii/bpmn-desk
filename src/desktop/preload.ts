@@ -3,6 +3,7 @@ import { channels, type DesktopBridge } from '../shared/contracts';
 import type { Language } from '../shared/i18n';
 import { runtimeBridge } from './runtime/preload';
 import { updateChannels, type UpdatesBridge, type UpdateStatus } from '../shared/updates';
+import { applicationChannels, type ApplicationBridge } from '../shared/application-info';
 const bridge: DesktopBridge = {
   initialSession: () => ipcRenderer.invoke(channels.initialSession),
   onWorkspaceChanged: callback => {
@@ -63,3 +64,8 @@ const updates: UpdatesBridge = {
   },
 };
 contextBridge.exposeInMainWorld('updates', updates);
+const application: ApplicationBridge = {
+  info: () => ipcRenderer.invoke(applicationChannels.info),
+  openLink: link => ipcRenderer.invoke(applicationChannels.openLink, link),
+};
+contextBridge.exposeInMainWorld('application', application);

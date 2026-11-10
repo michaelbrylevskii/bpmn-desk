@@ -14,6 +14,28 @@ async function russianProfile(directory: string): Promise<string> {
   return directory;
 }
 
+test('окно о приложении читает настоящие версии и открывает только разрешённые ссылки', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-about-'));
+  const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
+  try {
+    const page = await app.firstWindow();
+    const actual = await app.evaluate(({ app }) => ({ version: app.getVersion(), electron: process.versions.electron, chromium: process.versions.chrome, node: process.versions.node, platform: process.platform, arch: process.arch }));
+    expect(await page.evaluate(() => window.application!.info())).toEqual(actual);
+    await app.evaluate(({ shell }) => { shell.openExternal = async url => { process.env.BPMN_DESK_ABOUT_LINK_TEST = url; }; });
+    await page.getByRole('button', { name: 'About', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'About', exact: true });
+    await expect(dialog).toContainText(`Version ${actual.version}`);
+    await dialog.getByRole('link', { name: 'Project on GitHub', exact: true }).click();
+    expect(await app.evaluate(() => process.env.BPMN_DESK_ABOUT_LINK_TEST)).toBe('https://github.com/michaelbrylevskii/bpmn-desk');
+    const rejected = await page.evaluate(async () => {
+      try { await Reflect.apply(window.application!.openLink, undefined, ['https://invalid.example/']); return false; } catch { return true; }
+    });
+    expect(rejected).toBe(true);
+    expect(await app.evaluate(() => process.env.BPMN_DESK_ABOUT_LINK_TEST)).toBe('https://github.com/michaelbrylevskii/bpmn-desk');
+    await page.keyboard.press('Escape'); await expect(dialog).toHaveCount(0);
+  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
 test('фоновая проверка не блокирует окно, синхронизирует бейджи и открывает только страницу релизов', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-updates-'));
   const app = await electron.launch({ args: ['tests/e2e/update-main.mjs'], chromiumSandbox: true,
