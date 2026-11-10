@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld('desktop', bridge);
 contextBridge.exposeInMainWorld('runtime', runtimeBridge((channel, ...args) => ipcRenderer.invoke(channel, ...args)));
 const updates: UpdatesBridge = {
   status: () => ipcRenderer.invoke(updateChannels.status),
+  check: () => ipcRenderer.invoke(updateChannels.check),
   openRelease: () => ipcRenderer.invoke(updateChannels.openRelease),
   onChanged: callback => {
     const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => callback(status);

@@ -66,7 +66,7 @@
 .connection-form { display: grid; gap: 14px; }.connection-fields > label:not(.runtime-check) { display: grid; gap: 7px; font-size: 12px; }.runtime-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin: -7px 0 0; }.connection-form > button { justify-self: start; }
 .runtime-actions { display: flex; gap: 8px; padding-top: 14px; }.runtime-actions .danger { color: var(--danger); }.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .spinning { animation: runtime-spin 1s linear infinite; }@keyframes runtime-spin { to { transform: rotate(360deg); } }
-@media (max-width: 1200px) { .runtime-catalog { width: 245px; }.runtime-details { width: 330px; }.toolbar .brand strong, .toolbar .version { display: none; } }
+@media (max-width: 1200px) { .runtime-catalog { width: 245px; }.runtime-details { width: 330px; }.toolbar .brand strong { display: none; } }
 @media (prefers-reduced-motion: reduce) { .spinning { animation: none; } }
 .runtime-toolbar-tools { display: flex; align-items: center; gap: 5px; min-width: 0; }
 .connection-picker { width: clamp(160px, 17vw, 240px); }.runtime-toolbar-tools .button { white-space: nowrap; }
@@ -94,7 +94,7 @@
 .connection-fields { display: grid; gap: 14px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .connection-form .runtime-actions { align-items: center; flex-wrap: wrap; }.connection-delete { margin-left: auto; }
 .connections-dialog [role="status"] { color: var(--green); font-size: 12px; padding: 10px 0; }
-@media (max-width: 1300px) { .runtime-toolbar-tools > .button { font-size: 0; gap: 0; padding: 8px; }.runtime-toolbar-tools > .button svg { width: 18px; height: 18px; }.toolbar:has(.runtime-toolbar-tools) { padding: 0 12px; gap: 3px; }.toolbar:has(.runtime-toolbar-tools) .brand { margin-right: 2px; }.toolbar:has(.runtime-toolbar-tools) .brand strong, .toolbar:has(.runtime-toolbar-tools) .version { display: none; } }
+@media (max-width: 1300px) { .runtime-toolbar-tools > .button { font-size: 0; gap: 0; padding: 8px; }.runtime-toolbar-tools > .button svg { width: 18px; height: 18px; }.toolbar:has(.runtime-toolbar-tools) { padding: 0 12px; gap: 3px; }.toolbar:has(.runtime-toolbar-tools) .brand { margin-right: 2px; }.toolbar:has(.runtime-toolbar-tools) .brand strong { display: none; } }
 
 .runtime-job-alert { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0; text-align: left; }.runtime-job-alert span { flex: 1; }.runtime-job-alert svg { flex-shrink: 0; }.runtime-job-alert:hover { border-color: var(--danger); }
 .runtime-summary-status { position: relative; }

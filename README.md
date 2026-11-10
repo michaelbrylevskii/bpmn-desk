@@ -52,7 +52,7 @@ chmod +x BPMN-Desk-*.AppImage
 
 Without FUSE, use `--appimage-extract-and-run` as the first argument. Windows executables are unsigned; macOS is not available yet.
 
-The app checks GitHub for updates at startup and every six hours. An orange version badge opens the latest release; installation is manual.
+The app checks GitHub for updates at startup and every six hours. Click the version badge to check manually or open an available release; installation is manual.
 
 ## Scope
 

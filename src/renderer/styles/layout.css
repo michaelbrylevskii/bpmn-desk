@@ -3,14 +3,17 @@
 .brand { display: flex; align-items: center; gap: 10px; margin-right: 14px; }
 .brand-icon { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #5f7cbb; border-radius: 9px; color: #a1baff; background: #263759; }
 .brand strong { font-size: 17px; letter-spacing: -.5px; }.brand strong span { font-weight: 400; margin-left: 4px; color: var(--muted); }
-.version { align-self: flex-start; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; font-size: 9px; padding: 2px 4px; margin-top: 4px; }
-.version-link { align-self: flex-start; margin-top: 4px; }
-.version-link .version { margin-top: 0; }
-.version.update-available { color: #9a4a0a; border-color: #d58b3a; background: #fff3df; }
-.toolbar .brand .version.update-available { display: inline-block; }
-.version.update-available:hover { background: #ffe5ba; }
-:root[data-theme="dark"] .version.update-available { color: #ffc77c; border-color: #bb833e; background: #3b2c1c; }
-:root[data-theme="dark"] .version.update-available:hover { background: #523a22; }
+.version { display: inline-flex; align-items: center; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; font-size: 9px; font-weight: 400; line-height: 1.4; padding: 2px 4px; user-select: none; }
+.version:disabled { opacity: 1; }
+.version-link { display: flex; align-self: flex-start; margin-top: 4px; line-height: 0; }
+.version:not(.update-available):hover:not(:disabled) { border-color: var(--muted); background-color: var(--surface-raised); }
+.version[aria-busy="true"] { cursor: progress; background-image: linear-gradient(105deg, transparent 35%, color-mix(in srgb, currentColor 22%, transparent) 50%, transparent 65%); background-size: 250% 100%; animation: version-checking 1.4s ease-in-out infinite; }
+@keyframes version-checking { from { background-position: 120% 0; } to { background-position: -20% 0; } }
+@media (prefers-reduced-motion: reduce) { .version[aria-busy="true"] { animation: none; background-position: 50% 0; } }
+.version.update-available { color: #9a4a0a; border-color: #d58b3a; background-color: #fff3df; }
+.version.update-available:hover { background-color: #ffe5ba; }
+:root[data-theme="dark"] .version.update-available { color: #ffc77c; border-color: #bb833e; background-color: #3b2c1c; }
+:root[data-theme="dark"] .version.update-available:hover { background-color: #523a22; }
 .toolbar-divider { height: 23px; border-left: 1px solid var(--border); margin: 0 8px; }
 .toolbar-spacer, .status-spacer, .bottom-spacer { flex: 1; }
 .document-tabs { height: 40px; display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg); flex-shrink: 0; }
@@ -49,7 +52,7 @@
 .toast-details { border: 0; margin-top: 8px; }.toast-details > summary { padding: 3px 0; font-size: 12px; font-weight: 450; color: var(--muted); }.toast-details > pre { margin: 7px 0 0; padding: 8px 10px; max-height: 180px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; background: var(--input); border: 1px solid var(--border); border-radius: 6px; }
 .drop-overlay { position: absolute; inset: 12px; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--bg) 94%, transparent); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--accent); pointer-events: none; }.drop-overlay h2 { margin: 22px 0 8px; }
 
-@media (max-width: 900px) { .brand { margin-right: 3px; }.brand strong, .version { display: none; }.toolbar-divider { margin: 0 3px; }.toolbar .button { font-size: 11px; gap: 4px; padding: 8px; }.canvas-heading { gap: 5px; }.canvas-heading > span:first-child { min-width: 0; overflow: hidden; white-space: nowrap; }.statusbar { gap: 8px; }.statusbar > span:nth-child(2) { max-width: 120px; overflow: hidden; white-space: nowrap; } }
+@media (max-width: 900px) { .brand { margin-right: 3px; }.brand strong { display: none; }.toolbar-divider { margin: 0 3px; }.toolbar .button { font-size: 11px; gap: 4px; padding: 8px; }.canvas-heading { gap: 5px; }.canvas-heading > span:first-child { min-width: 0; overflow: hidden; white-space: nowrap; }.statusbar { gap: 8px; }.statusbar > span:nth-child(2) { max-width: 120px; overflow: hidden; white-space: nowrap; } }
 
 .engine-badge { border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; color: var(--accent); white-space: nowrap; }
 .export-menu { position: relative; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 7px; }

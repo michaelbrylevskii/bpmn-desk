@@ -34,6 +34,15 @@ test('фоновая проверка не блокирует окно, синх
     await expect.poll(() => app.evaluate(() => Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'requests') as number)).toBe(1);
     await app.evaluate(() => {
       const complete: unknown = Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'complete');
+      if (typeof complete !== 'function') throw new Error('Release request missing'); complete('v0.0.0');
+    });
+    for (const window of [page, other]) await expect(window.locator('.version')).toBeEnabled();
+    await page.locator('.version').click();
+    for (const window of [page, other]) await expect(window.locator('.version')).toHaveAttribute('aria-busy', 'true');
+    await other.evaluate(() => { void window.updates!.check(); });
+    expect(await app.evaluate(() => Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'requests') as number)).toBe(2);
+    await app.evaluate(() => {
+      const complete: unknown = Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'complete');
       if (typeof complete !== 'function') throw new Error('Release request missing'); complete();
     });
     for (const window of [page, other]) await expect(window.locator('.update-available')).toHaveAccessibleName('Version 99.0.0 is available. Open the release on GitHub.');

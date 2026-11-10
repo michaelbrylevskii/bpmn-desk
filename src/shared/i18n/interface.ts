@@ -1,4 +1,6 @@
 export const interfaceMessages = {
+  'Проверить обновления': 'Check for updates',
+  'Проверка обновлений…': 'Checking for updates…',
   'Доступна версия {version}. Открыть релиз на GitHub.': 'Version {version} is available. Open the release on GitHub.',
   'Файл': 'File',
   'Правка': 'Edit',

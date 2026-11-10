@@ -13,7 +13,7 @@ net.fetch = (url, options) => {
   if (url !== 'https://api.github.com/repos/michaelbrylevskii/bpmn-desk/releases/latest') return originalFetch(url, options);
   state.requests++;
   return new Promise(resolve => {
-    state.complete = () => resolve(globalThis.Response.json({ tag_name: 'v99.0.0', draft: false, prerelease: false, html_url: 'https://invalid.example/' }));
+    state.complete = (tag = 'v99.0.0') => resolve(globalThis.Response.json({ tag_name: tag, draft: false, prerelease: false, html_url: 'https://invalid.example/' }));
   });
 };
 shell.openExternal = async url => { state.opened.push(url); };

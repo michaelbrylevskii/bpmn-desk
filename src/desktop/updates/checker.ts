@@ -45,11 +45,15 @@ export class UpdateChecker {
   private readonly listeners = new Set<(status: UpdateStatus) => void>();
   private interval: ReturnType<typeof setInterval> | undefined;
   private request: AbortController | undefined;
+  private pending: Promise<void> | undefined;
   private running = false;
+  private stopped = false;
 
   constructor(private readonly currentVersion: string, private readonly fetchRelease: ReleaseFetch) {}
 
-  status(): UpdateStatus { return { availableVersion: this.availableVersion }; }
+  status(): UpdateStatus { return { availableVersion: this.availableVersion, checking: !!this.request }; }
+
+  private publish(): void { for (const listener of this.listeners) listener(this.status()); }
 
   subscribe(listener: (status: UpdateStatus) => void): () => void {
     this.listeners.add(listener); return () => { this.listeners.delete(listener); };
@@ -57,19 +61,26 @@ export class UpdateChecker {
 
   start(): void {
     if (this.running) return;
-    this.running = true;
-    this.interval = setInterval(() => { void this.check(); }, checkInterval); this.interval.unref();
-    void this.check();
+    this.running = true; this.stopped = false;
+    this.interval = setInterval(() => { void this.checkNow(); }, checkInterval); this.interval.unref();
+    void this.checkNow();
   }
 
   stop(): void {
-    this.running = false; clearInterval(this.interval); this.interval = undefined;
+    this.running = false; this.stopped = true; clearInterval(this.interval); this.interval = undefined;
     this.request?.abort();
   }
 
+  checkNow(): Promise<void> {
+    if (this.stopped) return Promise.resolve();
+    this.pending ??= Promise.resolve().then(() => this.check()).finally(() => { this.pending = undefined; });
+    return this.pending;
+  }
+
   private async check(): Promise<void> {
-    if (this.request) return;
+    if (this.stopped) return;
     const controller = new AbortController(); this.request = controller;
+    this.publish();
     const timer = setTimeout(() => controller.abort(), checkTimeout); timer.unref();
     let availableVersion: string | null = null;
     try {
@@ -81,8 +92,8 @@ export class UpdateChecker {
       if (controller.signal.aborted) availableVersion = null;
     } catch { /* Офлайн, таймаут и ограничения GitHub оставляют обычный серый бейдж. */ }
     finally { clearTimeout(timer); controller.abort(); this.request = undefined; }
-    if (!this.running || availableVersion === this.availableVersion) return;
+    if (this.stopped) return;
     this.availableVersion = availableVersion;
-    for (const listener of this.listeners) listener(this.status());
+    this.publish();
   }
 }
