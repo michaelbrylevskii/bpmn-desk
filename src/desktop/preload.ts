@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { channels, type DesktopBridge } from '../shared/contracts';
 import type { Language } from '../shared/i18n';
 import { runtimeBridge } from './runtime/preload';
+import { updateChannels, type UpdatesBridge, type UpdateStatus } from '../shared/updates';
 const bridge: DesktopBridge = {
   initialSession: () => ipcRenderer.invoke(channels.initialSession),
   onWorkspaceChanged: callback => {
@@ -51,3 +52,13 @@ const bridge: DesktopBridge = {
 };
 contextBridge.exposeInMainWorld('desktop', bridge);
 contextBridge.exposeInMainWorld('runtime', runtimeBridge((channel, ...args) => ipcRenderer.invoke(channel, ...args)));
+const updates: UpdatesBridge = {
+  status: () => ipcRenderer.invoke(updateChannels.status),
+  openRelease: () => ipcRenderer.invoke(updateChannels.openRelease),
+  onChanged: callback => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => callback(status);
+    ipcRenderer.on(updateChannels.changed, listener);
+    return () => { ipcRenderer.removeListener(updateChannels.changed, listener); };
+  },
+};
+contextBridge.exposeInMainWorld('updates', updates);

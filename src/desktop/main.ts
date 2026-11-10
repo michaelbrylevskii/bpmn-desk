@@ -9,6 +9,7 @@ import { RecentFiles } from './recent-files';
 import { SessionStore } from './session-store';
 import { createWindow } from './create-window';
 import type { DocumentServices } from './ipc';
+import { UpdateChecker } from './updates/checker';
 protocol.registerSchemesAsPrivileged([{ scheme: 'bpmn-desk', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 if (process.env.BPMN_DESK_USER_DATA) app.setPath('userData', resolve(process.env.BPMN_DESK_USER_DATA));
 const fileArguments = (args: string[]) => args.filter(arg => /\.(bpmn|bpmn20\.xml|xml)$/i.test(arg)).map(arg => arg.startsWith('file://') ? fileURLToPath(arg) : resolve(arg));
@@ -41,6 +42,8 @@ async function start(): Promise<void> {
     return net.fetch(pathToFileURL(path).toString());
   });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  const updates = new UpdateChecker(app.getVersion(), (url, options) => net.fetch(url, options));
+  app.once('will-quit', () => updates.stop());
   const sessions = new SessionStore(app.getPath('userData')); const recent = new RecentFiles(app.getPath('userData'));
   await sessions.load(); await recent.load();
   const services: DocumentServices = { sessions, recent, owners: new Map(),
@@ -48,7 +51,7 @@ async function start(): Promise<void> {
     changed: (kind, source) => { for (const window of BrowserWindow.getAllWindows()) if (window !== source) window.webContents.send(channels.workspaceChanged, kind); },
   };
   const openers = new Map<number, (paths: string[]) => Promise<void>>();
-  const openWindow = (paths: string[], initialSession?: string): Promise<BrowserWindow> => createWindow({ language, services, paths, initialSession,
+  const openWindow = (paths: string[], initialSession?: string): Promise<BrowserWindow> => createWindow({ language, services, updates, paths, initialSession,
     newWindow: async () => { await openWindow([]); },
     focused: (window, open) => {
       if (!openers.has(window.id)) {
@@ -60,6 +63,8 @@ async function start(): Promise<void> {
   });
   openEmptyWindow = async () => { await openWindow([]); };
   await openWindow(pending.splice(0));
+  // В разработке и тестах не обращаемся к публичному API; интерфейс уже загружен.
+  if (app.isPackaged) updates.start();
   while (pendingWindows > 0) { pendingWindows--; await openEmptyWindow(); }
 }
 if (ownsInstance) app.whenReady().then(start).catch(error => { console.error(error); app.quit(); });

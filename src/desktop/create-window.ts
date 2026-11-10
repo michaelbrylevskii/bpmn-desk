@@ -9,14 +9,16 @@ import { registerIpc, type DocumentServices } from './ipc';
 import type { LanguageSettings } from './language-settings';
 import { registerRuntimeIpc } from './runtime/ipc';
 import { windowIpc } from './window-ipc';
+import { registerUpdateIpc } from './updates/ipc';
+import type { UpdateChecker } from './updates/checker';
 
 const menus = new Map<number, () => void>();
 function updateFocusedMenu(fallback: BrowserWindow): void {
   const window = BrowserWindow.getFocusedWindow() ?? fallback; menus.get(window.id)?.();
 }
 
-export async function createWindow({ language, services, paths = [], initialSession = null, focused, newWindow }: {
-  language: LanguageSettings; services: DocumentServices; paths?: string[]; initialSession?: string | null;
+export async function createWindow({ language, services, updates, paths = [], initialSession = null, focused, newWindow }: {
+  language: LanguageSettings; services: DocumentServices; updates: UpdateChecker; paths?: string[]; initialSession?: string | null;
   focused: (window: BrowserWindow, open: (paths: string[]) => Promise<void>) => void;
   newWindow: () => Promise<void>;
 }): Promise<BrowserWindow> {
@@ -78,7 +80,7 @@ export async function createWindow({ language, services, paths = [], initialSess
     if (!state || typeof state !== 'object' || !Object.keys(menuState).every(key => key in state && typeof Reflect.get(state, key) === 'boolean')) return;
     menuState = state as MenuState; if (window.isFocused()) updateApplicationMenu(menuState);
   });
-  installMenu(); registerRuntimeIpc(window, services.changed);
+  installMenu(); registerRuntimeIpc(window, services.changed); registerUpdateIpc(window, updates);
   const open = await registerIpc(window, value => { dirty = value; }, paths, completeClose, value => translateText(language.get(), value), services, initialSession);
   window.on('focus', () => { installMenu(); focused(window, open); });
   focused(window, open);

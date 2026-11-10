@@ -6,12 +6,43 @@ import { resolve } from 'node:path';
 import { mkdir, mkdtemp, rm, copyFile, readFile, writeFile, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
+import { packagedWindow } from './packaged-window';
 
 async function russianProfile(directory: string): Promise<string> {
   await mkdir(directory, { recursive: true });
   await writeFile(resolve(directory, 'language.json'), '"ru"');
   return directory;
 }
+
+test('фоновая проверка не блокирует окно, синхронизирует бейджи и открывает только страницу релизов', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-updates-'));
+  const app = await electron.launch({ args: ['tests/e2e/update-main.mjs'], chromiumSandbox: true,
+    env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
+  let browser: import('@playwright/test').Browser | undefined;
+  try {
+    const view = await packagedWindow(app); const page = view.page; browser = view.browser;
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.locator('.version')).not.toHaveClass(/update-available/);
+    expect(await page.evaluate(() => !!window.updates)).toBe(true);
+    const next = page.context().waitForEvent('page');
+    await app.evaluate(({ Menu }) => {
+      const file = Menu.getApplicationMenu()?.items[0];
+      const action = file?.submenu?.items.find(item => item.id === 'new-window');
+      if (!action) throw new Error('New window action missing'); action.click();
+    });
+    const other = await next; await expect(other.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect.poll(() => app.evaluate(() => Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'requests') as number)).toBe(1);
+    await app.evaluate(() => {
+      const complete: unknown = Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'complete');
+      if (typeof complete !== 'function') throw new Error('Release request missing'); complete();
+    });
+    for (const window of [page, other]) await expect(window.locator('.update-available')).toHaveAccessibleName('Version 99.0.0 is available. Open the release on GitHub.');
+    await other.locator('.update-available').click();
+    await expect.poll(() => app.evaluate(() => Reflect.get(Reflect.get(globalThis, 'releaseFixture'), 'opened') as string[]))
+      .toEqual(['https://github.com/michaelbrylevskii/bpmn-desk/releases/latest']);
+    await page.screenshot({ path: 'test-results/update-badge.png' });
+  } finally { await browser?.close(); await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
 
 test('Electron запускает packaged renderer, preload и встроенные примеры', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-e2e-'));

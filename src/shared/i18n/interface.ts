@@ -1,4 +1,5 @@
 export const interfaceMessages = {
+  'Доступна версия {version}. Открыть релиз на GitHub.': 'Version {version} is available. Open the release on GitHub.',
   'Файл': 'File',
   'Правка': 'Edit',
   'Вид': 'View',
