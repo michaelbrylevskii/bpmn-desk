@@ -45,7 +45,7 @@ for (const kind of ['malformed', 'body-text'] as const) {
     await page.getByRole('button', { name: 'Отменить правки XML', exact: true }).click();
     await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
     await expect(page.getByLabel('Название', { exact: true })).toHaveValue('New process');
-    await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+    await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
     await alert.getByTitle('Закрыть уведомление', { exact: true }).click();
     await expect(alert).toHaveCount(0);
   });

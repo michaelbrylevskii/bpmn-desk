@@ -14,6 +14,36 @@ async function russianProfile(directory: string): Promise<string> {
   return directory;
 }
 
+test('команды сохранения, закрытия и дублирования учитывают ввод в поле без предварительной потери фокуса', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'desk-pending-input-')); const path = resolve(directory, 'process.bpmn');
+  await copyFile('examples/flowable-vacation-request.bpmn20.xml', path);
+  const app = await electron.launch({ args: ['.', path], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: resolve(directory, 'profile'), ELECTRON_RENDERER_URL: '' } });
+  try {
+    const page = await app.firstWindow();
+    await page.getByRole('button', { name: 'Vacation request vacationRequest', exact: true }).click();
+    const name = page.getByLabel('Name', { exact: true }).filter({ visible: true });
+    await name.fill('Pending close');
+    let confirmations = 0;
+    page.on('dialog', async dialog => { confirmations++; await dialog.dismiss(); });
+    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('close-tab')!.click());
+    await expect.poll(() => confirmations).toBe(1);
+    await expect(page.locator('.document-tab')).toHaveCount(1);
+    await expect(page.locator('.dirty-dot.local')).toBeVisible();
+    await expect(name).toHaveValue('Pending close');
+    await name.fill('Pending save');
+    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('save')!.click());
+    await expect.poll(() => readFile(path, 'utf8')).toContain('name="Pending save"');
+    await expect(page.locator('.dirty-dot')).toHaveCount(0);
+    await name.fill('Pending duplicate');
+    await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('duplicate')!.click());
+    await expect(page.locator('.document-tab')).toHaveCount(2);
+    await expect(page.locator('.document-tab.active .unbound-dot')).toBeVisible();
+    await expect(name).toHaveValue('Pending duplicate');
+    await expect(page.locator('.document-tab').first().locator('.dirty-dot.local')).toBeVisible();
+    expect(await readFile(path, 'utf8')).not.toContain('Pending duplicate');
+  } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
 test('окно о приложении читает настоящие версии и открывает только разрешённые ссылки', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'bpmn-desk-about-'));
   const app = await electron.launch({ args: ['.'], chromiumSandbox: true, env: { ...process.env, BPMN_DESK_USER_DATA: directory, ELECTRON_RENDERER_URL: '' } });
@@ -148,7 +178,7 @@ test('Electron открывает Camunda 7 через CLI и сохраняет
     expect(xml).toContain('c7:collection="nativeItems"');
     expect(xml).toContain('c7:delegateExpression="${notificationWorker}"');
     expect(xml).toContain('demo:version="1"');
-    await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+    await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
@@ -298,7 +328,7 @@ test('Electron сохраняет копию и отклоняет внешне�
     await page.locator('.outline-item').first().click();
     const field = page.getByLabel('Выражение делегата', { exact: true });
     await field.fill('${nativeEdited}'); await field.blur();
-    await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
+    await expect(page.getByLabel(/Есть изменения в схеме\./)).toBeVisible();
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
     await expect(page.getByRole('status')).toContainText('Сохранено');
     expect(await readFile(path, 'utf8')).toContain('${nativeEdited}');
@@ -328,7 +358,7 @@ test('закрытие окна завершает редактирование 
     await page.locator('.outline-item').first().click();
     await page.getByLabel('Выражение делегата', { exact: true }).fill('${focusedEdit}');
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.close());
-    await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
+    await expect(page.getByLabel(/Есть изменения в схеме\./)).toBeVisible();
     await expect.poll(() => counter.evaluate(state => state.count)).toBe(1);
     const ids = JSON.parse(await readFile(resolve(directory, 'sessions/index.json'), 'utf8')) as string[];
     const session = JSON.parse(await readFile(resolve(directory, 'sessions', `${ids[0]}.json`), 'utf8'));

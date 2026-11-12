@@ -12,5 +12,5 @@ test('браузерное preview оставляет монитор недос�
   await page.getByTitle('Закрыть Новая вкладка', { exact: true }).click();
   await expect(page.getByLabel('Название', { exact: true })).toHaveValue('Local draft');
   await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
 });

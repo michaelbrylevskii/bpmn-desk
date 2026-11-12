@@ -27,7 +27,7 @@ test('фокус холста использует акцент приложен
     expect(outline.style).toBe('solid');
     expect(outline.width).toBe('2px');
   }
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
 });
 
 test('тема холста меняется без изменения XML, экспорт SVG содержит готовые цвета', async ({ page }) => {
@@ -45,7 +45,7 @@ test('тема холста меняется без изменения XML, эк
   await page.getByTitle('Светлая тема', { exact: true }).click();
   expect(await circle.evaluate(el => getComputedStyle(el).fill)).toBe('rgb(255, 255, 255)');
   await expect(page.getByLabel('XML схемы')).toHaveText(xml!);
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
   const pending = page.waitForEvent('download');
   await page.getByTitle('Экспорт SVG', { exact: true }).click();
   const svg = readFileSync((await (await pending).path())!, 'utf8');

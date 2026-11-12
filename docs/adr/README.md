@@ -42,3 +42,4 @@
 - [0043 — Закреплённые сессии и обратная связь рабочего пространства](0043-pinned-sessions-and-workspace-feedback.md)
 - [0044 — Фоновая проверка версий](0044-release-checks.md)
 - [0045 — Окно «О приложении»](0045-application-information.md)
+- [0046 — Точки отсчёта и статусы изменений документа](0046-document-change-baselines.md)

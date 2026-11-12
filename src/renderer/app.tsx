@@ -64,10 +64,10 @@ export function App() {
     if (saved) report({ severity: 'success', message: t('Экспортировано: {name}', { name: saved.name }),
       action: saved.revealToken ? { label: t('Показать в папке'), run: () => bridge.revealExport(saved.revealToken!) } : undefined });
   }), [docs, monitoring, controls, active?.id, report, t]);
-  const closeTabs = useCallback((targets: WorkspaceTab[]) => {
-    if (!docs.closeMany(targets.filter(tab => tab.kind === 'document').map(tab => tab.id))) return;
+  const closeTabs = useCallback((targets: WorkspaceTab[]) => docs.run(async () => {
+    if (!await docs.closeMany(targets.filter(tab => tab.kind === 'document').map(tab => tab.id))) return;
     tabs.closeMany(targets.map(tab => tab.id));
-  }, [docs, tabs]);
+  }), [docs, tabs]);
   const tabMenu = (tab: WorkspaceTab): MenuCommand[] => {
     const record = docs.documents.find(record => record.id === tab.id);
     return [
@@ -152,7 +152,7 @@ export function App() {
       onManageConnections={() => setManaging(monitoring ? activeTab.connectionId : profiles.data.items.find(item => item.id === profiles.preferredId)?.id ?? profiles.data.items[0]?.id ?? '')}
       runtimeTools={monitoring ? <RuntimeToolbar connectionId={activeTab.connectionId} connections={profiles.data.items} controls={controls} choose={id => { tabs.changeConnection(activeTab.id, id); profiles.remember(id); }} manage={setManaging} /> : undefined} />
     <Tabs tabs={tabs.tabs} activeId={tabs.activeId} documents={docs.documents} connections={profiles.data.items} controls={handles.controls} activate={tabs.activate} move={tabs.move} menu={tabMenu}
-      close={tab => tab.kind === 'document' ? docs.close(tab.id) : tabs.closeTab(tab.id)} create={requestNew} />
+      close={tab => closeTabs([tab])} create={requestNew} />
     <div className="workspaces">{docs.documents.map(record => <DocumentWorkspace key={record.id} record={record} active={record.id === tabs.activeId}
       editors={docs.editors.current} clipboard={clipboard} dark={dark} view={docs.view} reload={docs.reload} sync={docs.sync} draft={docs.draft} importFailed={docs.importFailed} report={report} run={docs.run} />)}
       {monitors.map(tab => <div className="workspace-surface" key={tab.id} hidden={tab.id !== tabs.activeId}><RuntimeWorkspace initial={tab.monitor} summaryEnabled={summaryPreference.enabled} setSummaryEnabled={summaryPreference.setEnabled} dark={dark} id={tab.id} connectionId={tab.connectionId} connections={profiles.data} revision={profiles.revisions[tab.connectionId] ?? 0} active={tab.id === tabs.activeId} copy={copy} publish={handles.publish} /></div>)}

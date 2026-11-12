@@ -20,7 +20,7 @@ export function useSessions({ documents, tabs, activeId, controls, restoreDocume
   const persisted = useRef(''); const haveSnapshot = useRef(false);
   const snapshot = useMemo(() => ({ tabs: tabs.map(tab => tab.kind === 'monitor' ? { ...tab, monitor: controls[tab.id]?.session ?? tab.monitor } : tab), activeId,
     documents: documents.map(record => ({ id: record.id, name: record.name, path: record.path, token: record.token,
-      xml: record.xml, guardXml: record.guardXml, diskXml: record.diskXml ?? record.sourceXml, savedXml: record.savedXml, draft: record.draft, view: record.view })) }), [tabs, activeId, documents, controls]);
+      xml: record.xml, guardXml: record.guardXml, diskXml: record.diskXml ?? record.sourceXml, savedXml: record.savedXml, draft: record.draft, baselineDraft: record.baselineDraft, view: record.view })) }), [tabs, activeId, documents, controls]);
   const latest = useRef(snapshot); latest.current = snapshot;
   const refresh = useCallback(async () => setItems(await bridge.sessions()), []);
   useEffect(() => {

@@ -14,7 +14,7 @@ test('XML расширений имеет собственные отступы 
   expect(lines.find(line => line.includes('<flowable:field'))).toMatch(/^ {2}<flowable:field/);
   expect(lines.find(line => line.includes('<flowable:string'))).toMatch(/^ {4}<flowable:string/);
   expect(lines.at(-1)).toMatch(/^<\/(?:bpmn:)?extensionElements>$/);
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
   await fragment.fill(lines.join('\n').replace('>general<', '>formatted-category<'));
   await page.getByRole('button', { name: 'Применить расширения', exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click();
@@ -24,5 +24,5 @@ test('XML расширений имеет собственные отступы 
   await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
   await expect(xml).not.toContainText('formatted-category');
   await expect(xml).toContainText('>general<');
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
 });

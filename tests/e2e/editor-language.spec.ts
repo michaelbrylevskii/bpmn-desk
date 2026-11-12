@@ -71,5 +71,5 @@ test('смена языка сохраняет действия выбранно
   await expect(panel.getByRole('button', { name: 'Следующее совпадение', exact: true })).toBeInViewport();
   await expect(panel.getByRole('button', { name: 'Учитывать регистр', exact: true })).toBeVisible();
   await expect(panel.locator('.xml-search-count')).toHaveText('0/5');
-  await expect(page.getByLabel('Несохранённые изменения', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
 });

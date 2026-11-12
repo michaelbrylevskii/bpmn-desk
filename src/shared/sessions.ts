@@ -3,7 +3,7 @@ import type { HistoryQuery } from './history';
 export interface DiagramView { x: number; y: number; width: number; height: number; selected?: string }
 export interface SessionDocument {
   id: string; name: string; path: string; token?: string;
-  xml: string; guardXml?: string; diskXml: string; savedXml: string | null; draft?: string; view?: DiagramView;
+  xml: string; guardXml?: string; diskXml: string; savedXml: string | null; draft?: string; baselineDraft?: string; view?: DiagramView;
 }
 export interface SessionMonitor {
   definitionId: string; instanceId: string; history: boolean; selected?: string; title?: string; historyFilter?: string; jobId?: string;

@@ -6,7 +6,7 @@ test('схема без файла и её дубликат серые до пр
   const active = page.locator('.document-tab.active');
   await expect(active.locator('.unbound-dot')).toBeVisible();
   await active.getByRole('tab').hover();
-  await expect(page.getByRole('tooltip')).toContainText('Схема не связана с файлом.');
+  await expect(page.getByRole('tooltip')).toContainText('Схема не сохранена в файл.');
   await active.click({ button: 'right' }); await page.getByRole('menuitem', { name: 'Дублировать схему', exact: true }).click();
   await expect(page.locator('.unbound-dot')).toHaveCount(2);
   await page.locator('.outline-item').filter({ hasText: 'Process_1' }).last().click();

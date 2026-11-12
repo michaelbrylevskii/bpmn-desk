@@ -1,6 +1,8 @@
 import { expect, it } from 'vitest';
 import { hasLocalEdits, isDirty, type DocumentRecord } from '../../src/renderer/documents/types';
 import { sessionOverview } from '../../src/shared/session-validation';
+import { documentTabStatus } from '../../src/renderer/documents/tab-status';
+import { validDocument } from '../../src/shared/session-validation';
 
 const original = '<process id="original"/>';
 const changed = '<process id="changed"/>';
@@ -25,6 +27,42 @@ it('сохранение в файл снимает защиту, дальней
   expect(isDirty(saved)).toBe(false); expect(hasLocalEdits(saved)).toBe(false);
   expect(isDirty({ ...saved, xml: changed })).toBe(true);
   expect(isDirty({ ...saved, draft: '<unfinished' })).toBe(true);
+});
+
+it('черновик дубликата входит в его исходное состояние и переживает сериализацию сессии', () => {
+  const copy = record({ draft: '<unfinished', baselineDraft: '<unfinished' });
+  const restored: unknown = JSON.parse(JSON.stringify(copy));
+  expect(validDocument(restored)).toBe(true);
+  if (!validDocument(restored)) throw new Error('Invalid test session');
+  const document = { ...restored, sourceXml: restored.xml };
+  expect(hasLocalEdits(document)).toBe(false);
+  expect(isDirty(document)).toBe(true);
+  expect(hasLocalEdits({ ...document, draft: '<different' })).toBe(true);
+  expect(hasLocalEdits({ ...document, draft: undefined })).toBe(true);
+  expect(hasLocalEdits({ ...document, draft: '<unfinished' })).toBe(false);
+  expect(hasLocalEdits({ ...document, xml: changed, draft: undefined })).toBe(true);
+  expect(validDocument({ ...copy, baselineDraft: 42 })).toBe(false);
+});
+
+it('различает локальные правки, внешние изменения и необходимость подтверждать закрытие', () => {
+  const cases = [
+    { fields: {}, dot: 'unbound', protect: true },
+    { fields: { xml: changed }, dot: 'local', protect: true },
+    { fields: { path: '/process.bpmn' }, dot: '', protect: false },
+    ...(['changed', 'missing', 'unavailable'] as const).flatMap(fileState => [
+      { fields: { path: '/process.bpmn', fileState }, dot: 'external', protect: false },
+      { fields: { path: '/process.bpmn', fileState, xml: changed }, dot: 'conflict', protect: true },
+      { fields: { path: '/process.bpmn', fileState, draft: '<unfinished' }, dot: 'conflict', protect: true },
+    ]),
+  ];
+  for (const { fields, dot, protect } of cases) {
+    const document = record(fields);
+    expect(documentTabStatus(document).dot).toBe(dot);
+    expect(isDirty(document)).toBe(protect);
+  }
+  const unavailable = documentTabStatus(record({ path: '/process.bpmn', fileState: 'unavailable' }));
+  expect(unavailable.messages).toContain('Не удалось проверить файл на диске.');
+  expect(unavailable.messages).not.toContain('Файл изменён на диске.');
 });
 
 it('сессия отмечает документ без файла несохранённым даже без правок', () => {

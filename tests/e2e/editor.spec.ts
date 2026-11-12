@@ -18,22 +18,23 @@ test('редактирование Flowable, undo/redo и сохранение �
   const original = await field.inputValue();
   await field.fill('${editedDelegate}');
   await field.blur();
-  await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toBeVisible();
   await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
   await expect(field).toHaveValue(original);
   await page.getByTitle('Повторить (Ctrl+Shift+Z)', { exact: true }).click();
   await expect(field).toHaveValue('${editedDelegate}');
+  await field.fill('${savedDelegate}');
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await field.press('Control+s');
   const download = await downloadPromise;
   const path = await download.path();
   expect(path).not.toBeNull();
   const saved = readFileSync(path!, 'utf8');
-  expect(saved).toContain('${editedDelegate}');
+  expect(saved).toContain('${savedDelegate}');
   const before = readFileSync('examples/flowable-showcase.bpmn20.xml', 'utf8');
   const issues = preservationIssues(before, saved);
   expect(issues.every(issue => issue.includes('delegateExpression'))).toBe(true);
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
 });
 
 test('все встроенные схемы отображаются и сохраняют расширения', async ({ page }) => {
@@ -89,7 +90,7 @@ test('вкладки независимы, локальное восстанов
   await page.locator('.outline-item').filter({ hasText: 'StartEvent_1' }).click();
   await page.getByLabel('Название', { exact: true }).fill('Восстановленный старт');
   await page.getByLabel('Название', { exact: true }).blur();
-  await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toBeVisible();
   await page.getByTitle('Новая вкладка (Ctrl+N)').click();
   await createDiagram(page, 'Flowable');
   await expect(page.locator('.document-tab')).toHaveCount(2);
@@ -98,7 +99,7 @@ test('вкладки независимы, локальное восстанов
   await expect(page.locator('.document-tab')).toHaveCount(2);
   await page.locator('.document-tab').first().getByRole('tab').click();
   await expect(page.locator('.outline-item').filter({ hasText: 'Восстановленный старт' })).toBeVisible();
-  await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toBeVisible();
 });
 
 test('ошибочный XML не заменяет диаграмму', async ({ page }) => {
@@ -155,5 +156,5 @@ test('исправление повреждённого файла через XM
   await page.getByLabel('XML схемы').fill(emptyDiagram);
   await page.getByRole('button', { name: 'Применить XML', exact: true }).click();
   await expect(page.locator('.import-error')).toHaveCount(0);
-  await expect(page.getByLabel('Несохранённые изменения')).toBeVisible();
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toBeVisible();
 });

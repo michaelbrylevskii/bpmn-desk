@@ -19,6 +19,7 @@ export function validMonitor(value: unknown): value is SessionMonitor {
 export function validDocument(value: unknown): value is SessionDocument {
   if (!object(value) || !['id', 'name', 'path'].every(key => typeof value[key] === 'string') || !optionalString(value.token)) return false;
   if (value.guardXml !== undefined && !xml(value.guardXml)) return false;
+  if (value.baselineDraft !== undefined && !xml(value.baselineDraft)) return false;
   if (!xml(value.xml) || !xml(value.diskXml) || value.savedXml !== null && !xml(value.savedXml) || value.draft !== undefined && !xml(value.draft)) return false;
   return value.view === undefined || object(value.view) && ['x', 'y', 'width', 'height'].every(key => typeof value.view === 'object' && value.view !== null && key in value.view && typeof Reflect.get(value.view, key) === 'number' && Number.isFinite(Reflect.get(value.view, key))) && Number(value.view.width) > 0 && Number(value.view.height) > 0 && optionalString(value.view.selected);
 }

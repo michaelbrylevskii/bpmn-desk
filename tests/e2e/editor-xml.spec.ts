@@ -25,7 +25,7 @@ test('XML поиск и переход к выбранному элементу 
   await search.fill('documentReview');
   await search.press('Enter');
   await expect(page.locator('.cm-searchMatch')).not.toHaveCount(0);
-  await expect(page.getByLabel('Несохранённые изменения')).toHaveCount(0);
+  await expect(page.getByLabel(/Есть изменения в схеме\./)).toHaveCount(0);
   await page.getByLabel('XML схемы').click();
   await page.keyboard.press('Control+Home');
   await page.keyboard.insertText('<!-- XML заметка -->\n');
