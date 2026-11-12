@@ -43,7 +43,11 @@ export async function openInstance(page: Page, id: string, history = false) {
   await filters.getByRole('button', { name: 'Open instance', exact: true }).click();
   await expect(page.locator('.workspace-surface:not([hidden]) .runtime-instance > code')).toHaveText(id);
 }
-export async function close(app: ElectronApplication, directory: string) { await app.close(); await rm(directory, { recursive: true, force: true }); }
+export async function close(app: ElectronApplication, directory: string) {
+  // Сценарий перезапуска мог уже закрыть это приложение.
+  await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }).catch(() => undefined);
+  await app.close(); await rm(directory, { recursive: true, force: true });
+}
 
 /** Исходное выключенное предпочтение, сохранённое предыдущей сессией приложения. */
 export async function savedSummaryOff(page: Page) {

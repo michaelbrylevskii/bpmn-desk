@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createDiagram } from './create-diagram';
 
-test('сессия сохраняет чистые вкладки, порядок и активную вкладку', async ({ page }) => {
+test('сессия сохраняет схемы без файла, порядок и активную вкладку', async ({ page }) => {
   await page.goto('/'); await createDiagram(page, 'Flowable');
   await page.locator('.new-tab').click(); await createDiagram(page, 'Camunda 7');
   await page.locator('.document-tab').first().getByRole('tab').click();
@@ -9,6 +9,7 @@ test('сессия сохраняет чистые вкладки, порядо�
   await expect(page.locator('.document-tab')).toHaveCount(2);
   await expect(page.locator('.engine-badge')).toHaveText('Flowable');
   await expect(page.locator('.dirty-dot')).toHaveCount(0);
+  await expect(page.locator('.unbound-dot')).toHaveCount(2);
   await page.locator('.document-tab').nth(1).getByRole('tab').click(); await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
 });
 
@@ -89,6 +90,7 @@ test('меню вкладки дублирует неприменённый XML 
 test('удаление сессии удаляет снимок, а список ограничен 15 записями', async ({ page }) => {
   await page.goto('/'); await createDiagram(page, 'Flowable'); await page.reload();
   await expect(page.getByRole('region', { name: 'Sessions', exact: true }).locator('.recent-entry')).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Delete session' }).click(); await page.reload();
   await expect(page.locator('.recent-entry')).toHaveCount(0);
   const snapshot = { id: 'test', updatedAt: new Date().toISOString(), dismissed: false, tabs: [{ kind: 'monitor', id: 'monitor', connectionId: 'missing' }], activeId: 'monitor', documents: [] };

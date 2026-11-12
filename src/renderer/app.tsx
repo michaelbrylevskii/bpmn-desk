@@ -164,7 +164,7 @@ export function App() {
         offer={sessions.offered && <SessionOffer session={sessions.offered} busy={sessions.restoring} restore={() => docs.run(() => sessions.restore(sessions.offered!.id, sourceHome))} dismiss={() => docs.run(() => sessions.dismiss(sessions.offered!.id))} />} />}</div>
     <footer className="statusbar"><span><CircleCheck size={13} />{monitoring ? t('Состояние процессов') : active ? t('{count} элементов', { count: active.snapshot?.items.length ?? 0 }) : t('Готово')}</span>
       <span>{active?.snapshot && <span className="engine-badge">{active.snapshot.engines.map(id => engineProfiles[id].title).join(' + ') || 'BPMN 2.0'}</span>}{monitoring ? 'Flowable REST API' : active?.snapshot?.selected?.id ?? 'BPMN 2.0 · Flowable · Camunda 7'}</span><span className="status-spacer" />
-      <span>{home ? t('Стартовая страница') : monitoring ? t('Только чтение') : active && isDirty(active) ? t('Есть несохранённые изменения') : active && !active.path ? t('Без файла · сохрани копию') : t('Все изменения сохранены')}</span></footer>
+      <span>{home ? t('Стартовая страница') : monitoring ? t('Только чтение') : active && !active.path ? t('Без файла · сохрани копию') : active && isDirty(active) ? t('Есть несохранённые изменения') : t('Все изменения сохранены')}</span></footer>
     {notice && <NotificationToast key={notice.id} notice={notice} close={() => setNotice(undefined)} />}
     {dragging && <div className="drop-overlay"><Workflow size={44} /><h2>{t('Отпусти BPMN-файлы здесь')}</h2><p>{t('Схемы откроются в отдельных вкладках')}</p></div>}
     {managing !== undefined && <ConnectionsDialog connections={profiles.data} initialId={managing} close={() => setManaging(undefined)} changed={profiles.refresh} />}

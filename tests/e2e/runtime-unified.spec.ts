@@ -2,6 +2,22 @@ import { expect, test } from '@playwright/test';
 import { close, launch, openInstance, openCatalogFilters } from './runtime-fixture';
 import { historyServer } from './history-server';
 
+test('копия из монитора начинает с серой точки и защищена от закрытия без подтверждения', async () => {
+  const api = await historyServer();
+  const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });
+  try {
+    await openInstance(page, 'p1', true);
+    await page.getByRole('button', { name: 'Create local copy', exact: true }).click();
+    const copy = page.locator('.document-tab[data-kind=document]');
+    await expect(copy.locator('.unbound-dot')).toBeVisible();
+    page.once('dialog', dialog => dialog.dismiss()); await copy.click({ button: 'middle' });
+    await expect(copy).toHaveCount(1);
+    page.once('dialog', dialog => dialog.accept()); await copy.click({ button: 'middle' });
+    await expect(copy).toHaveCount(0);
+    await expect(page.locator('.runtime-canvas')).toBeVisible();
+  } finally { try { await close(app, directory); } finally { await api.stop(); } }
+});
+
 test('единая схема сохраняет выбор, масштаб и ширину при смене вкладки и переживает отказ одного API', async () => {
   const api = await historyServer(); api.state.runtimeStatus = 200; api.state.finished = false; api.state.unfinishedActivities = true;
   const { app, page, directory } = await launch(api.baseUrl).catch(async error => { await api.stop(); throw error; });

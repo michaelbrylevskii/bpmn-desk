@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, House, Server, Workflow, X } from 'lucide-re
 import { useId, useRef, useState } from 'react';
 import type { Connection } from '../../shared/runtime';
 import type { DocumentRecord } from '../documents/types';
-import { isDirty } from '../documents/types';
+import { hasLocalEdits } from '../documents/types';
 import { useI18n } from '../i18n/provider';
 import type { MonitorControls } from '../runtime/controls';
 import type { WorkspaceTab } from './use-tabs';
@@ -40,9 +40,10 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
     const document = documents.find(item => item.id === tab.id); const connection = tab.kind === 'monitor' ? connections.find(item => item.id === tab.connectionId) : undefined;
     const title = tab.kind === 'home' ? t('Новая вкладка') : tab.kind === 'document' ? document?.name ?? '' : `${controls[tab.id]?.title || tab.monitor?.title || t('Состояние процессов')} · ${connection?.name || t('Выбери подключение')}`;
     const external = document?.fileState && document.fileState !== 'unchanged';
-    const dirty = document && isDirty(document);
-    const state = external ? dirty ? 'conflict' : 'external' : dirty ? 'local' : '';
-    const detail = <div className="tab-tooltip"><strong>{title}</strong>{document?.path && <div className="file-path">{document.path}</div>}{dirty && <div>{t('Есть несохранённые изменения')}</div>}{document?.draft !== undefined && document.draft !== document.xml && <div>{t('Неприменённые изменения XML')}</div>}{external && <div>{t(document.fileState === 'missing' ? 'Файл удалён с диска.' : document.fileState === 'unavailable' ? 'Не удалось проверить файл на диске.' : 'Файл изменён на диске.')}</div>}{document?.fileError && <div>{document.fileError}</div>}</div>;
+    const dirty = document && hasLocalEdits(document);
+    const unbound = document && !document.path;
+    const state = external ? dirty ? 'conflict' : 'external' : dirty ? 'local' : unbound ? 'unbound' : '';
+    const detail = <div className="tab-tooltip"><strong>{title}</strong>{document?.path && <div className="file-path">{document.path}</div>}{unbound && <><div>{t('Схема не связана с файлом.')}</div><div>{t('При сохранении будет предложено выбрать файл.')}</div></>}{dirty && <div>{t('Есть несохранённые изменения')}</div>}{document?.draft !== undefined && document.draft !== document.xml && <div>{t('Неприменённые изменения XML')}</div>}{external && <div>{t(document.fileState === 'missing' ? 'Файл удалён с диска.' : document.fileState === 'unavailable' ? 'Не удалось проверить файл на диске.' : 'Файл изменён на диске.')}</div>}{document?.fileError && <div>{document.fileError}</div>}</div>;
     return <Tooltip key={tab.id} content={detail}><div className={`document-tab ${tab.id === activeId ? 'active' : ''} ${drop?.id === tab.id ? drop.after ? 'drop-after' : 'drop-before' : ''}`} data-kind={tab.kind} onContextMenu={event => { event.preventDefault(); setContext({ tab, x: event.clientX, y: event.clientY }); }}
       onMouseDown={event => { if (event.button === 1) event.preventDefault(); }}
       onAuxClick={event => { if (event.button === 1) { event.preventDefault(); close(tab); } }}
@@ -62,7 +63,7 @@ export function Tabs({ tabs, activeId, documents, connections, controls, activat
       <button role="tab" draggable data-tab-id={tab.id} aria-selected={tab.id === activeId} onClick={() => activate(tab.id)} tabIndex={tab.id === activeId ? 0 : -1}
         onDragStart={event => { dragged.current = tab.id; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-bpmn-desk-tab', tab.id); }}
         onDragEnd={() => { dragged.current = undefined; setDrop(undefined); }}>
-        {tab.kind === 'home' ? <House size={14} /> : tab.kind === 'monitor' ? <Server size={14} /> : <Workflow size={14} />}<span>{title}</span>{state && <i className={`dirty-dot ${state}`} aria-label={t(external ? document.fileState === 'missing' ? 'Файл удалён с диска.' : 'Файл изменён на диске.' : 'Несохранённые изменения')} />}</button>
+        {tab.kind === 'home' ? <House size={14} /> : tab.kind === 'monitor' ? <Server size={14} /> : <Workflow size={14} />}<span>{title}</span>{state && <i className={state === 'unbound' ? 'unbound-dot' : `dirty-dot ${state}`} aria-label={t(state === 'unbound' ? 'Схема не связана с файлом.' : external ? document.fileState === 'missing' ? 'Файл удалён с диска.' : 'Файл изменён на диске.' : 'Несохранённые изменения')} />}</button>
       <button title={t('Закрыть {name}', { name: title })} onClick={() => close(tab)}><X size={13} /></button>
     </div></Tooltip>;
   })}</nav><button className="tab-scroll tab-scroll-left" aria-label={t('Прокрутить вкладки влево')} title={t('Прокрутить вкладки влево')} disabled={!scroll.left} onClick={() => scroll.scroll(-1)}><ChevronLeft size={16} /></button><button className="tab-scroll tab-scroll-right" aria-label={t('Прокрутить вкладки вправо')} title={t('Прокрутить вкладки вправо')} disabled={!scroll.right} onClick={() => scroll.scroll(1)}><ChevronRight size={16} /></button></div><button className="new-tab" title={t('Новая вкладка')} onClick={create}>+</button></div>{context && <CommandMenu items={menu(context.tab)} x={context.x} y={context.y} owner={owner} close={() => setContext(undefined)} />}</>;

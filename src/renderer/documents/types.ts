@@ -20,7 +20,13 @@ export interface DocumentRecord {
 }
 
 export function isDirty(record: DocumentRecord): boolean {
-  return (record.savedXml !== null && record.xml !== record.savedXml) || (record.draft !== undefined && record.draft !== record.xml);
+  return !record.path || (record.savedXml !== null && record.xml !== record.savedXml) || (record.draft !== undefined && record.draft !== record.xml);
+}
+
+/** Копия требует сохранения сразу, но до правок совпадает со своим исходным снимком. */
+export function hasLocalEdits(record: DocumentRecord): boolean {
+  const baseline = !record.path && record.savedXml === '' ? record.diskXml ?? record.sourceXml : record.savedXml;
+  return (baseline !== null && record.xml !== baseline) || (record.draft !== undefined && record.draft !== record.xml);
 }
 
 export type EditorRegistry = Map<string, BpmnEditor>;

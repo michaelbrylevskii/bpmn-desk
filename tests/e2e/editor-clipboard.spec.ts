@@ -24,6 +24,7 @@ for (const scenario of [
   await page.keyboard.press('Control+c');
   await page.locator('.new-tab').click(); await createDiagram(page, 'BPMN 2.0');
   await expect(page.locator('.document-workspace:visible .djs-container')).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
   await page.getByTitle(`Закрыть ${scenario.sample}.bpmn20.xml`, { exact: true }).click();
   for (let count = 1; count <= 2; count++) {
     const canvas = page.locator('.document-workspace:visible .bpmn-container .djs-container > svg');

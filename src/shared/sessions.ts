@@ -18,5 +18,5 @@ export interface WorkspaceSession extends SessionLabel {
 export interface SessionOverview extends SessionLabel { open?: boolean; id: string; updatedAt: string; dismissed: boolean; tabs: { name: string; kind: SessionTab['kind']; dirty: boolean; connectionId?: string; context?: string }[] }
 export const sessionLimit = 15;
 export const retainSessions = <T extends SessionLabel>(records: T[]): T[] => [...records.filter(record => record.pinned), ...records.filter(record => !record.pinned).slice(0, sessionLimit)];
-export const documentChanged = (document: Pick<SessionDocument, 'xml' | 'savedXml' | 'draft'>): boolean =>
-  document.savedXml !== null && document.xml !== document.savedXml || document.draft !== undefined && document.draft !== document.xml;
+export const documentChanged = (document: Pick<SessionDocument, 'path' | 'xml' | 'savedXml' | 'draft'>): boolean =>
+  !document.path || document.savedXml !== null && document.xml !== document.savedXml || document.draft !== undefined && document.draft !== document.xml;

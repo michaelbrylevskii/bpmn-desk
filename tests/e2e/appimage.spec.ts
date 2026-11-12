@@ -53,6 +53,8 @@ test('извлечённая AppImage открывает демонстраци�
     await expect(page.locator(`[data-tab-id="${destinationId}"]`)).toHaveAttribute('aria-selected', 'true');
     await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
     await expect(page.locator('.document-workspace:visible .outline-item[title^="bpmn:ServiceTask"]')).toHaveCount(0);
+    // Здесь два CDP-клиента; подтверждения проверяются отдельными Electron-сценариями.
+    await page.evaluate(() => { window.confirm = () => true; });
     await page.getByTitle('Close New diagram.bpmn', { exact: true }).click();
     await expect(page.locator('.djs-element[data-element-id="prepareDocument"]')).toBeVisible();
     await expect(page.getByTitle('Undo (Ctrl+Z)', { exact: true })).toBeDisabled();
@@ -80,7 +82,7 @@ test('извлечённая AppImage открывает демонстраци�
     expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(2);
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
     await expect(second.locator('.document-tab')).toHaveCount(0);
-  } finally { await view?.browser.close(); await app.close(); await rm(directory, { recursive: true, force: true }); }
+  } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await view?.browser.close(); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
 test('AppImage читает историю через production IPC и связывает журнал со схемой', async () => {

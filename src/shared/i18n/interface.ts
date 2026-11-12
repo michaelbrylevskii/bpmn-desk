@@ -78,6 +78,8 @@ export const interfaceMessages = {
   'Готово': 'Ready',
   'Есть несохранённые изменения': 'Unsaved changes',
   'Без файла · сохрани копию': 'No file · save a copy',
+  'Схема не связана с файлом.': 'This diagram is not linked to a file.',
+  'При сохранении будет предложено выбрать файл.': 'Saving will prompt you to choose a file.',
   'Все изменения сохранены': 'All changes saved',
   'Закрыть уведомление': 'Dismiss notification',
   'Отпусти BPMN-файлы здесь': 'Drop BPMN files here',

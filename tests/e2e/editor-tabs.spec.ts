@@ -1,6 +1,28 @@
 import { test, expect } from './russian-fixture';
 import { createDiagram } from './create-diagram';
 
+test('схема без файла и её дубликат серые до правок, но закрытие требует подтверждения', async ({ page }) => {
+  await page.goto('/'); await createDiagram(page, 'Flowable');
+  const active = page.locator('.document-tab.active');
+  await expect(active.locator('.unbound-dot')).toBeVisible();
+  await active.getByRole('tab').hover();
+  await expect(page.getByRole('tooltip')).toContainText('Схема не связана с файлом.');
+  await active.click({ button: 'right' }); await page.getByRole('menuitem', { name: 'Дублировать схему', exact: true }).click();
+  await expect(page.locator('.unbound-dot')).toHaveCount(2);
+  await page.locator('.outline-item').filter({ hasText: 'Process_1' }).last().click();
+  await page.getByLabel('Название', { exact: true }).filter({ visible: true }).fill('Изменённая копия');
+  await page.getByLabel('Название', { exact: true }).filter({ visible: true }).blur();
+  await expect(active.locator('.dirty-dot.local')).toBeVisible();
+  await page.getByTitle('Отменить (Ctrl+Z)', { exact: true }).click();
+  await expect(active.locator('.unbound-dot')).toBeVisible();
+  page.once('dialog', dialog => dialog.dismiss()); await active.click({ button: 'middle' });
+  await expect(page.locator('.document-tab')).toHaveCount(2);
+  page.once('dialog', dialog => dialog.accept()); await active.click({ button: 'middle' });
+  await expect(page.locator('.document-tab')).toHaveCount(1);
+  page.once('dialog', dialog => dialog.dismiss()); await active.click({ button: 'middle' });
+  await expect(page.locator('.document-tab')).toHaveCount(1);
+});
+
 test('колёсико прокручивает вкладки без Shift, стрелки не меняют геометрию у краёв', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 900 }); await page.goto('/');
   for (let index = 0; index < 5; index++) {

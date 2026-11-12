@@ -42,5 +42,5 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .icon-button:hover:not(:disabled) { background: var(--surface-raised); color: var(--text); }
 .badge { font-size: 10px; color: var(--muted); background: var(--surface-raised); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; }
 .muted { color: var(--muted); font-size: 12px; line-height: 1.6; }
-.dirty-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+.dirty-dot, .unbound-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block; flex: 0 0 auto; }
 kbd { font: inherit; opacity: .6; font-size: 11px; margin-left: 10px; }

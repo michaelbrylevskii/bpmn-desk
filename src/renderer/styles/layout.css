@@ -78,6 +78,7 @@
 .document-tabs > .tooltip-anchor { display: flex; flex-shrink: 0; max-width: 330px; }
 .document-tabs .document-tab { flex: 1; }
 .dirty-dot.local { background: var(--accent); }
+.unbound-dot { background: var(--muted); }
 .dirty-dot.external { background: #d18c24; }
 .dirty-dot.conflict { background: var(--danger); }
 .tab-tooltip, .session-tooltip { display: grid; gap: 6px; max-width: 520px; overflow-wrap: anywhere; }

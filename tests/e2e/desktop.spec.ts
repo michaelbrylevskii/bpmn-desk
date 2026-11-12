@@ -95,7 +95,7 @@ test('Electron запускает packaged renderer, preload и встроенн
     await manage.click(); await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByRole('dialog').getByTitle('Закрыть', { exact: true }).click();
     await page.screenshot({ path: 'test-results/desktop-editor.png' });
-  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+  } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
 test('nativeTheme переключает системную палитру; ручной режим переживает перезапуск', async () => {
@@ -162,6 +162,13 @@ test('native создание выбирает профиль, PNG проход�
     await app.evaluate(({ Menu }) => Menu.getApplicationMenu()!.getMenuItemById('new-diagram')!.click());
     await createDiagram(page, 'Camunda 7');
     await expect(page.locator('.engine-badge')).toHaveText('Camunda 7');
+    await expect(page.locator('.unbound-dot')).toBeVisible();
+    const closing = await app.evaluateHandle(({ dialog, BrowserWindow }) => {
+      const state = { count: 0 }; dialog.showMessageBoxSync = () => { state.count++; return 0; };
+      BrowserWindow.getAllWindows()[0]!.close(); return state;
+    });
+    await expect.poll(async () => (await closing.jsonValue()).count).toBe(1);
+    await expect(page.locator('.unbound-dot')).toBeVisible();
     await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, png);
     await expect(page.evaluate(() => window.desktop!.saveFile({ format: 'png', name: 'bad.png', content: new Uint8Array([1, 2, 3]) }))).rejects.toThrow('Недопустимый запрос');
     await page.getByTitle('Формат экспорта', { exact: true }).click();
@@ -194,7 +201,16 @@ test('native создание выбирает профиль, PNG проход�
     await page.getByTitle('PNG · белый фон', { exact: true }).click();
     await expect(page.locator('.dirty-dot')).toHaveCount(0);
     await expect(page.locator('.toast[data-severity=success]')).toHaveCount(0);
-  } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
+    await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+    await expect(page.locator('.unbound-dot')).toBeVisible();
+    const saved = resolve(directory, 'saved.bpmn');
+    await app.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, saved);
+    await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+    await expect(page.getByRole('status')).toContainText('Сохранено: saved.bpmn');
+    await expect(page.locator('.unbound-dot')).toHaveCount(0);
+    await expect(page.locator('.dirty-dot')).toHaveCount(0);
+    expect(await readFile(saved, 'utf8')).toContain('definitions');
+  } finally { await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 1; }); await app.close(); await rm(directory, { recursive: true, force: true }); }
 });
 
 test('повторный запуск с файлом использует активное окно, без файла открывает новое', async () => {
