@@ -73,7 +73,7 @@ test('ошибка XML расширений выделяется в обеих �
     expect(colors.background).toBe(name === 'Light theme' ? 'rgb(255, 242, 243)' : 'rgb(45, 30, 41)');
   }
   await expect(xml).toHaveText('<broken>');
-  await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
+  await expect(page.getByLabel(/The diagram has changes\./)).toHaveCount(0);
 });
 
 test('успешное применение автоматически исчезает после плавного затухания', async ({ page }) => {

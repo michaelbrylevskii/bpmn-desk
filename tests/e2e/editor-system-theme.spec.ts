@@ -32,7 +32,7 @@ test('системная тема меняется на ходу, ручной �
   await expect(root).toHaveAttribute('data-theme', 'light');
   await xml.focus(); await page.keyboard.press('Control+z');
   await expect(xml).toHaveText(original!);
-  await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
+  await expect(page.getByLabel(/The diagram has changes\./)).toHaveCount(0);
   await page.reload();
   await expect(auto).toHaveAttribute('aria-pressed', 'true');
   await expect(root).toHaveAttribute('data-theme', 'light');

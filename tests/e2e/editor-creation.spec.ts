@@ -42,7 +42,7 @@ test('стартовая вкладка сохраняет черновик и �
   }
   await expect(page.locator('.welcome')).toHaveCount(0); await expect(page.locator('.document-tab')).toHaveCount(2);
   await page.locator('.document-tab').first().getByRole('tab').click(); await expect(page.locator('.document-workspace:visible').getByLabel('Name', { exact: true })).toHaveValue('Retained draft');
-  await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click(); await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
+  await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click(); await expect(page.getByLabel(/The diagram has changes\./)).toHaveCount(0);
   await page.locator('.new-tab').click();
   const dataTransfer = await page.evaluateHandle(xml => { const data = new DataTransfer(); data.items.add(new File([xml], 'dropped.bpmn', { type: 'application/xml' })); return data; }, readFileSync('examples/camunda7-showcase.bpmn20.xml', 'utf8'));
   await page.locator('.welcome').dispatchEvent('drop', { dataTransfer }); await dataTransfer.dispose();
@@ -56,5 +56,5 @@ test('Ctrl+N завершает редактирование поля и сох�
   await page.getByLabel('Name', { exact: true }).fill('Pending field edit'); await page.keyboard.press('Control+n');
   await expect(page.locator('.welcome')).toBeVisible(); await page.getByTitle('Close New tab', { exact: true }).click();
   await page.getByRole('button', { name: 'XML', exact: true }).click(); await expect(page.getByLabel('Diagram XML', { exact: true })).toContainText('Pending field edit');
-  await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click(); await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
+  await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click(); await expect(page.getByLabel(/The diagram has changes\./)).toHaveCount(0);
 });

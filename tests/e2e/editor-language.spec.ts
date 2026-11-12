@@ -43,7 +43,7 @@ test('английский по умолчанию, смена языка сох
   await expect(page.getByLabel('Diagram XML', { exact: true })).toHaveText(baseline!);
   await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
   await expect(page.getByLabel('Name', { exact: true })).toHaveValue('New process');
-  await expect(page.getByLabel('Unsaved changes', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel(/The diagram has changes\./)).toHaveCount(0);
 });
 
 test('выбранный русский язык восстанавливается после обновления', async ({ page }) => {

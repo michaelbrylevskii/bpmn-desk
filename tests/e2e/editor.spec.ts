@@ -45,7 +45,7 @@ test('все встроенные схемы отображаются и сох�
     await expect(page.locator('.outline-item').first()).toBeVisible();
     await expect(page.locator('.import-error')).toHaveCount(0);
     await selectOption(page.getByRole('combobox', { name: 'Язык', exact: true }), 'en');
-    await expect(page.getByLabel('Unsaved changes', { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel(/The diagram has changes\./)).toHaveCount(0);
     await selectOption(page.getByRole('combobox', { name: 'Language', exact: true }), 'ru');
     const pending = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();

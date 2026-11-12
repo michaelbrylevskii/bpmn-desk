@@ -49,8 +49,9 @@ test('несколько мониторов сохраняют собствен�
     await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Retained draft'); await expect(page.getByLabel('Diagram XML', { exact: true })).toContainText('retained XML draft');
     page.once('dialog', dialog => void dialog.dismiss()); await local.locator('..').getByRole('button').click(); await expect(local).toBeVisible();
     await page.getByRole('button', { name: 'Discard XML edits', exact: true }).click(); await page.getByTitle('Undo (Ctrl+Z)', { exact: true }).click();
-    await expect(page.getByLabel('Unsaved changes')).toHaveCount(0);
-    await local.locator('..').getByRole('button').click(); await expect(firstTab).toHaveAttribute('aria-selected', 'true');
+    await expect(local.locator('.unbound-dot')).toBeVisible();
+    page.once('dialog', dialog => void dialog.accept());
+    await local.locator('..').getByRole('button').click(); await expect(local).toHaveCount(0); await expect(firstTab).toHaveAttribute('aria-selected', 'true');
     await page.locator('.new-tab').click();
     await page.getByTitle('Manage connections', { exact: true }).click();
     await expect(page.getByRole('dialog').getByLabel('Connection name')).toHaveValue('Fixture engine');
