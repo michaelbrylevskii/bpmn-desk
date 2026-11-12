@@ -25,4 +25,6 @@
 
 Camunda 8/Zeebe, runtime Camunda 7, редактирование DMN/CMMN и внешних `.form` файлов не включены. Ссылки на ресурсы сохраняются.
 
+Монитор Camunda 7 запланирован отдельно: [объём и этапы](camunda7-monitor-plan.md). Поддержка runtime пока не реализована.
+
 [Примеры и лицензии](../examples/provenance.json) · [ADR 0014](adr/0014-engine-profiles.md) · [Проверки моделей](development.md)
