@@ -46,7 +46,7 @@ for (const change of ['property', 'draft', 'applied-xml'] as const) {
       await expect(copy.locator('.dirty-dot.local')).toBeVisible();
       await xml.press('Control+z');
       await expect(copy.locator('.unbound-dot')).toBeVisible();
-      await xml.press('Control+Shift+z');
+      await xml.press('Control+y');
       await expect(copy.locator('.dirty-dot.local')).toBeVisible();
       await xml.press('Control+z');
     } else {
